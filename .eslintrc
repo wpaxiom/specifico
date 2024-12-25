@@ -1,0 +1,38 @@
+{
+    "ignorePatterns": [
+		"**/libraries/**/*.js",
+		"**/inc/**/*.js",
+		"**/assets/plugins/**/*.js",
+		"**/assets/dist/**/*.js"
+	],
+	"parserOptions": {
+		"ecmaVersion": 6,
+		"sourceType": "script",
+		"ecmaFeatures": {
+		}
+	},
+	"globals": {
+		"wp": true,
+		"page": true,
+		"browser": true,
+		"context": true,
+		"jQuery": "writable",
+		"$": "writable",
+		"pagenow": "writable",
+		"ABSP_JS": true,
+		"elementor": true,
+		"elementorCommon": true,
+		"elementorFrontend": true,
+		"elementorFrontendConfig": true,
+		"elementorModules": true
+	},
+	"rules": {
+		"eqeqeq": "warn",
+		"semi": "error",
+		"arrow-parens": ["error", "as-needed"]
+	},
+	"env": {
+		"browser": true,
+		"node": false
+	}
+}

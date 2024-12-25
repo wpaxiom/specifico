@@ -1,0 +1,24 @@
+{
+  "extends": [
+    "stylelint-config-wordpress/scss"
+  ],
+  "ignoreFiles": [
+	"**/*.js",
+	"**/*.css",
+	"**/*.php"
+  ],
+
+  "rules": {
+	"rule-empty-line-before": ["always", {"ignore": ["after-comment","inside-block"]}],
+	"no-eol-whitespace": [ true, { "ignore": ["empty-lines"]}],
+	"declaration-property-unit-whitelist" : {
+	  "/^animation/": ["s", "ms"],
+	  "line-height": ["px", "em", "rem"]
+	},
+	"max-line-length": [ 100 ],
+	"at-rule-no-unknown": null,
+	"scss/at-rule-no-unknown": true,
+	"at-rule-empty-line-before": null,
+  	"no-descending-specificity": null
+  }
+}

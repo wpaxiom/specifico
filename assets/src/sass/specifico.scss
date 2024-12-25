@@ -1,0 +1,60 @@
+.specifico {
+    &-striped-table {
+        width: 100%;
+        border-collapse: collapse;
+
+        th, td {
+            padding: 8px;
+            border: 1px solid black;
+        }
+
+        tbody tr:nth-child(odd) {
+            background-color: #f2f2f2;
+        }
+    }
+
+    &-bordered-table {
+        width: 100%;
+        border-collapse: collapse;
+        th, td {
+            padding: 8px;
+            border: 2px solid #ccc;
+        }
+    }
+
+    &-hoverable-table {
+        width: 100%;
+        border-collapse: collapse;
+        th, td {
+            padding: 8px;
+            border: 1px solid black;
+        }
+        tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+    }
+
+    &-condensed-table {
+        width: 100%;
+        border-collapse: collapse;
+        th, td {
+            padding: 4px;
+            border: 1px solid black;
+        }
+    }
+
+    &-colored-table {
+        width: 100%;
+        border-collapse: collapse;
+        thead th {
+            background-color: #4a90e2;
+            color: white;
+            padding: 8px;
+            border: 1px solid black;
+        }
+        tbody td, tbody th {
+            padding: 8px;
+            border: 1px solid black;
+        }
+    }
+}

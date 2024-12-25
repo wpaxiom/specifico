@@ -1,0 +1,39 @@
+{
+    "name": "wpaxiom/specifico",
+    "license": "gplv2",
+    "autoload": {
+        "psr-4": {
+            "WpAxiom\\Specifico\\": "includes/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Faisal Hossain Shuvo",
+            "email": "shuvo586@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require-dev": {
+        "phpstan/phpstan": "^0.12.94",
+        "phpstan/extension-installer": "^1.1",
+        "szepeviktor/phpstan-wordpress": "^0.7.7",
+        "php-stubs/woocommerce-stubs": "^5.5",
+        "php-stubs/wordpress-stubs": "^5.8",
+        "squizlabs/php_codesniffer": "^3.6",
+        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1",
+        "phpcompatibility/php-compatibility": "^9.3",
+        "phpcompatibility/phpcompatibility-wp": "^2.1",
+        "wp-coding-standards/wpcs": "^2.3",
+        "automattic/vipwpcs": "^2.3"
+    },
+    "scripts": {
+        "phpcs": "@php ./vendor/bin/phpcs --standard=phpcs.xml --colors --extensions=php .",
+        "phpcbf": "@php ./vendor/bin/phpcbf --standard=phpcs.xml --colors --extensions=php ."
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true
+        }
+    }
+}
