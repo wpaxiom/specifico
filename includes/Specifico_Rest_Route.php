@@ -562,17 +562,35 @@ class Specifico_Rest_Route {
 	}
 
 	public function get_product_option( $res ) {
+		$product_id = (int) $res['id'];
 
-		$data['id'] = $res['id'];
-		$data['spec'] = 'yes' === get_post_meta( $res['id'], '_specifico_spec', true ) ? 1 : 0 ;
-		$data['type'] = get_post_meta( $res['id'], '_specifico_type', true );
-		$data['table'] = get_post_meta( $res['id'], '_specifico_table', true );
+		$override = get_post_meta( $product_id, '_specifico_override', true );
+		$groups   = get_post_meta( $product_id, '_specifico_groups', true );
 
-		$groups = get_post_meta( $res['id'], '_specifico_groups', true );
+		$inherit_values = get_post_meta( $product_id, '_specifico_inherit_values', true );
 
-		if ( $groups ) {
-			$data['groups'] = $groups;
-		}
+		$data = [
+			'id'             => $product_id,
+			'spec'           => 'yes' === get_post_meta( $product_id, '_specifico_spec', true ) ? 1 : 0,
+			'override'       => 'custom' === $override ? 'custom' : '',
+			'groups'         => is_array( $groups ) ? $groups : [],
+			'inherit_values' => is_array( $inherit_values ) ? $inherit_values : [],
+		];
+
+		// Resolve what the mapping would show for this product, regardless of
+		// override mode. The metabox always shows the inherited preview so the
+		// merchant sees what they'd get if they unchecked Custom.
+		$match = Mapping_Resolver::resolve( $product_id );
+
+		$data['inherited'] = $match
+			? [
+				'table_id'    => $match['table_id'],
+				'table_name'  => $match['table_name'],
+				'match_type'  => $match['match_type'],
+				'match_value' => $match['match_value'],
+				'groups'      => Mapping_Resolver::get_table_groups( $match['table_id'] ),
+			]
+			: null;
 
 		return rest_ensure_response( $data );
 	}
@@ -605,125 +623,19 @@ class Specifico_Rest_Route {
 		return rest_ensure_response( 'Group deleted successfully' );
 	}
 
-	function get_specification_groups( $table_id ) {
-		$data         = [];
-		$table_groups = get_post_meta( $table_id, '_specifico_groups', true );
-
-		if ( $table_groups ) {
-			foreach ( $table_groups as $index => $group ) {
-				$attrs = get_post_meta( $group['value'],'_specifico_attr', true );
-				$attribute = [];
-
-				if ( $attrs ) {
-					foreach ( $attrs as $key => $attr ) {
-						$attribute[ $key ][0]['id'] = 1;
-						$attribute[ $key ][0]['value'] = $attr['attributeName'];
-						$attribute[ $key ][1]['id'] = 2;
-						$attribute[ $key ][1]['value'] = $attr['attributeValue'];
-					}
-				}
-
-				$data[ $index ]['id'] = $group['value'];
-				$data[ $index ]['title'] = $group['label'];
-				$data[ $index ]['inputGroups'] = $attribute;
-			}
-		}
-
-		return $data;
-	}
-
 	public function get_product_attribute( $res ) {
-
-		$data = $this->get_specification_groups( $res['id'] );
+		$data = Mapping_Resolver::get_table_groups( (int) $res['id'] );
 		return rest_ensure_response( $data );
 	}
 
 	public function get_product_default_attribute( $res ) {
-		$product_id = $res['id'];
-
-		if ( $product_id ) {
-			$mappings = get_option( '_specifico_mapping' );
-
-			if ( $mappings ) {
-				foreach ( $mappings as $mapping ) {
-
-					$type = $mapping['type']['value'];
-
-					foreach ( $mapping['values'] as $value ) {
-						if (
-							( 'product-id' === $type && $value['label'] == $product_id ) ||
-							( 'product-name' === $type && $value['value'] == $product_id )
-						) {
-							// Match found by ID or Name
-							$table_id = $mapping['category']['value'];
-						} elseif ( 'product-category' === $type ) {
-
-							// Check if the product belongs to the category
-							$category_id = $value['value'];
-							$args = array(
-								'post_type'      => 'product',
-								'posts_per_page' => -1, // Get all products
-								'tax_query'      => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
-									array(
-										'taxonomy' => 'product_cat',
-										'field'    => 'term_id',
-										'terms'    => $category_id,
-										'operator' => 'IN',
-									),
-								),
-							);
-
-							$products = get_posts( $args );
-
-							$products_in_category = [];
-
-							foreach ( $products as $product ) {
-								$products_in_category[] = $product->ID;
-							}
-
-							if ( in_array($product_id, $products_in_category) ) {
-								$table_id = $mapping['category']['value'];
-							}
-						} elseif ( 'product-tag' === $type ) {
-							// Check if the product belongs to the tag
-							$tag_id = $value['value'];
-
-							$args = array(
-								'post_type'      => 'product',
-								'posts_per_page' => -1, // Get all products
-								'tax_query'      => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
-									array(
-										'taxonomy' => 'product_tag',
-										'field'    => 'term_id',
-										'terms'    => $tag_id,
-										'operator' => 'IN',
-									),
-								),
-							);
-
-							$products = get_posts( $args );
-
-							$products_in_tag = [];
-
-							foreach ( $products as $product ) {
-								$products_in_tag[] = $product->ID;
-							}
-
-							if ( in_array($product_id, $products_in_tag) ) {
-								$table_id = $mapping['category']['value'];
-							}
-						}
-					}
-				}
-
-				$data = $this->get_specification_groups( $table_id );
-			} else {
-				$data = false;
-			}
-
-			return rest_ensure_response( $data );
-
+		$product_id = (int) $res['id'];
+		if ( ! $product_id ) {
+			return rest_ensure_response( [] );
 		}
+
+		$groups = Mapping_Resolver::resolve_groups( $product_id );
+		return rest_ensure_response( $groups );
 	}
 
 	/**

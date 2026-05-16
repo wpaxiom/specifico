@@ -35,7 +35,55 @@ final class Specifico {
 		add_action( 'plugins_loaded', [ $this, 'init_plugin' ] );
 		add_action( 'init', [ $this, 'table_post_type' ], 0 );
 		add_action( 'init', [ $this, 'group_post_type' ], 0 );
+		add_action( 'init', [ $this, 'maybe_migrate' ], 20 );
 
+	}
+
+	/**
+	 * One-shot meta migration from the 3-mode (default/table/custom) shape to
+	 * the 2-mode (inherit/custom) shape. Idempotent — gated by the
+	 * `_specifico_db_version` option.
+	 */
+	public function maybe_migrate() {
+		if ( (int) get_option( '_specifico_db_version', 0 ) >= 2 ) {
+			return;
+		}
+
+		$product_ids = get_posts( [
+			'post_type'      => 'product',
+			'posts_per_page' => -1,
+			'meta_key'       => '_specifico_spec',
+			'fields'         => 'ids',
+			'post_status'    => 'any',
+		] );
+
+		foreach ( $product_ids as $product_id ) {
+			$type = get_post_meta( $product_id, '_specifico_type', true );
+			$type_value = is_array( $type ) && isset( $type['value'] ) ? $type['value'] : $type;
+
+			if ( 'table' === $type_value ) {
+				// Seed per-product groups from the chosen table, then mark as custom.
+				$table = get_post_meta( $product_id, '_specifico_table', true );
+				$table_id = is_array( $table ) && isset( $table['value'] ) ? (int) $table['value'] : 0;
+				if ( $table_id ) {
+					$seed = Mapping_Resolver::get_table_groups( $table_id );
+					update_post_meta( $product_id, '_specifico_groups', $seed );
+				}
+				update_post_meta( $product_id, '_specifico_override', 'custom' );
+			} elseif ( 'custom' === $type_value ) {
+				// Existing custom groups already in _specifico_groups, just flip the flag.
+				update_post_meta( $product_id, '_specifico_override', 'custom' );
+			} else {
+				// 'default' (or unset) -> inherit. Drop any stale groups copy.
+				update_post_meta( $product_id, '_specifico_override', '' );
+				delete_post_meta( $product_id, '_specifico_groups' );
+			}
+
+			delete_post_meta( $product_id, '_specifico_type' );
+			delete_post_meta( $product_id, '_specifico_table' );
+		}
+
+		update_option( '_specifico_db_version', 2, true );
 	}
 
 	/**
