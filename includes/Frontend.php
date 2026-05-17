@@ -2,6 +2,7 @@
 
 namespace WpAxiom\Specifico;
 
+if ( ! defined( 'ABSPATH' ) ) exit;
 class Frontend {
 	/**
 	 * Frontend constructor.

@@ -33,9 +33,9 @@ class Mapping_Resolver {
 		}
 
 		foreach ( $mappings as $mapping ) {
-			$type     = $mapping['type']['value']     ?? null;
+			$type     = $mapping['type']['value'] ?? null;
 			$table_id = $mapping['category']['value'] ?? null;
-			$values   = $mapping['values']            ?? [];
+			$values   = $mapping['values'] ?? [];
 
 			if ( ! $type || ! $table_id || ! is_array( $values ) ) {
 				continue;
@@ -103,8 +103,14 @@ class Mapping_Resolver {
 			$input_groups = [];
 			if ( is_array( $attrs ) ) {
 				foreach ( $attrs as $key => $attr ) {
-					$input_groups[ $key ][0] = [ 'id' => 1, 'value' => $attr['attributeName']  ?? '' ];
-					$input_groups[ $key ][1] = [ 'id' => 2, 'value' => $attr['attributeValue'] ?? '' ];
+					$input_groups[ $key ][0] = [
+						'id'    => 1,
+						'value' => $attr['attributeName'] ?? '',
+					];
+					$input_groups[ $key ][1] = [
+						'id'    => 2,
+						'value' => $attr['attributeValue'] ?? '',
+					];
 				}
 			}
 

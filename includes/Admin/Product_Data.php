@@ -2,6 +2,8 @@
 
 namespace WpAxiom\Specifico\Admin;
 
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 class Product_Data {
 
 	function __construct() {
@@ -47,13 +49,13 @@ class Product_Data {
 		update_post_meta( $product_id, '_specifico_override', $override );
 
 		if ( 'custom' === $override && isset( $_POST['_specifico_groups'] ) && is_array( $_POST['_specifico_groups'] ) ) {
-			$groups = self::sanitize_groups( wp_unslash( $_POST['_specifico_groups'] ) );
+			$groups = self::sanitize_groups( map_deep( wp_unslash( $_POST['_specifico_groups'] ), 'sanitize_text_field' ) );
 			update_post_meta( $product_id, '_specifico_groups', $groups );
 			delete_post_meta( $product_id, '_specifico_inherit_values' );
 		} else {
 			delete_post_meta( $product_id, '_specifico_groups' );
 			if ( isset( $_POST['_specifico_inherit_values'] ) && is_array( $_POST['_specifico_inherit_values'] ) ) {
-				$inherit_values = self::sanitize_inherit_values( wp_unslash( $_POST['_specifico_inherit_values'] ) );
+				$inherit_values = self::sanitize_inherit_values( map_deep( wp_unslash( $_POST['_specifico_inherit_values'] ), 'sanitize_text_field' ) );
 				update_post_meta( $product_id, '_specifico_inherit_values', $inherit_values );
 			}
 		}

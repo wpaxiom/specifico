@@ -2,15 +2,15 @@
 Contributors: wpaxiom
 Tags: woocommerce, product specification, specifications table, Product Information, ecommerce
 Requires at least: 5.8
-Tested up to: 6.7
+Tested up to: 6.9
 WC requires at least: 6.3
-WC tested up to: 9.5
-Requires PHP: 7.0
+WC tested up to: 10.4
+Requires PHP: 7.4
 Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Specifico is a WordPress plugin for WooCommerce that displays product specification tables, enhancing the shopping experience by showcasing detailed product information in a structured manner.
+Display product specification tables on WooCommerce product pages with grouped attributes, category mapping, and per-product overrides.
 
 == Description ==
 Specifico is a powerful WordPress plugin designed to showcase product specifications for WooCommerce products. It allows you to display a structured specification table for each product, enhancing the user experience and providing detailed product information at a glance.
@@ -40,6 +40,32 @@ Yes, Specifico has been tested with WooCommerce up to latest version.
 6. Specification add/edit Modal
 
 == Changelog ==
+
+= 1.0.1 =
+* New: Per-product value overrides in "Inherit from mapping" mode — labels stay locked to the mapping while values are
+editable for each product.
+* New: Show/Hide toggle for inherited fields in the product metabox so the table stays collapsed by default.
+* New: "Start over" link in Customize mode to swap between starting blank or copying an existing table after a choice
+has been made.
+* Improve: Replaced the Add/Edit Specification modal with an inline panel matching the Groups screen for a consistent
+admin experience.
+* Improve: Cancel button on Add/Edit forms; Save is disabled until the title is filled.
+* Improve: Row action menu now has pencil/trash icons, closes on outside click, and auto-closes after picking an
+action.
+* Improve: Themed MultiSelect chips, dropdown options, and focus states to match the plugin palette; dropped the
+redundant clear-all X (per-chip X kept).
+* Improve: Pagination simplified to "1-10 of N" with chevron prev/next controls.
+* Improve: Mapping page rows now have placeholder hints, larger fields, and a properly sized delete button.
+* Improve: Semibold table headers and dashed separators between Add/Edit form sections.
+* Fix: Plugin styles no longer leak into the WordPress dashboard — buttons no longer briefly show an unexpected border
+on first load of unrelated admin pages.
+* Fix: Add/Edit form fields no longer carry the previously edited title when switching from Edit to Add.
+* Fix: Row action dropdown now closes after clicking Edit (no more lingering menu behind the form).
+* Fix: Dashed row separators on Mapping and Add Group screens render correctly.
+* Fix: Toggle switch knob now visually slides when toggled.
+* Dev: Upgraded @wordpress/scripts to v32.2 (clears 36 of 55 dependency alerts including the critical), dropped the
+unused `tailwind` and `react-modal` packages, scoped Tailwind utilities to a `.specifico-app` wrapper, and added `npm
+run make-zip` for release packaging
 
 = 1.0.0 =
 * Initial release.

@@ -298,7 +298,7 @@ class Specifico_Rest_Route {
 		$args = [
 			'post_type'   => 'specifico-table',
 			'numberposts' => -1,
-			'meta_key'    => '_specifico_status',
+			'meta_key'    => '_specifico_status', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Admin-only listing of specification tables.
 		];
 
 		$specs = get_posts( $args );

@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-05-17T03:20:59+00:00\n"
+"POT-Creation-Date: 2026-05-17T06:39:45+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: specifico\n"
@@ -44,7 +44,7 @@ msgid "Specifico"
 msgstr ""
 
 #: includes/Admin/Menu.php:21
-#: includes/Frontend/Tab.php:23
+#: includes/Frontend/Tab.php:25
 #: includes/Specifico.php:113
 #: includes/Specifico.php:114
 msgid "Specifications"
@@ -68,7 +68,7 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: includes/Admin/Product_Data.php:16
+#: includes/Admin/Product_Data.php:18
 msgid "Specification Settings"
 msgstr ""
 

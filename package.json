@@ -8,6 +8,7 @@
     "build": "wp-scripts build && npm run composer:build && npm run wp:i18n",
     "composer:build": "composer install --no-dev && composer dump-autoload -o",
     "wp:i18n": "wp i18n make-pot .",
+    "make-zip": "node scripts/make-zip.js",
     "start": "wp-scripts start",
     "tailwind": "npx tailwindcss -i ./assets/src/scss/utilities/base.css -o ./assets/dist/css/admin.css --watch"
   },
@@ -38,6 +39,7 @@
     "@wordpress/element": "^5.0.0",
     "@wordpress/i18n": "^4.23.0",
     "@wordpress/scripts": "^32.2.0",
+    "archiver": "^7.0.1",
     "autoprefixer": "^10.4.17",
     "axios": "^1.2.0",
     "browserslist": "^4.13.0",

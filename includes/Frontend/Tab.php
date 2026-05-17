@@ -4,6 +4,8 @@ namespace WpAxiom\Specifico\Frontend;
 
 use WpAxiom\Specifico\Mapping_Resolver;
 
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 class Tab {
 
 	function __construct() {

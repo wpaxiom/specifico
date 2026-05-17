@@ -52,7 +52,7 @@ final class Specifico {
 		$product_ids = get_posts( [
 			'post_type'      => 'product',
 			'posts_per_page' => -1,
-			'meta_key'       => '_specifico_spec',
+			'meta_key'       => '_specifico_spec', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- One-time migration, version-gated above.
 			'fields'         => 'ids',
 			'post_status'    => 'any',
 		] );

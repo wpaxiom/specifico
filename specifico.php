@@ -14,9 +14,9 @@
  *
  * Requires PHP: 7.4
  * Requires at least: 5.8
- * Tested up to: 6.7
+ * Tested up to: 6.9
  * WC requires at least: 6.3
- * WC tested up to: 9.5
+ * WC tested up to: 10.7
  *
  * @package 
  * @author WpAxiom <info@wpaxiom.com>
