@@ -6,10 +6,10 @@ const MappingRepeater = ({ metaFields, onAddField, onChange, onRemoveField, onCh
     return (
         <>
             {metaFields.map((field, index) => (
-                <div key={index} className="flex gap-2.5 relative before:content-'' before:w-full before:h-px before:bg-dash-border before:bg-repeat-x before:absolute before:bottom-0">
-                    <MultiSelect value={field.category} hasLabel={false} onChange={e => onChange(index, 'category', e)} options={spec}/>
-                    <MultiSelect value={field.type} hasLabel={false} onChange={e => onChangeType(index, 'type', e)} options={type}/>
-                    <MultiSelect isMulti value={field.values} hasLabel={false} onChange={e => onChange(index, 'values', e)} options={values} isDisabled={disabled}/>
+                <div key={index} className="flex gap-2.5 relative before:content-[''] before:w-full before:h-px before:bg-dash-border before:bg-repeat-x before:absolute before:bottom-0">
+                    <MultiSelect placeholder="Select specification" value={field.category} hasLabel={false} onChange={e => onChange(index, 'category', e)} options={spec}/>
+                    <MultiSelect placeholder="Select type" value={field.type} hasLabel={false} onChange={e => onChangeType(index, 'type', e)} options={type}/>
+                    <MultiSelect isMulti placeholder="Select values" value={field.values} hasLabel={false} onChange={e => onChange(index, 'values', e)} options={values} isDisabled={disabled}/>
                     <button onClick={() => onRemoveField(index)} className="p-[10px] max-h-[42px] self-center bg-[#FBFCFD] border border-[#E9E8FE] rounded">
                         <Trash />
                     </button>

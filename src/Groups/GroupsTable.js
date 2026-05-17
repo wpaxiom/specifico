@@ -98,8 +98,7 @@ const GroupsTable = () => {
     };
 
     const handleSaveAndClose = async () => {
-        // Logic to save the meta fields to the specific post
-        // Once saved, close the attribute section
+        if (!title.trim()) return;
         setShowAttributeSection(false);
 
         if ( isEditing ) {
@@ -108,6 +107,11 @@ const GroupsTable = () => {
             await createPost();
         }
         resetForm();
+    };
+
+    const handleCancel = () => {
+        resetForm();
+        setShowAttributeSection(false);
     };
 
     const table = useReactTable({
@@ -249,27 +253,32 @@ const GroupsTable = () => {
                             <p className="text-[#555555]">Here are your groups tables. You can edit or delete them.</p>
                         </div>
                     </div>
-                    <div className="flex-initial text-right">
+                    <div className="flex-initial text-right flex gap-2">
                         { showAttributeSection &&
-                            <button className="flex gap-1 items-center px-3.5 py-2.5 bg-[#6B66F7] rounded text-white" onClick={handleSaveAndClose}>
-                                { isEditing &&
-                                    <>
-                                        <Rotate />
-                                        Update Group
-                                    </>
-                                }
-                                { ! isEditing &&
-                                    <>
-                                        Save Group
-                                    </>
-                                }
-                            </button>
+                            <>
+                                <button type="button" onClick={handleCancel} className="px-3.5 py-2.5 bg-white border border-[#E9E8FE] rounded text-[#555555]">
+                                    Cancel
+                                </button>
+                                <button type="button" disabled={!title.trim()} className="flex gap-1 items-center px-3.5 py-2.5 bg-[#6B66F7] rounded text-white disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleSaveAndClose}>
+                                    { isEditing &&
+                                        <>
+                                            <Rotate />
+                                            Update Group
+                                        </>
+                                    }
+                                    { ! isEditing &&
+                                        <>
+                                            Save Group
+                                        </>
+                                    }
+                                </button>
+                            </>
                         }
 
                         { ! showAttributeSection &&
                             <button onClick={handleOpenAddPanel}
                                     className="flex gap-1 items-center px-3.5 py-2.5 bg-[#6B66F7] rounded text-white">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16"><path stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 3.333v9.334M3.333 8h9.334"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16"><path stroke="#fff" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 3.333v9.334M3.333 8h9.334"/></svg>
                                 Add Group
                             </button>
                         }

@@ -94,6 +94,13 @@ const Options = () => {
         }]);
     };
 
+    const startOver = (e) => {
+        if (e) e.preventDefault();
+        setAccordions([]);
+        setSeedTable(null);
+        setActiveAccordion(null);
+    };
+
     const chooseInherit = () => {
         setOverrideMode('');
     };
@@ -211,6 +218,7 @@ const Options = () => {
                                     seedTable={seedTable}
                                     onSeed={seedFromTable}
                                     onStartBlank={startBlank}
+                                    onStartOver={startOver}
                                     onToggle={toggleAccordion}
                                     onAdd={addAccordion}
                                     onRemove={removeAccordion}
@@ -250,7 +258,7 @@ const ModeCard = ({ selected, onClick, title, subtitle, children }) => (
                 "mt-1 w-4 h-4 rounded-full border-2 flex-shrink-0 " +
                 (selected ? "border-[#6B66F7]" : "border-[#C9C7FB]")
             }>
-                {selected && <div className="w-2 h-2 bg-[#6B66F7] rounded-full m-auto mt-[3px]" />}
+                {selected && <div className="w-2 h-2 bg-[#6B66F7] rounded-full m-auto mt-[2.5px]" />}
             </div>
             <div className="flex-1">
                 <div className="text-[15px] font-semibold text-[#333333]">{title}</div>
@@ -266,6 +274,8 @@ const ModeCard = ({ selected, onClick, title, subtitle, children }) => (
 );
 
 const InheritPreview = ({ inherited, inheritValues, onInheritValueChange }) => {
+    const [showFields, setShowFields] = useState(false);
+
     if (!inherited) {
         return (
             <div className="bg-white border border-[#E9E8FE] rounded p-3">
@@ -286,15 +296,28 @@ const InheritPreview = ({ inherited, inheritValues, onInheritValueChange }) => {
 
     return (
         <div className="bg-white border border-[#E9E8FE] rounded p-3">
-            <div className="text-[#333333]">
-                Will display: <strong>{inherited.table_name}</strong>
-            </div>
-            <div className="text-[#555555] mt-1 mb-3">
-                Matched via {matchLabel}{inherited.match_value ? <>: <em>{inherited.match_value}</em></> : null}
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <div className="text-[#333333]">
+                        Will display: <strong>{inherited.table_name}</strong>
+                    </div>
+                    <div className="text-[#555555] mt-1">
+                        Matched via {matchLabel}{inherited.match_value ? <>: <em>{inherited.match_value}</em></> : null}
+                    </div>
+                </div>
+                {previewGroups.length > 0 && (
+                    <button
+                        type="button"
+                        onClick={() => setShowFields(prev => !prev)}
+                        className="text-[#6B66F7] underline text-sm flex-shrink-0"
+                    >
+                        {showFields ? 'Hide fields' : 'Show fields'}
+                    </button>
+                )}
             </div>
 
-            {previewGroups.length > 0 && (
-                <div className="space-y-4">
+            {showFields && previewGroups.length > 0 && (
+                <div className="space-y-4 mt-4">
                     {previewGroups.map((g, gi) => (
                         <div key={gi}>
                             {g.title && (
@@ -326,7 +349,7 @@ const InheritPreview = ({ inherited, inheritValues, onInheritValueChange }) => {
 
 const CustomEditor = ({
     accordions, activeAccordion, specOptions, seedTable,
-    onSeed, onStartBlank, onToggle, onAdd, onRemove, onAddRow, onRemoveRow,
+    onSeed, onStartBlank, onStartOver, onToggle, onAdd, onRemove, onAddRow, onRemoveRow,
     onTitleChange, onValueChange,
 }) => {
     if (accordions.length === 0) {
@@ -355,6 +378,18 @@ const CustomEditor = ({
 
     return (
         <div className="space-y-3">
+            <div className="flex items-center justify-between">
+                <span className="text-[#555555] text-sm">
+                    {seedTable ? <>Copied from <strong>{seedTable.label}</strong></> : 'Custom table'}
+                </span>
+                <button
+                    type="button"
+                    onClick={onStartOver}
+                    className="text-[#6B66F7] underline text-sm"
+                >
+                    Start over
+                </button>
+            </div>
             {accordions.map((accordion) => (
                 <div key={accordion.id} className="bg-white border border-[#E9E8FE] rounded">
                     <div

@@ -3,6 +3,10 @@ module.exports = {
     content: [
         "./src/**/*.{html,js}",
     ],
+    important: '.specifico-app',
+    corePlugins: {
+        preflight: false,
+    },
     theme: {
         extend: {
             content: {

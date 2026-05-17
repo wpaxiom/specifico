@@ -20,7 +20,7 @@ class Product_Data {
 	 * Mount point for the React app.
 	 */
 	public function specifico_options_callback() {
-		?><div id="specifico-product-options"></div><?php
+		?><div id="specifico-product-options" class="specifico-app"></div><?php
 	}
 
 	/**

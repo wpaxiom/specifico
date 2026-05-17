@@ -29,7 +29,7 @@ class Menu {
 	 */
 	public function plugin_page() {
 		?>
-		<div id="specifico-admin"></div>
+		<div id="specifico-admin" class="specifico-app"></div>
 		<?php
 	}
 
@@ -38,7 +38,7 @@ class Menu {
 	 */
 	public function group_page() {
 		?>
-		<div id="specifico-groups"></div>
+		<div id="specifico-groups" class="specifico-app"></div>
 		<?php
 	}
 
@@ -47,7 +47,7 @@ class Menu {
 	 */
 	public function specification_mapping() {
 		?>
-		<div id="specifico-mapping"></div>
+		<div id="specifico-mapping" class="specifico-app"></div>
 		<?php
 	}
 
@@ -56,7 +56,7 @@ class Menu {
 	 */
 	public function specification_settings() {
 		?>
-		<div id="specifico-settings"></div>
+		<div id="specifico-settings" class="specifico-app"></div>
 		<?php
 	}
 

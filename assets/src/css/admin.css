@@ -1,3 +1,109 @@
-@tailwind base;
+/*
+ * Scoped Tailwind reset. Preflight is disabled globally (tailwind.config.js)
+ * so WP admin's own button/heading styles aren't touched. These rules give
+ * us just enough of preflight's behaviour inside `.specifico-app` for the
+ * utility classes to compose predictably.
+ */
+.specifico-app,
+.specifico-app *,
+.specifico-app *::before,
+.specifico-app *::after {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: #e5e7eb;
+    /* Tailwind transform / filter / ring CSS variable defaults.
+       Preflight is disabled globally, so these have to be re-declared
+       here or `translate-x-*`, `rotate-*`, `scale-*`, etc. produce
+       invalid `transform: translate(var(--tw-translate-x), )` strings. */
+    --tw-translate-x: 0;
+    --tw-translate-y: 0;
+    --tw-rotate: 0;
+    --tw-skew-x: 0;
+    --tw-skew-y: 0;
+    --tw-scale-x: 1;
+    --tw-scale-y: 1;
+    --tw-blur: ;
+    --tw-brightness: ;
+    --tw-contrast: ;
+    --tw-grayscale: ;
+    --tw-hue-rotate: ;
+    --tw-invert: ;
+    --tw-saturate: ;
+    --tw-sepia: ;
+    --tw-drop-shadow: ;
+    --tw-backdrop-blur: ;
+    --tw-backdrop-brightness: ;
+    --tw-backdrop-contrast: ;
+    --tw-backdrop-grayscale: ;
+    --tw-backdrop-hue-rotate: ;
+    --tw-backdrop-invert: ;
+    --tw-backdrop-opacity: ;
+    --tw-backdrop-saturate: ;
+    --tw-backdrop-sepia: ;
+    --tw-ring-offset-width: 0px;
+    --tw-ring-offset-color: #fff;
+    --tw-ring-color: rgb(59 130 246 / 0.5);
+    --tw-ring-offset-shadow: 0 0 #0000;
+    --tw-ring-shadow: 0 0 #0000;
+    --tw-shadow: 0 0 #0000;
+    --tw-shadow-colored: 0 0 #0000;
+}
+
+.specifico-app h1,
+.specifico-app h2,
+.specifico-app h3,
+.specifico-app h4,
+.specifico-app h5,
+.specifico-app h6,
+.specifico-app p {
+    margin: 0;
+    font-size: inherit;
+    font-weight: inherit;
+}
+
+.specifico-app button,
+.specifico-app [type='button'],
+.specifico-app [type='reset'],
+.specifico-app [type='submit'] {
+    -webkit-appearance: button;
+    background-color: transparent;
+    background-image: none;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    line-height: inherit;
+    cursor: pointer;
+}
+
+.specifico-app button:disabled,
+.specifico-app [type='button']:disabled,
+.specifico-app [type='reset']:disabled,
+.specifico-app [type='submit']:disabled {
+    cursor: not-allowed;
+}
+
+.specifico-app input,
+.specifico-app select,
+.specifico-app textarea {
+    font: inherit;
+    color: inherit;
+    margin: 0;
+}
+
+.specifico-app img,
+.specifico-app svg,
+.specifico-app video,
+.specifico-app canvas {
+    display: block;
+    vertical-align: middle;
+}
+
+.specifico-app img,
+.specifico-app video {
+    max-width: 100%;
+    height: auto;
+}
+
 @tailwind components;
 @tailwind utilities;
