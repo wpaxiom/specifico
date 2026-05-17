@@ -26,6 +26,8 @@ import TableFooter from "../components/TableFooter";
 import TableHeader from "../components/TableHeader";
 import Add from "../components/Icons/Add";
 import Rotate from "../components/Icons/Rotate";
+import Edit from "../components/Icons/Edit";
+import Delete from "../components/Icons/Delete";
 import SpecLoader from "../components/Loader/SpecLoader";
 import EmptySection from "../components/EmptySection";
 import tableFooter from "../components/TableFooter";
@@ -116,6 +118,7 @@ const SpecTable = ( {postId} ) => {
     const [ status, setStatus ] = useState( true );
     const [ options, setOptions ] = useState([]);
     const [ selectedGroup, setSelectedGroup ] = useState([]);
+    const [ editingId, setEditingId ] = useState(null);
 
     const [ isLoading, setIsLoading ] = useState( false );
 
@@ -203,6 +206,7 @@ const SpecTable = ( {postId} ) => {
     };
 
     const handleFetchSpec = async (postID) => {
+        setEditingId(postID);
         openModal( 'modal2' );
         try {
             const response = await Api.get(`/specifico/v1/specification/${postID}`);
@@ -343,18 +347,12 @@ const SpecTable = ( {postId} ) => {
                                                 )}
                                                 <div className="flex-initial w-[19%] text-[#555555] text-right">
                                                     <DropdownButton>
-                                                        <button onClick={() => handleFetchSpec(row.id)} className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-[#F5F5FE] hover:text-gray-900">Edit</button>
-                                                        <SpecModal isOpen={modals.modal2} onRequestClose={() => closeModal('modal2')}>
-                                                            <TextInput type="text" placeholder="Table Name" id="post-title" required value={title} onChange={(e) => {setTitle(e.target.value)}}/>
-                                                            <Switch placeholder="Status" checked={status} onChange={() => setStatus((prev) => !prev)}/>
-                                                            <MultiSelect id="edit-group-selector" isMulti placeholder="Groups" onChange={(Groups) => { setSelectedGroup(Groups)}} options={options} value={selectedGroup}/>
-                                                            <div className="h-px w-full bg-[#F2F1FE] my-[30px]"></div>
-                                                            <Button className="flex gap-1 items-center px-3.5 py-2.5 bg-[#6B66F7] rounded text-white" onClick={() => updatePost(row.id)}>
-                                                                <Rotate />
-                                                                Update Specification
-                                                            </Button>
-                                                        </SpecModal>
-                                                        <button type="button" className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-[#F5F5FE] hover:text-gray-900" onClick={() => deletePost(row.id)}>
+                                                        <button onClick={() => handleFetchSpec(row.id)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#555555] hover:bg-[#F5F5FE] hover:text-[#333333] transition-colors">
+                                                            <Edit />
+                                                            Edit
+                                                        </button>
+                                                        <button type="button" className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#E74C3C] hover:bg-[#FFF2F2] transition-colors" onClick={() => deletePost(row.id)}>
+                                                            <Delete />
                                                             Delete
                                                         </button>
                                                     </DropdownButton>
@@ -376,6 +374,17 @@ const SpecTable = ( {postId} ) => {
                     <EmptySection title="Specification not found" desc="Sorry ! No Specification table found. You can add specification by clicking add specification button" />
                 }
             </div>
+
+            <SpecModal isOpen={modals.modal2} onRequestClose={() => closeModal('modal2')} label="Edit Specification">
+                <TextInput type="text" placeholder="Table Name" id="post-title-edit" required value={title} onChange={(e) => {setTitle(e.target.value)}}/>
+                <Switch placeholder="Status" checked={status} onChange={() => setStatus((prev) => !prev)}/>
+                <MultiSelect id="edit-group-selector" isMulti placeholder="Groups" onChange={(Groups) => { setSelectedGroup(Groups)}} options={options} value={selectedGroup}/>
+                <div className="h-px w-full bg-[#F2F1FE] my-[30px]"></div>
+                <Button className="flex gap-1 items-center px-3.5 py-2.5 bg-[#6B66F7] rounded text-white" onClick={() => updatePost(editingId)}>
+                    <Rotate />
+                    Update Specification
+                </Button>
+            </SpecModal>
         </div>
     );
 };

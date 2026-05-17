@@ -10,7 +10,7 @@ const MappingRepeater = ({ metaFields, onAddField, onChange, onRemoveField, onCh
                     <MultiSelect value={field.category} hasLabel={false} onChange={e => onChange(index, 'category', e)} options={spec}/>
                     <MultiSelect value={field.type} hasLabel={false} onChange={e => onChangeType(index, 'type', e)} options={type}/>
                     <MultiSelect isMulti value={field.values} hasLabel={false} onChange={e => onChange(index, 'values', e)} options={values} isDisabled={disabled}/>
-                    <button onClick={() => onRemoveField(index)} className="p-1 w-8 h-8 bg-[#FBFCFD] border border-[#E9E8FE] rounded my-4">
+                    <button onClick={() => onRemoveField(index)} className="p-[10px] max-h-[42px] self-center bg-[#FBFCFD] border border-[#E9E8FE] rounded">
                         <Trash />
                     </button>
                 </div>

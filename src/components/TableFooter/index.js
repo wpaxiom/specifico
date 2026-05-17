@@ -17,7 +17,7 @@ const TableFooter = ({ table, deletePosts }) => {
                     </select>
                 </div>
                 <div className="flex">
-                    <button className="px-3 py-[12px] bg-white rounded border border-[#E9E8FE] text-[#555555] leading-none disabled:opacity-50 disabled:cursor-not-allowed" type="button" onClick={() => deletePosts(table.getSelectedRowModel().rows.map(row => row.id))} disabled={! ( table.getIsAllRowsSelected() || table.getIsSomeRowsSelected() )}>
+                    <button className="px-3 py-[7px] bg-white rounded border border-[#E9E8FE] text-[#555555] leading-none disabled:opacity-50 disabled:cursor-not-allowed" type="button" onClick={() => deletePosts(table.getSelectedRowModel().rows.map(row => row.id))} disabled={! ( table.getIsAllRowsSelected() || table.getIsSomeRowsSelected() )}>
                         Bulk Delete
                     </button>
                 </div>

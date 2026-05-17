@@ -1,14 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const DropdownButton = ( {children} ) => {
     const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef(null);
 
-    const toggleDropdown = () => {
-        setIsOpen(!isOpen);
+    const toggleDropdown = (e) => {
+        e.stopPropagation();
+        setIsOpen(prev => !prev);
     };
 
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleClickOutside = (e) => {
+            if (containerRef.current && !containerRef.current.contains(e.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
+
     return (
-        <div className="relative inline-block text-left">
+        <div ref={containerRef} className="relative inline-block text-left">
             <button
                 type="button"
                 className=""
@@ -31,7 +44,8 @@ const DropdownButton = ( {children} ) => {
             {/* Dropdown panel */}
             {isOpen && (
                 <div
-                    className="absolute right-0 z-10 w-56 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
+                    onClick={() => setIsOpen(false)}
+                    className="absolute right-0 z-10 w-40 mt-1 origin-top-right bg-white rounded border border-[#E9E8FE] shadow-[0_8px_24px_rgba(26,26,26,0.08)] overflow-hidden text-left">
                     {children}
                 </div>
             )}

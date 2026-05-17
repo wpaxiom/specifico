@@ -22,6 +22,8 @@ import TableHeader from "../components/TableHeader";
 import TableFooter from "../components/TableFooter";
 import Check from "../components/Icons/Check";
 import Rotate from "../components/Icons/Rotate";
+import Edit from "../components/Icons/Edit";
+import Delete from "../components/Icons/Delete";
 import SpecLoader from "../components/Loader/SpecLoader";
 import GroupLoader from "../components/Loader/GroupLoader";
 import EmptySection from "../components/EmptySection";
@@ -292,10 +294,14 @@ const GroupsTable = () => {
                                                 )}
                                                 <div className="flex-initial w-[24%] text-[#555555] text-right">
                                                     <DropdownButton>
-                                                        <button onClick={() => fetchGroup(row.id)} className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-[#F5F5FE] hover:text-gray-900">Edit</button>
+                                                        <button onClick={() => fetchGroup(row.id)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#555555] hover:bg-[#F5F5FE] hover:text-[#333333] transition-colors">
+                                                            <Edit />
+                                                            Edit
+                                                        </button>
                                                         <button type="button"
-                                                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-[#F5F5FE] hover:text-gray-900"
+                                                                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#E74C3C] hover:bg-[#FFF2F2] transition-colors"
                                                                 onClick={() => deletePost(row.id)}>
+                                                            <Delete />
                                                             Delete
                                                         </button>
                                                     </DropdownButton>
