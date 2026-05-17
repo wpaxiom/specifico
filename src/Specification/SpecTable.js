@@ -139,6 +139,17 @@ const SpecTable = ( {postId} ) => {
         fetchGroupsSelect();
     }, [postId]);
 
+    const resetForm = () => {
+        setTitle('');
+        setStatus(true);
+        setSelectedGroup([]);
+    };
+
+    const handleOpenAddModal = () => {
+        resetForm();
+        openModal('modal1');
+    };
+
     const fetchData = async () => {
         try {
             setIsLoading( true );
@@ -183,6 +194,7 @@ const SpecTable = ( {postId} ) => {
             );
             setTableCounts( parseInt( specificoAdminSettings.tables ) + 1 );
             await fetchData(); // Fetch posts again to update the list
+            resetForm();
         } catch (error) {
             console.error('Error creating specification:', error);
         } finally {
@@ -299,7 +311,7 @@ const SpecTable = ( {postId} ) => {
                     </div>
                 </div>
                 <div className="flex-initial text-right">
-                    <button onClick={() => openModal('modal1')} className="flex gap-1 items-center px-3.5 py-2.5 bg-[#6B66F7] rounded text-white">
+                    <button onClick={handleOpenAddModal} className="flex gap-1 items-center px-3.5 py-2.5 bg-[#6B66F7] rounded text-white">
                         <Add />
                         Add Specification
                     </button>

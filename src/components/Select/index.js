@@ -14,7 +14,7 @@ const Select = ({id, placeholder, hasLabel = true, tooltext, toolplace, classNam
                         }
                     </>
                 }
-                <select id={id} name={id} {...rest} className={ hasLabel ? "w-80% !bg-[#fbfcfd] !border !border-[#F0F0FE] !rounded !py-2 !px-5 !leading-none !max-w-full box-border appearance-none !bg-caret !bg-[length:8px_4px] !bg-[right_12px_top_50%] !text-[#555555]" + ' ' + className : "w-full !bg-[#fbfcfd] !border !border-[#F0F0FE] !rounded !py-2 !px-5 !leading-none !max-w-full box-border appearance-none !bg-caret !bg-[length:8px_4px] !bg-[right_12px_top_50%] !text-[#555555]" + ' ' + className} >
+                <select id={id} name={id} {...rest} className={ hasLabel ? "w-80% !bg-[#fbfcfd] !border !border-[#F0F0FE] focus:!border-[#C9C7FB] focus:!outline-none focus:!shadow-none focus:!ring-0 !rounded !py-2 !px-5 !leading-none !max-w-full box-border appearance-none !bg-caret !bg-[length:8px_4px] !bg-[right_12px_top_50%] !text-[#555555]" + ' ' + className : "w-full !bg-[#fbfcfd] !border !border-[#F0F0FE] focus:!border-[#C9C7FB] focus:!outline-none focus:!shadow-none focus:!ring-0 !rounded !py-2 !px-5 !leading-none !max-w-full box-border appearance-none !bg-caret !bg-[length:8px_4px] !bg-[right_12px_top_50%] !text-[#555555]" + ' ' + className} >
                     {items.map((item) => (
                         <option value={item.value}>{item.label}</option>
                     ))}

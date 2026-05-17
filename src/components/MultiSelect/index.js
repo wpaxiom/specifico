@@ -19,26 +19,30 @@ const MultiSelect = ( {id, placeholder, hasLabel = true, tooltext, toolplace, ..
 
     const customClasses = {
         container: () => hasLabel ? "w-[80%]" : "w-full",
-        control: () => "w-full !bg-[#fbfcfd] !border !border-[#F0F0FE] !rounded !py-0 !px-0 !leading-none !text-[#555555] !min-h-[30px]",
-        // placeholder: () => placeholderStyles,
-         input: () => "!m-0 !p-0",
-         valueContainer: () => "!py-0 !px-1.5",
-        // singleValue: () => singleValueStyles,
-        // multiValue: () => multiValueStyles,
-        multiValueLabel: () => '!py-0.5 !pr-0 !pl-1 !bg-[#F5F5FE]',
-        multiValueRemove: () => '!px-0.5 !bg-[#F5F5FE]',
-        // clearIndicator: () => clearIndicatorStyles,
+        control: ({ isFocused }) =>
+            "w-full !bg-[#fbfcfd] !rounded !py-0 !px-0 !leading-none !text-[#555555] !min-h-[36px] !shadow-none !border " +
+            (isFocused ? "!border-[#C9C7FB]" : "!border-[#F0F0FE]"),
+        input: () => "!m-0 !p-0 [&_input]:!shadow-none [&_input:focus]:!shadow-none [&_input]:!ring-0",
+        valueContainer: () => "!py-1 !px-2 !gap-1",
+        placeholder: () => "!text-[#999999] !text-sm !m-0",
+        singleValue: () => "!text-[#555555]",
+        multiValue: () => "!bg-[#F5F5FE] !rounded !m-0 !overflow-hidden",
+        multiValueLabel: () => "!py-1.5 !pr-1 !pl-3 !text-[#555555] !text-sm",
+        multiValueRemove: () => "!pl-1 !pr-2 !text-[#999999] hover:!bg-[#E9E8FE] hover:!text-[#555555]",
         indicatorSeparator: () => "!hidden",
-        // dropdownIndicator: () => dropdownIndicatorStyles,
-        // menu: () => menuStyles,
-        // groupHeading: () => groupHeadingStyles,
-        // option: ({ isFocused, isSelected }) =>
-        //     clsx(
-        //         isFocused && optionStyles.focus,
-        //         isSelected && optionStyles.selected,
-        //         optionStyles.base,
-        //     ),
-        // noOptionsMessage: () => noOptionsMessageStyles,
+        indicatorsContainer: () => "!py-0",
+        clearIndicator: () => "!p-1 !text-[#555555] hover:!text-[#333333] cursor-pointer",
+        dropdownIndicator: () => "!p-1 !text-[#555555]",
+        menu: () => "!rounded !border !border-[#E9E8FE] !shadow-lg !mt-1 !overflow-hidden",
+        menuList: () => "!py-1",
+        option: ({ isFocused, isSelected }) =>
+            "!px-3 !py-2 !text-sm !cursor-pointer " +
+            (isSelected
+                ? "!bg-[#6B66F7] !text-white"
+                : isFocused
+                    ? "!bg-[#F5F5FE] !text-[#555555]"
+                    : "!bg-white !text-[#555555]"),
+        noOptionsMessage: () => "!text-[#999999] !text-sm !py-2",
     }
 
     return (
@@ -57,6 +61,7 @@ const MultiSelect = ( {id, placeholder, hasLabel = true, tooltext, toolplace, ..
                     id={id}
                     classNames={customClasses}
                     closeMenuOnSelect={true}
+                    isClearable={false}
                     components={{animatedComponents, DropdownIndicator}}
                     {...rest}/>
             </div>

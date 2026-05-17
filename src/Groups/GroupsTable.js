@@ -84,6 +84,17 @@ const GroupsTable = () => {
 
     const [ isLoading, setIsLoading ] = useState( false );
 
+    const resetForm = () => {
+        setTitle('');
+        setAttributes([{ attributeName: '', attributeValue: '', attributeType: 'text', defaultValue: '' }]);
+        setIsEditing('');
+    };
+
+    const handleOpenAddPanel = () => {
+        resetForm();
+        setShowAttributeSection(true);
+    };
+
     const handleSaveAndClose = async () => {
         // Logic to save the meta fields to the specific post
         // Once saved, close the attribute section
@@ -91,10 +102,10 @@ const GroupsTable = () => {
 
         if ( isEditing ) {
             await updatePost( isEditing );
-            setIsEditing( '' );
         } else {
             await createPost();
         }
+        resetForm();
     };
 
     const table = useReactTable({
@@ -254,7 +265,7 @@ const GroupsTable = () => {
                         }
 
                         { ! showAttributeSection &&
-                            <button onClick={() => setShowAttributeSection(true)}
+                            <button onClick={handleOpenAddPanel}
                                     className="flex gap-1 items-center px-3.5 py-2.5 bg-[#6B66F7] rounded text-white">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16"><path stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 3.333v9.334M3.333 8h9.334"/></svg>
                                 Add Group
