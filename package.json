@@ -9,6 +9,8 @@
     "composer:build": "composer install --no-dev && composer dump-autoload -o",
     "wp:i18n": "wp i18n make-pot .",
     "make-zip": "node scripts/make-zip.js",
+    "sync": "node scripts/sync-to-public.js",
+    "sync:apply": "node scripts/sync-to-public.js --apply",
     "start": "wp-scripts start",
     "tailwind": "npx tailwindcss -i ./assets/src/scss/utilities/base.css -o ./assets/dist/css/admin.css --watch"
   },

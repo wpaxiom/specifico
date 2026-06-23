@@ -4,7 +4,7 @@ Tags: woocommerce, product specification, specifications table, Product Informat
 Requires at least: 5.8
 Tested up to: 6.9
 WC requires at least: 6.3
-WC tested up to: 10.4
+WC tested up to: 10.7
 Requires PHP: 7.4
 Stable tag: 1.0.1
 License: GPLv2 or later
@@ -38,6 +38,18 @@ Yes, Specifico has been tested with WooCommerce up to latest version.
 4. Specification Mapping Page
 5. Specification Settings Page
 6. Specification add/edit Modal
+
+== Source Code ==
+
+Specifico's admin interface is built with React and compiled with webpack via @wordpress/scripts. The minified bundles shipped in `build/` and `assets/dist/` are generated from the human-readable source code in `src/` (React) and `assets/src/` (SCSS/JS). The complete, unminified source is publicly available at:
+
+https://github.com/wpaxiom/specifico
+
+To build the plugin from source:
+
+1. `composer install` — install PHP dependencies.
+2. `npm install` — install the JavaScript build dependencies.
+3. `npm run build` — compile `src/` and `assets/src/` into `build/` and `assets/dist/`.
 
 == Changelog ==
 

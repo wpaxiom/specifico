@@ -66,11 +66,11 @@ class Menu {
 		wp_enqueue_style( 'specifico-nunito-font', 'https://fonts.googleapis.com/css2?family=Nunito:wght@400;500&display=swap', array(), SPECIFICO_VERSION );
 
 		if ( 'toplevel_page_specifico-options' === $current_screen->id ) {
-			wp_enqueue_script( 'admin-ui', SPECIFICO_URL . '/build/specification.js', array(
+			wp_enqueue_script( 'specifico-admin-ui', SPECIFICO_URL . '/build/specification.js', array(
 				'jquery',
 				'wp-element',
 			), SPECIFICO_VERSION, true );
-			wp_localize_script( 'admin-ui', 'specificoAdminSettings', array(
+			wp_localize_script( 'specifico-admin-ui', 'specificoAdminSettings', array(
 				'url'     => esc_url_raw( rest_url() ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
 				'version' => SPECIFICO_ASSETS,
@@ -79,8 +79,8 @@ class Menu {
 		}
 
 		if ( 'specifico_page_specifico-groups' === $current_screen->id ) {
-			wp_enqueue_script( 'groups-ui', SPECIFICO_URL . '/build/groups.js', array( 'jquery', 'wp-element' ), SPECIFICO_VERSION, true );
-			wp_localize_script( 'groups-ui', 'specificoAdminSettings', array(
+			wp_enqueue_script( 'specifico-groups-ui', SPECIFICO_URL . '/build/groups.js', array( 'jquery', 'wp-element' ), SPECIFICO_VERSION, true );
+			wp_localize_script( 'specifico-groups-ui', 'specificoAdminSettings', array(
 				'url'     => esc_url_raw( rest_url() ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
 				'version' => SPECIFICO_ASSETS,
@@ -89,8 +89,8 @@ class Menu {
 		}
 
 		if ( 'specifico_page_specifico-mapping' === $current_screen->id ) {
-			wp_enqueue_script( 'attribute-mapping-ui', SPECIFICO_URL . '/build/mapping.js', array( 'jquery', 'wp-element' ), SPECIFICO_VERSION, true );
-			wp_localize_script( 'attribute-mapping-ui', 'specificoAdminSettings', array(
+			wp_enqueue_script( 'specifico-mapping-ui', SPECIFICO_URL . '/build/mapping.js', array( 'jquery', 'wp-element' ), SPECIFICO_VERSION, true );
+			wp_localize_script( 'specifico-mapping-ui', 'specificoAdminSettings', array(
 				'url'     => esc_url_raw( rest_url() ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
 				'version' => SPECIFICO_ASSETS,
@@ -99,8 +99,8 @@ class Menu {
 		}
 
 		if ( 'specifico_page_specifico-settings' === $current_screen->id ) {
-			wp_enqueue_script( 'attribute-settings-ui', SPECIFICO_URL . '/build/settings.js', array( 'jquery', 'wp-element' ), SPECIFICO_VERSION, true );
-			wp_localize_script( 'attribute-settings-ui', 'specificoAdminSettings', array(
+			wp_enqueue_script( 'specifico-settings-ui', SPECIFICO_URL . '/build/settings.js', array( 'jquery', 'wp-element' ), SPECIFICO_VERSION, true );
+			wp_localize_script( 'specifico-settings-ui', 'specificoAdminSettings', array(
 				'url'     => esc_url_raw( rest_url() ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
 				'version' => SPECIFICO_ASSETS,
@@ -108,8 +108,8 @@ class Menu {
 		}
 
 		if ( 'post' === $current_screen->base && 'product' === $current_screen->post_type ) {
-			wp_enqueue_script( 'product-options', SPECIFICO_URL . '/build/productOptions.js', array( 'jquery', 'wp-element' ), SPECIFICO_VERSION, true );
-			wp_localize_script( 'product-options', 'specificoAdminSettings', array(
+			wp_enqueue_script( 'specifico-product-options', SPECIFICO_URL . '/build/productOptions.js', array( 'jquery', 'wp-element' ), SPECIFICO_VERSION, true );
+			wp_localize_script( 'specifico-product-options', 'specificoAdminSettings', array(
 				'url'     => esc_url_raw( rest_url() ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
 				'version' => SPECIFICO_ASSETS,

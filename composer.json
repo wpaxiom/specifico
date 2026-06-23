@@ -34,6 +34,7 @@
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true,
             "phpstan/extension-installer": true
-        }
+        },
+        "autoloader-suffix": "SpecificoPlugin"
     }
 }

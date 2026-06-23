@@ -9,6 +9,7 @@
 .eslintrc
 .git
 .gitignore
+.releasekeep
 .github
 .gitlab-ci.yml
 .travis.yml
@@ -38,6 +39,13 @@ phpcs.xml.dist
 phpstan.neon
 .phpstan.neon.dist
 README.md
+RELEASE-NOTES-*.md
+ROADMAP.md
+REVIEW.md
+CLAUDE.md
+_dev
+.release
+scripts/sync-to-public.js
 webpack.config.js
 wp-cli.local.yml
 yarn.lock
@@ -48,8 +56,6 @@ node_modules
 includes/Admin/app/public
 includes/Admin/app/src
 gulpfile.js
-src
-!/assets/src/
 *.sql
 *.tar.gz
 *.zip

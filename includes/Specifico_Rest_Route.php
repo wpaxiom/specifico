@@ -34,7 +34,7 @@ class Specifico_Rest_Route {
 		register_rest_route( 'specifico/v1', '/specification/select', [
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'get_selected_specification' ],
-			'permission_callback' => [ $this, 'get_permission_settings' ],
+			'permission_callback' => [ $this, 'can_manage_products' ],
 		] );
 
 		register_rest_route( 'specifico/v1', '/specification', [
@@ -137,19 +137,19 @@ class Specifico_Rest_Route {
 		register_rest_route( 'specifico/v1', '/option/(?P<id>\d+)', [
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'get_product_option' ],
-			'permission_callback' => [ $this, 'get_permission_settings' ],
+			'permission_callback' => [ $this, 'can_edit_product_meta' ],
 		] );
 
 		register_rest_route( 'specifico/v1', '/option/group/(?P<id>\d+)', [
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'get_product_option_group' ],
-			'permission_callback' => [ $this, 'get_permission_settings' ],
+			'permission_callback' => [ $this, 'can_edit_product_meta' ],
 		] );
 
 		register_rest_route( 'specifico/v1', '/option/group/(?P<id>\d+)', [
 			'methods'             => 'DELETE',
 			'callback'            => [ $this, 'delete_product_option_group' ],
-			'permission_callback' => [ $this, 'get_permission_settings' ],
+			'permission_callback' => [ $this, 'can_edit_product_meta' ],
 		] );
 
 		/**
@@ -159,13 +159,13 @@ class Specifico_Rest_Route {
 		register_rest_route( 'specifico/v1', '/attribute/(?P<id>\d+)', [
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'get_product_attribute' ],
-			'permission_callback' => [ $this, 'get_permission_settings' ],
+			'permission_callback' => [ $this, 'can_manage_products' ],
 		] );
 
 		register_rest_route( 'specifico/v1', '/attribute/default/(?P<id>\d+)', [
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'get_product_default_attribute' ],
-			'permission_callback' => [ $this, 'get_permission_settings' ],
+			'permission_callback' => [ $this, 'can_edit_product_meta' ],
 		] );
 
 		/**
@@ -184,31 +184,56 @@ class Specifico_Rest_Route {
 	}
 
 	/**
-	 * Save Route permission Settings
-	 */
-	public function save_permission_settings(): bool {
-		return current_user_can( 'publish_posts' );
-	}
-
-	/**
-	 * Get Route permission Settings
+	 * Permission check for reading Specifico data.
+	 *
+	 * All REST routes serve the authenticated React admin (the storefront table
+	 * is server-rendered in Frontend\Tab, not via REST), and several endpoints
+	 * expose internal plugin configuration, so reads require admin access too.
 	 */
 	public function get_permission_settings(): bool {
-		return true;
+		return current_user_can( 'manage_options' );
 	}
 
 	/**
-	 * Update Route permission Settings
+	 * Permission check for creating Specifico data.
 	 */
-	public function update_permission_settings():bool {
-		return current_user_can( 'publish_posts' );
+	public function save_permission_settings(): bool {
+		return current_user_can( 'manage_options' );
 	}
 
 	/**
-	 * Delete Route permission Settings
+	 * Permission check for updating Specifico data.
 	 */
-	public function delete_permission_settings():bool {
-		return current_user_can( 'delete_posts' );
+	public function update_permission_settings(): bool {
+		return current_user_can( 'manage_options' );
+	}
+
+	/**
+	 * Permission check for deleting Specifico data.
+	 */
+	public function delete_permission_settings(): bool {
+		return current_user_can( 'manage_options' );
+	}
+
+	/**
+	 * Permission check for product-scoped routes whose {id} is a product.
+	 *
+	 * These power the "Specification Settings" metabox on the WooCommerce
+	 * product editor, so the check is object-specific: the user must be able to
+	 * edit that exact product. This intentionally allows Shop Managers (who can
+	 * edit products) without requiring full `manage_options` access.
+	 */
+	public function can_edit_product_meta( $request ): bool {
+		return current_user_can( 'edit_post', (int) $request['id'] );
+	}
+
+	/**
+	 * Permission check for product-area routes that read shared specification
+	 * data (the {id}, when present, is a spec table, not a product). Available
+	 * to any role that can edit products, e.g. the metabox and Mapping screen.
+	 */
+	public function can_manage_products(): bool {
+		return current_user_can( 'edit_products' );
 	}
 
 	/**
@@ -406,6 +431,14 @@ class Specifico_Rest_Route {
 			$index++;
 		}
 
+		return rest_ensure_response( $data_arr ) ;
+	}
+
+	/**
+	 * Recount published group posts and store the total in the
+	 * `_specifico_groups` option used by the admin menu.
+	 */
+	private function refresh_groups_count(): void {
 		$posts = get_posts(
 			[
 				'numberposts' => -1,
@@ -414,9 +447,7 @@ class Specifico_Rest_Route {
 			]
 		);
 
-		update_option( '_specifico_groups', count($posts), true );
-
-		return rest_ensure_response( $data_arr ) ;
+		update_option( '_specifico_groups', count( $posts ), true );
 	}
 
 	/**
@@ -458,6 +489,8 @@ class Specifico_Rest_Route {
 
 		$post_id = wp_insert_post( $args, true );
 
+		$this->refresh_groups_count();
+
 		return rest_ensure_response( $post_id );
 	}
 
@@ -491,6 +524,9 @@ class Specifico_Rest_Route {
 	 */
 	public function delete_group( $res ) {
 		$deleted_post = wp_delete_post( $res['id'], true);
+
+		$this->refresh_groups_count();
+
 		return rest_ensure_response( $deleted_post ) ;
 	}
 
