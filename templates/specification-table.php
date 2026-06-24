@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$product_id = isset( $product_id ) ? (int) $product_id : 0;
+$specifico_product_id = isset( $product_id ) ? (int) $product_id : 0;
 
 /**
  * Filters the CSS classes applied to the specification table.
@@ -32,8 +32,8 @@ $product_id = isset( $product_id ) ? (int) $product_id : 0;
  * @param array  $classes Table CSS classes.
  * @param string $style   Table style slug.
  */
-$classes = apply_filters( 'specifico_table_classes', [ 'specifico-table', 'specifico-' . $style ], $style );
-$classes = array_filter( array_map( 'sanitize_html_class', (array) $classes ) );
+$specifico_classes = apply_filters( 'specifico_table_classes', [ 'specifico-table', 'specifico-' . $style ], $style );
+$specifico_classes = array_filter( array_map( 'sanitize_html_class', (array) $specifico_classes ) );
 
 /**
  * Fires before the specification table.
@@ -41,30 +41,30 @@ $classes = array_filter( array_map( 'sanitize_html_class', (array) $classes ) );
  * @param array $groups     Render-ready groups.
  * @param int   $product_id Product ID.
  */
-do_action( 'specifico_before_table', $groups, $product_id );
+do_action( 'specifico_before_table', $groups, $specifico_product_id );
 ?>
-<table class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>" style="width: 100%">
-	<?php foreach ( $groups as $group ) :
-		if ( empty( $group ) ) {
+<table class="<?php echo esc_attr( implode( ' ', $specifico_classes ) ); ?>" style="width: 100%">
+	<?php foreach ( $groups as $specifico_group ) :
+		if ( empty( $specifico_group ) ) {
 			continue;
 		}
 		?>
-		<?php if ( $show_sub && ! empty( $group['title'] ) ) : ?>
+		<?php if ( $show_sub && ! empty( $specifico_group['title'] ) ) : ?>
 			<thead>
 				<tr>
-					<th colspan="2"><?php echo esc_html( $group['title'] ); ?></th>
+					<th colspan="2"><?php echo esc_html( $specifico_group['title'] ); ?></th>
 				</tr>
 			</thead>
 		<?php endif; ?>
-		<?php if ( ! empty( $group['inputGroups'] ) ) : ?>
+		<?php if ( ! empty( $specifico_group['inputGroups'] ) ) : ?>
 			<tbody>
-				<?php foreach ( $group['inputGroups'] as $row ) :
-					if ( empty( $row[0] ) && empty( $row[1] ) ) {
+				<?php foreach ( $specifico_group['inputGroups'] as $specifico_row ) :
+					if ( empty( $specifico_row[0] ) && empty( $specifico_row[1] ) ) {
 						continue;
 					}
 
-					$label = $row[0]['value'] ?? '';
-					$value = $row[1]['value'] ?? '';
+					$specifico_label = $specifico_row[0]['value'] ?? '';
+					$specifico_value = $specifico_row[1]['value'] ?? '';
 
 					/**
 					 * Filters a specification row's label.
@@ -75,7 +75,7 @@ do_action( 'specifico_before_table', $groups, $product_id );
 					 * @param array  $row        Row data ( [ label, value ] ).
 					 * @param int    $product_id Product ID.
 					 */
-					$label = apply_filters( 'specifico_row_label', $label, $row, $product_id );
+					$specifico_label = apply_filters( 'specifico_row_label', $specifico_label, $specifico_row, $specifico_product_id );
 
 					/**
 					 * Filters a specification row's value.
@@ -87,11 +87,11 @@ do_action( 'specifico_before_table', $groups, $product_id );
 					 * @param array  $row        Row data ( [ label, value ] ).
 					 * @param int    $product_id Product ID.
 					 */
-					$value = apply_filters( 'specifico_row_value', $value, $row, $product_id );
+					$specifico_value = apply_filters( 'specifico_row_value', $specifico_value, $specifico_row, $specifico_product_id );
 					?>
 					<tr>
-						<td><?php echo wp_kses_post( $label ); ?></td>
-						<td><?php echo wp_kses_post( $value ); ?></td>
+						<td><?php echo wp_kses_post( $specifico_label ); ?></td>
+						<td><?php echo wp_kses_post( $specifico_value ); ?></td>
 					</tr>
 				<?php endforeach; ?>
 			</tbody>
@@ -105,4 +105,4 @@ do_action( 'specifico_before_table', $groups, $product_id );
  * @param array $groups     Render-ready groups.
  * @param int   $product_id Product ID.
  */
-do_action( 'specifico_after_table', $groups, $product_id );
+do_action( 'specifico_after_table', $groups, $specifico_product_id );
