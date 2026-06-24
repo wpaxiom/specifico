@@ -14,7 +14,7 @@ const TextInput = ({id, placeholder, hasLabel = true, tooltext, toolplace, class
                         }
                     </>
                 }
-                <input id={id} name={id} {...rest} placeholder={placeholder} className= { hasLabel ? "w-[80%] !bg-[#fbfcfd] !border !border-[#F0F0FE] !rounded !py-2 !px-5 !leading-none !text-[#555555]" : "w-full !bg-[#fbfcfd] !border !border-[#F0F0FE] !rounded !py-2 !px-5 !leading-none !text-[#555555]" } />
+                <input id={id} name={id} {...rest} placeholder={placeholder} className= { hasLabel ? "w-[80%] specifico-field-control !bg-[#fbfcfd] !border !border-[#F0F0FE] focus:!border-[#C9C7FB] focus:!outline-none focus:!shadow-none focus:!ring-0 !rounded !py-2 !px-5 !leading-none box-border !text-[#555555]" : "w-full specifico-field-control !bg-[#fbfcfd] !border !border-[#F0F0FE] focus:!border-[#C9C7FB] focus:!outline-none focus:!shadow-none focus:!ring-0 !rounded !py-2 !px-5 !leading-none box-border !text-[#555555]" } />
             </div>
         </div>
     );

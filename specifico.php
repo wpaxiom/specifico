@@ -3,7 +3,7 @@
  * Plugin Name:       Specifico – Product Specification for WooCommerce
  * Plugin URI:        https://wpaxiom.com/plugins/specifico
  * Description:       Specifico is a powerful WordPress plugin designed exclusively for showcase WooCommerce product specification table.
- * Version:           1.0.1
+ * Version:           1.0.2
  * Author:            WPaxiom
  * Author URI:        https://wpaxiom.com
  * License:           GPL-2.0+
@@ -27,7 +27,7 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 if ( ! defined( 'SPECIFICO_VERSION' ) ) {
-	define( 'SPECIFICO_VERSION', '1.0.1' );
+	define( 'SPECIFICO_VERSION', '1.0.2' );
 }
 
 if ( ! defined( 'SPECIFICO_FILE' ) ) {

@@ -20,14 +20,14 @@ const MultiSelect = ( {id, placeholder, hasLabel = true, tooltext, toolplace, ..
     const customClasses = {
         container: () => hasLabel ? "w-[80%]" : "w-full",
         control: ({ isFocused }) =>
-            "w-full !bg-[#fbfcfd] !rounded !py-0 !px-0 !leading-none !text-[#555555] !min-h-[36px] !shadow-none !border " +
+            "specifico-field-control w-full !bg-[#fbfcfd] !rounded !py-0 !px-0 !leading-none !text-[#555555] !min-h-[36px] !shadow-none !border " +
             (isFocused ? "!border-[#C9C7FB]" : "!border-[#F0F0FE]"),
         input: () => "!m-0 !p-0 [&_input]:!shadow-none [&_input:focus]:!shadow-none [&_input]:!ring-0",
         valueContainer: () => "!py-1 !px-2 !gap-1",
         placeholder: () => "!text-[#999999] !text-sm !m-0",
         singleValue: () => "!text-[#555555]",
         multiValue: () => "!bg-[#F5F5FE] !rounded !m-0 !overflow-hidden",
-        multiValueLabel: () => "!py-1.5 !pr-1 !pl-3 !text-[#555555] !text-sm",
+        multiValueLabel: () => "!p-[3px] !text-[#555555] !text-sm",
         multiValueRemove: () => "!pl-1 !pr-2 !text-[#999999] hover:!bg-[#E9E8FE] hover:!text-[#555555]",
         indicatorSeparator: () => "!hidden",
         indicatorsContainer: () => "!py-0",

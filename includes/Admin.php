@@ -28,6 +28,23 @@ class Admin {
 		new Product_Data();
 
 		add_action('admin_enqueue_scripts', [ $this, 'admin_assets' ]);
+		add_filter( 'plugin_row_meta', [ $this, 'plugin_row_meta' ], 10, 2 );
+	}
+
+	/**
+	 * Add a Documentation link to the plugin's row meta on the Plugins screen
+	 * (the version / author-uri line).
+	 *
+	 * @param string[] $links Existing row meta links.
+	 * @param string   $file  Plugin file the row meta is for.
+	 * @return string[]
+	 */
+	public function plugin_row_meta( $links, $file ) {
+		if ( plugin_basename( SPECIFICO_FILE ) === $file ) {
+			$links[] = '<a href="' . esc_url( 'https://wpaxiom.com/docs/specifico' ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Documentation', 'specifico' ) . '</a>';
+		}
+
+		return $links;
 	}
 
 	/**

@@ -687,6 +687,17 @@ class Specifico_Rest_Route {
 	public function save_settings( $res ) {
 
 		$data = $res->get_json_params();
+
+		if ( is_array( $data ) ) {
+			if ( isset( $data['tab_title'] ) ) {
+				$data['tab_title'] = sanitize_text_field( $data['tab_title'] );
+			}
+			if ( isset( $data['wc_additional_info'] ) ) {
+				$allowed                    = [ 'keep', 'remove', 'remove_if_specs' ];
+				$data['wc_additional_info'] = in_array( $data['wc_additional_info'], $allowed, true ) ? $data['wc_additional_info'] : 'keep';
+			}
+		}
+
 		update_option('_specifico_settings', $data);
 		return rest_ensure_response( 'settings updated successfully' );
 	}

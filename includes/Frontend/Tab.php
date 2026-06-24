@@ -2,8 +2,6 @@
 
 namespace WpAxiom\Specifico\Frontend;
 
-use WpAxiom\Specifico\Mapping_Resolver;
-
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 class Tab {
@@ -19,13 +17,45 @@ class Tab {
 	function specification_tab( $tabs ) {
 		global $product;
 
-		$enabled = get_post_meta( $product->get_id(), '_specifico_spec', true );
-		if ( 'yes' === $enabled ) {
+		$product_id = $product->get_id();
+		$enabled    = 'yes' === get_post_meta( $product_id, '_specifico_spec', true );
+		$settings   = get_option( '_specifico_settings' );
+
+		/**
+		 * Filters whether the Specifications table is shown for a product.
+		 *
+		 * @param bool $enabled    Whether the table is enabled (per-product meta).
+		 * @param int  $product_id Product ID.
+		 */
+		$show = (bool) apply_filters( 'specifico_show_table', $enabled, $product_id );
+
+		if ( $show ) {
+			$default_title = is_array( $settings ) && ! empty( $settings['tab_title'] )
+				? $settings['tab_title']
+				: __( 'Specifications', 'specifico' );
+
+			/**
+			 * Filters the Specifications tab title.
+			 *
+			 * @param string      $title   Tab title.
+			 * @param \WC_Product $product Product object.
+			 */
+			$title = apply_filters( 'specifico_tab_title', $default_title, $product );
+
 			$tabs['specification'] = [
-				'title'    => __( 'Specifications', 'specifico' ),
+				'title'    => $title,
 				'priority' => 10,
 				'callback' => [ $this, 'specification_tab_content' ],
 			];
+		}
+
+		// Optionally remove WooCommerce's default "Additional information" tab.
+		$wc_mode = is_array( $settings ) && ! empty( $settings['wc_additional_info'] )
+			? $settings['wc_additional_info']
+			: 'keep';
+
+		if ( 'remove' === $wc_mode || ( 'remove_if_specs' === $wc_mode && $show ) ) {
+			unset( $tabs['additional_information'] );
 		}
 
 		return $tabs;
@@ -36,72 +66,12 @@ class Tab {
 	}
 
 	/**
-	 * Render the specification table.
+	 * Render the specification table for the current product.
 	 *
-	 * Source of truth:
-	 *   _specifico_override === 'custom'  -> render _specifico_groups
-	 *   otherwise                         -> resolve via mapping rules
+	 * Delegates to the shared Renderer so the tab and the [specifico] shortcode
+	 * resolve data identically and fire the same hooks.
 	 */
 	function specification_tab_content() {
-		$product_id = get_the_ID();
-		$override   = get_post_meta( $product_id, '_specifico_override', true );
-
-		if ( 'custom' === $override ) {
-			$groups = get_post_meta( $product_id, '_specifico_groups', true );
-		} else {
-			$groups         = Mapping_Resolver::resolve_groups( $product_id );
-			$inherit_values = get_post_meta( $product_id, '_specifico_inherit_values', true );
-			if ( is_array( $inherit_values ) && is_array( $groups ) ) {
-				foreach ( $inherit_values as $gi => $rows ) {
-					if ( ! is_array( $rows ) ) {
-						continue;
-					}
-					foreach ( $rows as $ri => $value ) {
-						if ( isset( $groups[ $gi ]['inputGroups'][ $ri ][1] ) ) {
-							$groups[ $gi ]['inputGroups'][ $ri ][1]['value'] = $value;
-						}
-					}
-				}
-			}
-		}
-
-		if ( ! is_array( $groups ) || empty( $groups ) ) {
-			return;
-		}
-
-		$settings = get_option( '_specifico_settings' );
-		$style    = is_array( $settings ) && isset( $settings['styles']['value'] ) ? $settings['styles']['value'] : '';
-		$show_sub = is_array( $settings ) && ! empty( $settings['enable_sub_heading'] );
-		?>
-		<table class="specifico-table specifico-<?php echo esc_attr( $style ); ?>" style="width: 100%">
-			<?php foreach ( $groups as $group ) :
-				if ( empty( $group ) ) {
-					continue;
-				}
-				?>
-				<?php if ( $show_sub && ! empty( $group['title'] ) ) : ?>
-					<thead>
-						<tr>
-							<th colspan="2"><?php echo esc_html( $group['title'] ); ?></th>
-						</tr>
-					</thead>
-				<?php endif; ?>
-				<?php if ( ! empty( $group['inputGroups'] ) ) : ?>
-					<tbody>
-						<?php foreach ( $group['inputGroups'] as $row ) :
-							if ( empty( $row[0] ) && empty( $row[1] ) ) {
-								continue;
-							}
-							?>
-							<tr>
-								<td><?php echo esc_html( $row[0]['value'] ?? '' ); ?></td>
-								<td><?php echo esc_html( $row[1]['value'] ?? '' ); ?></td>
-							</tr>
-						<?php endforeach; ?>
-					</tbody>
-				<?php endif; ?>
-			<?php endforeach; ?>
-		</table>
-		<?php
+		Renderer::render( get_the_ID() );
 	}
 }

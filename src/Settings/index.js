@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import Api from "../Utilites/Api";
 import Logo from "../components/Icons/Logo";
 import Switch from "../components/Switch";
-import MultiSelect from "../components/MultiSelect";
+import TextInput from "../components/TextInput";
+import Select from "../components/Select";
 import Form from "../components/Form";
 import SettingsLoader from "../components/Loader/SettingsLoader";
 
@@ -16,6 +17,8 @@ const Settings = () => {
 
     const [ enableSubHeading, setEnableSubHeading] = useState( true );
     const [ styles, setStyles ] = useState({ value: 'style-1', label: 'Style 1' } );
+    const [ tabTitle, setTabTitle ] = useState( '' );
+    const [ wcAdditionalInfo, setWcAdditionalInfo ] = useState( 'keep' );
 
     const styleOptions = [
         { value: 'striped-table', label: 'Striped Table' },
@@ -23,6 +26,12 @@ const Settings = () => {
         { value: 'hoverable-table', label: 'Hoverable Table' },
         { value: 'condensed-table', label: 'Condensed Table' },
         { value: 'colored-table', label: 'Colored Table' }
+    ];
+
+    const wcTabOptions = [
+        { value: 'keep', label: 'Keep it' },
+        { value: 'remove', label: 'Always remove' },
+        { value: 'remove_if_specs', label: 'Remove when product has specifications' }
     ];
     const handleSubmit = ( e ) => {
         e.preventDefault();
@@ -33,6 +42,8 @@ const Settings = () => {
         Api.post( '/specifico/v1/settings', {
             enable_sub_heading: enableSubHeading,
             styles: styles,
+            tab_title: tabTitle,
+            wc_additional_info: wcAdditionalInfo,
         }).then( ( res ) => {
             setLoader( 'Save Setting' );
             setBtnClass( '' );
@@ -50,6 +61,8 @@ const Settings = () => {
 
                 setEnableSubHeading( res.data.enable_sub_heading )
                 setStyles( res.data.styles );
+                setTabTitle( res.data.tab_title || '' );
+                setWcAdditionalInfo( res.data.wc_additional_info || 'keep' );
             }).then( ( res ) => {
                 setIsLoading( false );
             } );
@@ -80,13 +93,19 @@ const Settings = () => {
                         </div>
                             { ! isLoading &&
                                 <div className="px-5 pb-5">
-                                    <div className="relative before:content-'' before:w-full before:h-px before:bg-dash-border before:bg-repeat-x before:absolute before:bottom-0">
+                                    <div className="relative before:content-[''] before:w-full before:h-px before:bg-dash-border before:bg-repeat-x before:absolute before:bottom-0">
                                         <Switch id="_specifico_settings[enable_sub_heading]" name="_specifico_settings[enable_sub_heading]" placeholder="Enable Group Heading" checked={enableSubHeading} onChange={ () => setEnableSubHeading((prev) => !prev) }/>
                                     </div>
-                                    <div className="relative before:content-'' before:w-full before:h-px before:bg-dash-border before:bg-repeat-x before:absolute before:bottom-0">
-                                        <MultiSelect id="_specifico_settings[default_styles]" name="_specifico_settings[default_styles]" value={styles} onChange={ (e) => setStyles( e )} options={styleOptions} placeholder="Specification Styles"/>
+                                    <div className="relative before:content-[''] before:w-full before:h-px before:bg-dash-border before:bg-repeat-x before:absolute before:bottom-0">
+                                        <Select id="_specifico_settings[default_styles]" value={ styles?.value || '' } onChange={ (e) => { const opt = styleOptions.find( ( o ) => o.value === e.target.value ); setStyles( opt || { value: e.target.value, label: e.target.value } ); } } items={styleOptions} placeholder="Specification Styles"/>
                                     </div>
-                                    <button type="submit" className={ "flex gap-1 items-center px-3.5 py-2.5 bg-[#6B66F7] rounded text-white mt-5 " + btnClass } disabled={ !!btnClass }>
+                                    <div className="relative before:content-[''] before:w-full before:h-px before:bg-dash-border before:bg-repeat-x before:absolute before:bottom-0">
+                                        <TextInput id="_specifico_settings[tab_title]" value={tabTitle} onChange={ (e) => setTabTitle( e.target.value )} placeholder="Specifications Tab Title"/>
+                                    </div>
+                                    <div className="relative before:content-[''] before:w-full before:h-px before:bg-dash-border before:bg-repeat-x before:absolute before:bottom-0">
+                                        <Select id="_specifico_settings[wc_additional_info]" value={wcAdditionalInfo} onChange={ (e) => setWcAdditionalInfo( e.target.value )} items={wcTabOptions} placeholder="Additional Information Tab"/>
+                                    </div>
+                                    <button type="submit" className={ "flex gap-1 items-center px-3.5 py-2 bg-[#6B66F7] rounded text-white mt-5 " + btnClass } disabled={ !!btnClass }>
                                         <span>{loader}</span>
                                     </button>
                                 </div>

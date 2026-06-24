@@ -107,3 +107,54 @@
 
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Uniform field-control sizing across ALL Specifico admin apps.
+ * `.specifico-field-control` is on TextInput, the native Select, and the
+ * react-select control. Scoped to `.specifico-app` so it never leaks into the
+ * WordPress dashboard.
+ */
+
+/* Native input + select: always single-line — lock to 36px, center the text. */
+.specifico-app input.specifico-field-control,
+.specifico-app select.specifico-field-control {
+    height: 36px !important;
+    min-height: 36px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: 34px !important;
+}
+
+/*
+ * react-select control is a div. Use min-height so it sits at 36px when empty
+ * or single-line, but can still grow when multiple chips wrap to new rows.
+ */
+.specifico-app div.specifico-field-control {
+    min-height: 36px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/*
+ * react-select value container: one explicit padding rule (top/right/bottom/left).
+ * Chips are kept short in the component, so the 3px vertical stays within the
+ * 36px control while giving selected options breathing room. The indicators
+ * (caret) container already has no vertical padding via the component's py-0.
+ */
+.specifico-app div.specifico-field-control > div:first-child {
+    padding: 3px !important;
+}
+
+/*
+ * react-select renders its own bare <input> (no marker), so WP admin's global
+ * input styling (padding / min-height / line-height) inflates the control past
+ * 36px. Neutralize it.
+ */
+.specifico-app div.specifico-field-control input {
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    box-shadow: none !important;
+}

@@ -285,10 +285,10 @@ const SpecTable = () => {
                 <div className="flex-initial text-right flex gap-2">
                     { showForm &&
                         <>
-                            <button type="button" onClick={handleCancel} className="px-3.5 py-2.5 bg-white border border-[#E9E8FE] rounded text-[#555555]">
+                            <button type="button" onClick={handleCancel} className="px-3.5 py-2 bg-white border border-[#E9E8FE] rounded text-[#555555]">
                                 Cancel
                             </button>
-                            <button type="button" disabled={!title.trim()} className="flex gap-1 items-center px-3.5 py-2.5 bg-[#6B66F7] rounded text-white disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleSaveAndClose}>
+                            <button type="button" disabled={!title.trim()} className="flex gap-1 items-center px-3.5 py-2 bg-[#6B66F7] rounded text-white disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleSaveAndClose}>
                                 { editingId ?
                                     <>
                                         <Rotate />
@@ -305,7 +305,7 @@ const SpecTable = () => {
                     }
 
                     { ! showForm &&
-                        <button onClick={handleOpenAddPanel} className="flex gap-1 items-center px-3.5 py-2.5 bg-[#6B66F7] rounded text-white">
+                        <button onClick={handleOpenAddPanel} className="flex gap-1 items-center px-3.5 py-2 bg-[#6B66F7] rounded text-white">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16"><path stroke="#fff" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 3.333v9.334M3.333 8h9.334"/></svg>
                             Add Specification
                         </button>
@@ -324,7 +324,7 @@ const SpecTable = () => {
                                         {
                                             table.getRowModel().rows.length > 0 &&
                                             table.getRowModel().rows.map(row =>
-                                                <div className="flex px-5 py-4 gap-5 border-t border-[#F2F1FE] items-center" key={row.id}>
+                                                <div className="flex px-5 py-4 gap-5 items-center relative before:content-[''] before:w-full before:h-px before:bg-dash-border before:bg-repeat-x before:absolute before:bottom-0" key={row.id}>
                                                     {row.getVisibleCells().map(cell =>
                                                         <div className={cell.id.includes('checkbox') ? 'flex-initial w-[5%] max-w-3.5 text-[#555555]' : 'flex-initial w-[19%] text-[#555555]'} key={cell.id}> {flexRender(cell.column.columnDef.cell, cell.getContext())}</div>
                                                     )}

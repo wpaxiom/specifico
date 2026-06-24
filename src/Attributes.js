@@ -16,19 +16,16 @@ const Attributes = () => {
 
     const [ spec, setSpec ] = useState();
     const [ type, setType ] = useState();
-    const [ valueOptions, setValueOptions ] = useState([]);
-
-    //const [ productId, setProductId ] = useState();
+    // Value options cached per type value, e.g. { 'product-category': [...] }.
+    const [ optionsByType, setOptionsByType ] = useState({});
 
     const [ isLoading, setIsLoading ] = useState( false );
-    const [ disabled, setDisabled ] = useState( true );
 
     // Fetch posts on component mount
     useEffect(() => {
         fetchData();
         fetchSpec();
         fetchType();
-        fetchPostID();
     }, []);
 
     const fetchType = () => {
@@ -67,12 +64,42 @@ const Attributes = () => {
         }
     };
 
+    // Fetch (and cache) the selectable values for a given mapping type.
+    const fetchOptionsForType = async ( typeValue ) => {
+        if ( ! typeValue ) {
+            return;
+        }
+        try {
+            let options = [];
+            if ( typeValue === 'product-id' ) {
+                const response = await Api.get('/wp/v2/product?_fields=id');
+                options = response.data.map( ( item ) => ({ label: item.id, value: item.id }) );
+            } else if ( typeValue === 'product-name' ) {
+                const response = await Api.get('/wp/v2/product?_fields=id,title');
+                options = response.data.map( ( item ) => ({ label: item.title.rendered, value: item.id }) );
+            } else if ( typeValue === 'product-category' ) {
+                const response = await Api.get('/specifico/v1/categories');
+                options = response.data || [];
+            } else if ( typeValue === 'product-tag' ) {
+                const response = await Api.get('/specifico/v1/tags');
+                options = response.data || [];
+            }
+            setOptionsByType( ( prev ) => ({ ...prev, [ typeValue ]: options }) );
+        } catch ( error ) {
+            console.error( 'Error fetching values for type:', typeValue, error );
+        }
+    };
+
     const fetchData = async () => {
         try {
             setIsLoading( true );
             const response = await Api.get('/specifico/v1/mapping');
             if ( response.data ) {
                 setAttributes(response.data);
+                // Preload value options for every type already used in saved rows,
+                // so existing mappings are immediately editable (not locked).
+                const usedTypes = [ ...new Set( response.data.map( ( row ) => row?.type?.value ).filter( Boolean ) ) ];
+                usedTypes.forEach( ( t ) => fetchOptionsForType( t ) );
             }
         } catch (error) {
             console.error('Error fetching groups:', error);
@@ -102,71 +129,12 @@ const Attributes = () => {
     const handleTypeChange = async (index, field, value) => {
         const updatedFields = [...attributes];
         updatedFields[index][field] = value;
+        // Changing the type invalidates any previously selected values.
+        updatedFields[index].values = [];
         setAttributes(updatedFields);
 
-
-        // Example: Update valueOptions based on the selected type
-        if (value.value === 'product-id') {
-            try {
-                const response = await Api.get('/wp/v2/product?_fields=id');
-                const transformedResponse = response.data.map(item => ({
-                    // Change the keys as needed
-                    label: item.id,
-                    value: item.id,
-                }));
-                setValueOptions(transformedResponse);
-                setDisabled( false );
-            } catch (error) {
-                console.error('Error fetching products:', error);
-            }
-        } else if (value.value === 'product-name') {
-            try {
-                const response = await Api.get('/wp/v2/product?_fields=id,title');
-                const transformedResponse = response.data.map(item => ({
-                    // Change the keys as needed
-                    label: item.title.rendered,
-                    value: item.id,
-                }));
-                setValueOptions(transformedResponse);
-                setDisabled( false );
-            } catch (error) {
-                console.error('Error fetching products:', error);
-                setDisabled( true )
-            }
-        } else if (value.value === 'product-category') {
-            try {
-                const response = await Api.get('/specifico/v1/categories');
-                setValueOptions(response.data);
-                setDisabled( false );
-            } catch (error) {
-                console.error('Error fetching product categories:', error);
-                setDisabled( true )
-            }
-        }  else if (value.value === 'product-tag') {
-            try {
-                const response = await Api.get('/specifico/v1/tags');
-                setValueOptions(response.data);
-                setDisabled( false );
-            } catch (error) {
-                console.error('Error fetching product tags:', error);
-                setDisabled( true )
-            }
-        }
+        fetchOptionsForType( value?.value );
     };
-
-    const fetchPostID = async() => {
-        try {
-            const response = await Api.get('/wp/v2/product?_fields=id,title');
-            const transformedResponse = response.data.map(item => ({
-                // Change the keys as needed
-                label: item.id,
-                value: item.title.rendered,
-            }));
-            setValueOptions(transformedResponse);
-        } catch (error) {
-            console.error('Error fetching products:', error);
-        }
-    }
 
     const handleChange = (index, field, value) => {
         const updatedFields = [...attributes];
@@ -192,7 +160,7 @@ const Attributes = () => {
                         </div>
                     </div>
                     <div className="flex-initial text-right">
-                        <button className="flex gap-1 items-center px-3.5 py-2.5 bg-[#6B66F7] rounded text-white" onClick={() => updateData()}>
+                        <button className="flex gap-1 items-center px-3.5 py-2 bg-[#6B66F7] rounded text-white" onClick={() => updateData()}>
                             Save Mapping
                         </button>
                     </div>
@@ -215,9 +183,7 @@ const Attributes = () => {
                             onChangeType={handleTypeChange}
                             spec={spec}
                             type={type}
-                            values={valueOptions}
-                            loading={isLoading}
-                            disabled={disabled}
+                            optionsByType={optionsByType}
                         />
                         }
                         { isLoading &&

@@ -73,6 +73,48 @@ class Mapping_Resolver {
 	}
 
 	/**
+	 * Resolve the final render-ready groups for a product, honouring the
+	 * per-product override model.
+	 *
+	 *   _specifico_override === 'custom' -> the product's own _specifico_groups
+	 *   otherwise                        -> mapping result, with any per-product
+	 *                                       _specifico_inherit_values merged in
+	 *
+	 * This is the single source of truth for "what specs does this product
+	 * show" and is shared by the product tab and the [specifico] shortcode.
+	 *
+	 * @param int $product_id WooCommerce product post ID.
+	 * @return array
+	 */
+	public static function resolve_product_groups( $product_id ) {
+		$product_id = (int) $product_id;
+		$override   = get_post_meta( $product_id, '_specifico_override', true );
+
+		if ( 'custom' === $override ) {
+			$groups = get_post_meta( $product_id, '_specifico_groups', true );
+			return is_array( $groups ) ? $groups : [];
+		}
+
+		$groups         = self::resolve_groups( $product_id );
+		$inherit_values = get_post_meta( $product_id, '_specifico_inherit_values', true );
+
+		if ( is_array( $inherit_values ) && is_array( $groups ) ) {
+			foreach ( $inherit_values as $gi => $rows ) {
+				if ( ! is_array( $rows ) ) {
+					continue;
+				}
+				foreach ( $rows as $ri => $value ) {
+					if ( isset( $groups[ $gi ]['inputGroups'][ $ri ][1] ) ) {
+						$groups[ $gi ]['inputGroups'][ $ri ][1]['value'] = $value;
+					}
+				}
+			}
+		}
+
+		return is_array( $groups ) ? $groups : [];
+	}
+
+	/**
 	 * Build the render-ready groups array for a specification table.
 	 *
 	 * Output shape (per group):

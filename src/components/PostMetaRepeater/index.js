@@ -21,7 +21,7 @@ const PostMetaRepeater = ({ metaFields, onAddField, onChange, onRemoveField }) =
                     </button>
                 </div>
             ))}
-            <button onClick={onAddField} className="flex gap-1 items-center px-3.5 py-2.5 bg-[#6B66F7] rounded text-white mt-4">
+            <button onClick={onAddField} className="flex gap-1 items-center px-3.5 py-2 bg-[#6B66F7] rounded text-white mt-4">
                 <Add />
                 Add Attribute
             </button>
