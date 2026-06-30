@@ -1,12 +1,13 @@
 === Specifico – Product Specification for WooCommerce ===
-Contributors: wpaxiom
+Contributors: wpaxiom, shuvo586
+Donate link: https://www.wpaxiom.com/donate
 Tags: woocommerce, product specification, specifications table, Product Information, ecommerce
 Requires at least: 5.8
 Tested up to: 7.0
 WC requires at least: 6.3
-WC tested up to: 10.7
+WC tested up to: 10.9
 Requires PHP: 7.4
-Stable tag: 1.0.2
+Stable tag: 1.0.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,7 +24,11 @@ Instead of re-entering the same specs for every product, you build reusable attr
 * Category, tag, and per-product mapping rules to decide which table each product uses — no manual assignment needed.
 * Per-product overrides: inherit values from the mapped table, or customize values for a single product while labels stay locked to the mapping.
 * Show/Hide toggle for inherited fields so the table stays tidy in the product editor.
-* Customizable table styles via the Settings page.
+* Customizable table styles via the Settings page, plus a customizable Specifications tab title.
+* `[specifico]` shortcode to display a product's specification table anywhere — including the block editor (use `[specifico id="123"]` to target a specific product).
+* Theme template override — copy the bundled table template into your theme to fully control the markup.
+* Developer hooks to filter the groups, labels, values, tab title, table classes, and to inject markup before/after the table.
+* Schema.org structured data — specifications are added to the product's `Product` JSON-LD as `additionalProperty` entries, helping search engines understand your product specs.
 * Built for WooCommerce and compatible with HPOS (High-Performance Order Storage).
 
 = How to Use =
@@ -50,16 +55,51 @@ Yes, Specifico is designed exclusively for WooCommerce product pages.
 = Can I customize the specification table? =
 Yes, you can customize the look and content of the product specification table via plugin settings and templates.
 
+= Can I display the specification table somewhere other than the Specifications tab? =
+Yes. Use the `[specifico]` shortcode to render the current product's table anywhere a shortcode is supported, including the block editor. To target a specific product, pass its ID: `[specifico id="123"]`.
+
+= Can I change the specification table markup? =
+Yes. Copy the bundled `templates/specification-table.php` into your theme at `yourtheme/specifico/specification-table.php` and edit it there. Your override is used automatically and survives plugin updates. It works with both classic and block themes.
+
+= Are there developer hooks? =
+Yes. Specifico provides filters and actions to customize the table programmatically, including `specifico_table_groups`, `specifico_tab_title`, `specifico_show_table`, `specifico_table_classes`, `specifico_row_label`, `specifico_row_value`, and the `specifico_before_table` / `specifico_after_table` actions.
+
+= Does Specifico add structured data for search engines? =
+Yes. When a product's Specifications are enabled, Specifico adds each specification to the product's existing `Product` structured data (JSON-LD) as `additionalProperty` entries. It enriches WooCommerce's structured data rather than emitting a separate block, so there is only one Product entity per page. Developers can adjust or disable it with the `specifico_structured_data` filter.
+
+For example, a product's specifications are added to the `Product` JSON-LD like this:
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": "Example Laptop",
+      "additionalProperty": [
+        { "@type": "PropertyValue", "name": "RAM", "value": "16 GB" },
+        { "@type": "PropertyValue", "name": "Internal Storage", "value": "256 GB" },
+        { "@type": "PropertyValue", "name": "Expandable", "value": "Up to 1 TB" },
+        { "@type": "PropertyValue", "name": "GPU", "value": "Integrated" }
+      ]
+    }
+    </script>
+
+You can verify the output with Google's Rich Results Test or the Schema Markup Validator.
+
 = Is Specifico compatible with the latest version of WooCommerce? =
 Yes, Specifico has been tested with WooCommerce up to latest version.
 
 == Screenshots ==
-1. Specification Table List
-2. Groups List
-3. Add Group Page
-4. Specification Mapping Page
-5. Specification Settings Page
-6. Specification add/edit panel
+1. Specification Tables list — create, edit and manage your specification tables with the redesigned table interface.
+2. Specification Table add/edit panel — add or edit a specification table, pick its groups and arrange your attributes.
+3. Groups list — manage your reusable attribute groups with the updated UI.
+4. Add/Edit Group — create an attribute group and define its attributes (name, value, type and default value).
+5. Mapping page — create mapping rules to assign specification tables to products by category, tag or product ID.
+6. Export data — download all specification tables, groups, mapping rules and settings as a JSON file.
+7. Import data — upload a Specifico export or a compatible JSON file to restore specifications on any site.
+8. Settings page — configure the table style, tab title and the "Additional information" tab behaviour.
+9. Product editor — Specification Settings metabox showing the inherit mode with per-product value overrides.
+10. Product editor — Customize mode with full per-product specification values and show/hide toggles.
+11. Front-end specification table — the rendered Specifications tab on a WooCommerce product page.
 
 == Source Code ==
 
@@ -74,6 +114,15 @@ To build the plugin from source:
 3. `npm run build` — compile `src/` and `assets/src/` into `build/` and `assets/dist/`.
 
 == Changelog ==
+
+= 1.0.4 =
+* New: Redesigned admin UI across all screens — cleaner layout, refined typography, updated colour palette, consistent field heights, and improved spacing for a modern editing experience.
+* New: Export — download all your specification tables, groups, mapping rules and settings (and, optionally, per-product specification data) as a JSON file for backup or moving to another site.
+* New: Import — upload a Specifico export to restore it on any site. The importer matches tables, groups and products by slug, so re-importing is safe and never duplicates.
+* New: Import from other specification plugins — upload a compatible JSON export and Specifico detects the format automatically and imports its tables, groups and per-product specifications.
+
+= 1.0.3 =
+* New: Schema.org structured data — a product's specifications are added to its `Product` JSON-LD as `additionalProperty` entries, enriching WooCommerce's existing structured data (no duplicate Product entity). Output reflects the visible Specifications tab and can be filtered or disabled via the new `specifico_structured_data` filter.
 
 = 1.0.2 =
 * New: Theme template override support — copy `templates/specification-table.php` into your theme (`yourtheme/specifico/`) to fully customize the specification table markup.

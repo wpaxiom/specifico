@@ -1,48 +1,91 @@
 import React from "react";
-import Select, {
-    components,
-} from "react-select";
-import makeAnimated from 'react-select/animated';
+import Select, { components } from "react-select";
 import Labelwrap from "../Labelwrap";
-import Caret from "../Icons/Caret";
 
-const animatedComponents = makeAnimated();
-const MultiSelect = ( {id, placeholder, hasLabel = true, tooltext, toolplace, ...rest} ) => {
+const Chevron = () => (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M3 4.5 6 7.5 9 4.5" stroke="#9A9AAE" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
 
-    const DropdownIndicator = props => {
-        return (
-            <components.DropdownIndicator {...props} className="!p-0 !pr-5">
-                <Caret/>
-            </components.DropdownIndicator>
-        )
-    }
+const DropdownIndicator = ( props ) => (
+    <components.DropdownIndicator { ...props }><Chevron /></components.DropdownIndicator>
+);
 
-    const customClasses = {
-        container: () => hasLabel ? "w-[80%]" : "w-full",
-        control: ({ isFocused }) =>
-            "specifico-field-control w-full !bg-[#fbfcfd] !rounded !py-0 !px-0 !leading-none !text-[#555555] !min-h-[36px] !shadow-none !border " +
-            (isFocused ? "!border-[#C9C7FB]" : "!border-[#F0F0FE]"),
-        input: () => "!m-0 !p-0 [&_input]:!shadow-none [&_input:focus]:!shadow-none [&_input]:!ring-0",
-        valueContainer: () => "!py-1 !px-2 !gap-1",
-        placeholder: () => "!text-[#999999] !text-sm !m-0",
-        singleValue: () => "!text-[#555555]",
-        multiValue: () => "!bg-[#F5F5FE] !rounded !m-0 !overflow-hidden",
-        multiValueLabel: () => "!p-[3px] !text-[#555555] !text-sm",
-        multiValueRemove: () => "!pl-1 !pr-2 !text-[#999999] hover:!bg-[#E9E8FE] hover:!text-[#555555]",
-        indicatorSeparator: () => "!hidden",
-        indicatorsContainer: () => "!py-0",
-        clearIndicator: () => "!p-1 !text-[#555555] hover:!text-[#333333] cursor-pointer",
-        dropdownIndicator: () => "!p-1 !text-[#555555]",
-        menu: () => "!rounded !border !border-[#E9E8FE] !shadow-lg !mt-1 !overflow-hidden",
-        menuList: () => "!py-1",
-        option: ({ isFocused, isSelected }) =>
-            "!px-3 !py-2 !text-sm !cursor-pointer " +
-            (isSelected
-                ? "!bg-[#6B66F7] !text-white"
-                : isFocused
-                    ? "!bg-[#F5F5FE] !text-[#555555]"
-                    : "!bg-white !text-[#555555]"),
-        noOptionsMessage: () => "!text-[#999999] !text-sm !py-2",
+const FONT = "'Nunito', system-ui, sans-serif";
+
+// All styling lives in the `styles` prop (emotion, high specificity) rather than
+// Tailwind classes: it beats WP-admin's global input CSS that was inflating the
+// control, and it keeps working when the menu is portaled to <body>.
+const rsStyles = {
+    control: ( base, state ) => ( {
+        ...base,
+        minHeight: 38,
+        padding: 0,
+        backgroundColor: '#fff',
+        borderColor: state.isFocused ? '#6B66F7' : '#E7E7EF',
+        borderRadius: 10,
+        boxShadow: state.isFocused ? '0 0 0 3px rgba(107,102,247,0.16)' : 'none',
+        fontFamily: FONT,
+        '&:hover': { borderColor: state.isFocused ? '#6B66F7' : '#D8D8E4' },
+    } ),
+    // Matches the design control: padding 4px 8px, 6px gap between chips.
+    valueContainer: ( base ) => ( { ...base, padding: '4px 8px', gap: 6 } ),
+    placeholder: ( base ) => ( { ...base, color: '#9A9AAE', fontSize: 14, fontFamily: FONT, margin: 0 } ),
+    singleValue: ( base ) => ( { ...base, color: '#23232E', fontSize: 14, fontFamily: FONT } ),
+    input: ( base ) => ( { ...base, margin: 0, padding: 0, color: '#23232E', fontFamily: FONT } ),
+    // Chip = padding 5px 7px 5px 11px (label holds left/top/bottom, remove the right).
+    multiValue: ( base ) => ( { ...base, backgroundColor: '#EDEBFF', borderRadius: 8, overflow: 'hidden', margin: 0 } ),
+    multiValueLabel: ( base ) => ( { ...base, color: '#6B66F7', fontWeight: 700, fontSize: 12.5, fontFamily: FONT, padding: '5px 4px 5px 11px' } ),
+    multiValueRemove: ( base ) => ( { ...base, color: '#6B66F7', paddingLeft: 0, paddingRight: 7, ':hover': { backgroundColor: '#E2DFFF', color: '#6B66F7' } } ),
+    indicatorSeparator: () => ( { display: 'none' } ),
+    indicatorsContainer: ( base ) => ( { ...base, padding: 0 } ),
+    dropdownIndicator: ( base ) => ( { ...base, padding: '0 13px' } ),
+    clearIndicator: ( base ) => ( { ...base, padding: '0 4px', color: '#9A9AAE', ':hover': { color: '#54546A' } } ),
+    menuPortal: ( base ) => ( { ...base, zIndex: 99999 } ),
+    menu: ( base ) => ( {
+        ...base,
+        borderRadius: 12,
+        border: '1px solid #EDEDF3',
+        boxShadow: '0 10px 30px -8px rgba(30,28,80,0.28)',
+        overflow: 'hidden',
+        fontFamily: FONT,
+        zIndex: 99999,
+    } ),
+    menuList: ( base ) => ( { ...base, padding: 6 } ),
+    option: ( base, state ) => ( {
+        ...base,
+        fontSize: 13.5,
+        fontWeight: 600,
+        fontFamily: FONT,
+        padding: '8px 12px',
+        borderRadius: 8,
+        cursor: 'pointer',
+        color: state.isSelected ? '#fff' : '#54546A',
+        backgroundColor: state.isSelected ? '#6B66F7' : state.isFocused ? '#F6F5FF' : '#fff',
+        ':active': { backgroundColor: state.isSelected ? '#6B66F7' : '#F6F5FF' },
+    } ),
+    noOptionsMessage: ( base ) => ( { ...base, color: '#9A9AAE', fontSize: 14, fontFamily: FONT } ),
+};
+
+const MultiSelect = ( { id, placeholder, hasLabel = true, bare = false, tooltext, toolplace, ...rest } ) => {
+    const select = (
+        <Select
+            inputId={ id }
+            classNamePrefix="specifico-rs"
+            styles={ rsStyles }
+            placeholder={ placeholder }
+            closeMenuOnSelect={ ! rest.isMulti }
+            isClearable={ false }
+            menuPlacement="auto"
+            menuPortalTarget={ typeof document !== 'undefined' ? document.body : null }
+            components={ { DropdownIndicator } }
+            { ...rest }
+        />
+    );
+
+    if ( bare ) {
+        return select;
     }
 
     return (
@@ -57,13 +100,7 @@ const MultiSelect = ( {id, placeholder, hasLabel = true, tooltext, toolplace, ..
                         }
                     </>
                 }
-                <Select
-                    id={id}
-                    classNames={customClasses}
-                    closeMenuOnSelect={true}
-                    isClearable={false}
-                    components={{animatedComponents, DropdownIndicator}}
-                    {...rest}/>
+                <div className={ hasLabel ? "w-[80%]" : "w-full" }>{select}</div>
             </div>
         </div>
     )

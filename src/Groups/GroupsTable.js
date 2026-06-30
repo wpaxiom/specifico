@@ -4,29 +4,21 @@ import Api from "./../Utilites/Api";
 import IndeterminateCheckbox from "../components/IndeterminateCheckbox";
 import PostMetaRepeater from "../components/PostMetaRepeater";
 import {
-    Column,
-    Table as ReactTable,
-    PaginationState,
     useReactTable,
     getCoreRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
-    ColumnDef,
-    OnChangeFn,
     flexRender,
 } from '@tanstack/react-table'
+import TableSearch from "../components/TableSearch";
 import DropdownButton from "../components/DropdownButton";
-import TextInput from "../components/TextInput";
 import Logo from "../components/Icons/Logo"
 import TableHeader from "../components/TableHeader";
 import TableFooter from "../components/TableFooter";
-import Check from "../components/Icons/Check";
 import Rotate from "../components/Icons/Rotate";
-import Edit from "../components/Icons/Edit";
-import Delete from "../components/Icons/Delete";
-import SpecLoader from "../components/Loader/SpecLoader";
-import GroupLoader from "../components/Loader/GroupLoader";
-import EmptySection from "../components/EmptySection";
+import DeleteProgress from "../components/DeleteProgress";
+
+const CARD = "bg-white border border-[#ECECF3] rounded-2xl shadow-[0_1px_2px_rgba(20,20,45,0.04),0_18px_40px_-24px_rgba(30,28,80,0.18)]";
+const GROUP_GRID = "46px 120px minmax(150px,1fr) minmax(150px,1fr) 50px";
+const FIELD = "w-full !h-[38px] !min-h-[38px] box-border !border !border-[#E7E7EF] !rounded-[10px] !bg-white !px-[14px] !py-0 !m-0 font-medium !text-[14px] !text-[#23232E] !shadow-none !outline-none focus:!border-[#6B66F7] focus:!shadow-[0_0_0_3px_rgba(107,102,247,0.16)] focus:!ring-0";
 
 const columns = [
     {
@@ -34,41 +26,39 @@ const columns = [
         header: ({ table }) => (
             <IndeterminateCheckbox
                 {...{
-                    checked: table.getIsAllRowsSelected(),
-                    indeterminate: table.getIsSomeRowsSelected(),
-                    onChange: table.getToggleAllRowsSelectedHandler(),
+                    checked: table.getIsAllPageRowsSelected(),
+                    indeterminate: table.getIsSomePageRowsSelected(),
+                    onChange: table.getToggleAllPageRowsSelectedHandler(),
                 }}
             />
         ),
         cell: ({ row }) => (
-            <div className="">
-                <IndeterminateCheckbox
-                    {...{
-                        checked: row.getIsSelected(),
-                        disabled: !row.getCanSelect(),
-                        indeterminate: row.getIsSomeSelected(),
-                        onChange: row.getToggleSelectedHandler(),
-                    }}
-                />
-            </div>
+            <IndeterminateCheckbox
+                {...{
+                    checked: row.getIsSelected(),
+                    disabled: !row.getCanSelect(),
+                    indeterminate: row.getIsSomeSelected(),
+                    onChange: row.getToggleSelectedHandler(),
+                }}
+            />
         ),
     },
     {
         accessorKey: 'id',
         header: 'ID',
-        cell: info => info.getValue(),
+        cell: info => <span className="font-mono font-semibold text-[13px] text-[#A2A2B4]">{info.getValue()}</span>,
         footer: props => props.column.id,
     },
     {
         accessorKey: 'name',
         header: 'Name',
-        cell: info => info.getValue(),
+        cell: info => <span className="text-[#23232E] font-bold">{info.getValue()}</span>,
         footer: props => props.column.id,
     },
     {
         accessorKey: 'slug',
         header: 'Slug',
-        cell: info => info.getValue(),
+        cell: info => <span className="font-mono font-semibold text-[13px] text-[#9A9AAE]">{info.getValue()}</span>,
         footer: props => props.column.id,
     },
 ]
@@ -83,8 +73,13 @@ const GroupsTable = () => {
     const [ showAttributeSection, setShowAttributeSection] = useState(false);
 
     const [ groupCounts, setGroupCounts ] = useState( parseInt( specificoAdminSettings.groups ) );
+    const [ total, setTotal ] = useState( 0 );
+
+    const [ search, setSearch ] = useState( '' );
+    const [ debouncedSearch, setDebouncedSearch ] = useState( '' );
 
     const [ isLoading, setIsLoading ] = useState( false );
+    const [ deleteProgress, setDeleteProgress ] = useState( null );
 
     const resetForm = () => {
         setTitle('');
@@ -114,25 +109,69 @@ const GroupsTable = () => {
         setShowAttributeSection(false);
     };
 
+    const PAGE_SIZE_KEY = 'specifico_groups_page_size';
+    const getInitialPageSize = () => {
+        const stored = parseInt( localStorage.getItem( PAGE_SIZE_KEY ), 10 );
+        return [ 10, 25, 50, 100, 200, 500 ].includes( stored ) ? stored : 10;
+    };
+    const [ pagination, setPagination ] = useState( { pageIndex: 0, pageSize: getInitialPageSize() } );
+
+    useEffect(() => {
+        localStorage.setItem( PAGE_SIZE_KEY, String( pagination.pageSize ) );
+    }, [ pagination.pageSize ]);
+
     const table = useReactTable({
         data,
         columns,
+        state: { pagination },
+        onPaginationChange: setPagination,
+        manualPagination: true,
+        rowCount: total,
         getCoreRowModel: getCoreRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
         getRowId: row => row.id
     });
 
-    // Fetch posts on component mount
+    // Debounce the search box before hitting the server, and snap back to the
+    // first page whenever the term changes.
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch( search );
+            setPagination( prev => prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 } );
+        }, 400);
+        return () => clearTimeout( timer );
+    }, [ search ]);
+
+    // Server-side pagination: refetch whenever the page, page size, or the
+    // (debounced) search term changes.
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [ pagination.pageIndex, pagination.pageSize, debouncedSearch ]);
 
     const fetchData = async () => {
         try {
             setIsLoading( true );
-            const response = await Api.get('/specifico/v1/groups');
-            setData(response.data);
+            const response = await Api.get('/specifico/v1/groups', {
+                params: {
+                    page: pagination.pageIndex + 1,
+                    per_page: pagination.pageSize,
+                    search: debouncedSearch || undefined,
+                }
+            });
+            const rows = Array.isArray( response.data.rows ) ? response.data.rows : [];
+            const totalRows = parseInt( response.data.total, 10 ) || 0;
+            setData( rows );
+            setTotal( totalRows );
+            // Without an active search the server total is the authoritative
+            // overall count, so keep the empty-state gate in sync with it.
+            if ( ! debouncedSearch ) {
+                setGroupCounts( totalRows );
+            }
+            // If a deletion emptied the current page, step back to the last
+            // page that still has rows.
+            const lastPage = Math.max( Math.ceil( totalRows / pagination.pageSize ) - 1, 0 );
+            if ( totalRows > 0 && rows.length === 0 && pagination.pageIndex > lastPage ) {
+                setPagination( prev => ({ ...prev, pageIndex: lastPage }) );
+            }
         } catch (error) {
             console.error('Error fetching groups:', error);
         } finally {
@@ -158,7 +197,7 @@ const GroupsTable = () => {
     const createPost = async () => {
         try {
             setIsLoading( true );
-            const response = await Api.post(
+            await Api.post(
                 '/specifico/v1/groups',
                 {
                     title: title,
@@ -168,7 +207,6 @@ const GroupsTable = () => {
                     }
                 }
             );
-            setGroupCounts( parseInt( specificoAdminSettings.groups ) + 1 );
             await fetchData(); // Fetch posts again to update the list
         } catch (error) {
             console.error('Error creating group:', error);
@@ -180,7 +218,7 @@ const GroupsTable = () => {
     const updatePost = async (postId) => {
         try {
             setIsLoading( true );
-            const response = await Api.put(
+            await Api.put(
                 `/specifico/v1/groups/${postId}`,
                 {
                     title: title,
@@ -210,19 +248,41 @@ const GroupsTable = () => {
     };
 
     const deletePosts = async (posts) => {
-        try {
-            setIsLoading( true );
-            await Promise.all(
-                posts.map(async (postId) => {
+        if ( ! posts || ! posts.length ) return;
+
+        const total = posts.length;
+        let done = 0;
+        setDeleteProgress( { total, done } );
+
+        // Bring the progress card into view at the top of the page.
+        window.scrollTo( { top: 0, behavior: 'smooth' } );
+
+        // Bounded concurrency: process a few deletes at a time instead of firing
+        // all of them at once, so large bulk deletes don't overwhelm the server
+        // and we can report progress as each one finishes.
+        const queue = [ ...posts ];
+        const concurrency = Math.min( 5, total );
+        const worker = async () => {
+            while ( queue.length ) {
+                const postId = queue.shift();
+                try {
                     await Api.delete(`/specifico/v1/groups/${postId}`);
-                })
-            );
-            // After deleting all posts, fetch the updated list of posts
-            fetchData();
+                } catch (error) {
+                    console.error('Error deleting group:', postId, error);
+                }
+                done++;
+                setDeleteProgress( { total, done } );
+            }
+        };
+
+        try {
+            await Promise.all( Array.from( { length: concurrency }, worker ) );
+            table.resetRowSelection();
+            await fetchData();
         } catch (error) {
             console.error('Error deleting groups:', error);
         } finally {
-            setIsLoading( false );
+            setDeleteProgress( null );
         }
     };
 
@@ -242,123 +302,117 @@ const GroupsTable = () => {
         setAttributes(updatedFields);
     };
 
+    const primaryBtn = "whitespace-nowrap inline-flex items-center gap-[7px] h-[38px] px-[18px] bg-[#6B66F7] text-white border-none rounded-[11px] font-bold text-[13.5px] cursor-pointer shadow-[0_5px_14px_-4px_rgba(107,102,247,0.55)] hover:bg-[#5a55e8] disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
+    const secondaryBtn = "whitespace-nowrap inline-flex items-center gap-[7px] h-[38px] px-[18px] bg-white border border-[#E7E7EF] rounded-[11px] text-[#54546A] font-bold text-[13.5px] cursor-pointer hover:bg-[#F5F5F9] transition-colors";
+
     return (
-        <div className="font-['Nunito'] text-sm mt-5 mr-5 relative">
-            <div>
-                <div className="flex bg-white drop-shadow-[0_0_4px_rgba(26,26,26,0.15)] px-5 py-4 mb-5 items-center rounded">
-                    <div className="flex flex-auto gap-3 items-center">
-                        <Logo/>
-                        <div>
-                            <h1 className="text-lg font-semibold text-[#333333]">Specification Groups</h1>
-                            <p className="text-[#555555]">Here are your groups tables. You can edit or delete them.</p>
-                        </div>
-                    </div>
-                    <div className="flex-initial text-right flex gap-2">
-                        { showAttributeSection &&
-                            <>
-                                <button type="button" onClick={handleCancel} className="px-3.5 py-2 bg-white border border-[#E9E8FE] rounded text-[#555555]">
-                                    Cancel
-                                </button>
-                                <button type="button" disabled={!title.trim()} className="flex gap-1 items-center px-3.5 py-2 bg-[#6B66F7] rounded text-white disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleSaveAndClose}>
-                                    { isEditing &&
-                                        <>
-                                            <Rotate />
-                                            Update Group
-                                        </>
-                                    }
-                                    { ! isEditing &&
-                                        <>
-                                            Save Group
-                                        </>
-                                    }
-                                </button>
-                            </>
-                        }
-
-                        { ! showAttributeSection &&
-                            <button onClick={handleOpenAddPanel}
-                                    className="flex gap-1 items-center px-3.5 py-2 bg-[#6B66F7] rounded text-white">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16"><path stroke="#fff" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 3.333v9.334M3.333 8h9.334"/></svg>
-                                Add Group
-                            </button>
-                        }
-
+        <div className="font-['Nunito'] text-sm mt-5 mr-5 relative text-[#54546A]">
+            {/* page header card */}
+            <div className={`${CARD} flex items-center justify-between gap-4 px-6 py-[18px] mb-5`}>
+                <div className="flex items-center gap-[15px]">
+                    <span className="w-10 [&_svg]:w-10 [&_svg]:h-auto block"><Logo /></span>
+                    <div>
+                        <div className="font-extrabold text-[19px] text-[#23232E] tracking-[-0.2px]">Specification Groups</div>
+                        <div className="font-medium text-[13px] text-[#9A9AAE] mt-0.5">Here are your groups tables. You can edit or delete them.</div>
                     </div>
                 </div>
-                {!showAttributeSection && (
-                    <div className="bg-white drop-shadow-[0_0_4px_rgba(26,26,26,0.15)] rounded">
-                        { groupCounts > 0 &&
-                            <>
-                                <TableHeader table={table} />
-                                <div>
-                                    { ! isLoading &&
-                                        table.getRowModel().rows.map(row =>
-                                            <div className="flex px-5 py-4 gap-5 items-center relative before:content-[''] before:w-full before:h-px before:bg-dash-border before:bg-repeat-x before:absolute before:bottom-0"
-                                                 key={row.id}>
-                                                {row.getVisibleCells().map(cell =>
-                                                    <div
-                                                        className={cell.id.includes('checkbox') ? 'flex-initial w-[4%] max-w-3.5 text-[#555555]' : 'flex-initial w-[24%] text-[#555555]'}
-                                                        key={cell.id}> {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                    </div>
-                                                )}
-                                                <div className="flex-initial w-[24%] text-[#555555] text-right">
-                                                    <DropdownButton>
-                                                        <button onClick={() => fetchGroup(row.id)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#555555] hover:bg-[#F5F5FE] hover:text-[#333333] transition-colors">
-                                                            <Edit />
-                                                            Edit
-                                                        </button>
-                                                        <button type="button"
-                                                                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#E74C3C] hover:bg-[#FFF2F2] transition-colors"
-                                                                onClick={() => deletePost(row.id)}>
-                                                            <Delete />
-                                                            Delete
-                                                        </button>
-                                                    </DropdownButton>
-                                                </div>
-
-                                            </div>
-                                        )
-                                    }
-
-                                    { isLoading &&
-                                        <GroupLoader count={specificoAdminSettings.groups} />
-                                    }
-                                </div>
-                                <TableFooter table={table} deletePosts={deletePosts} />
-                            </>
-                        }
-                        { groupCounts <= 0 &&
-                            <EmptySection title="Group not found" desc="Sorry ! No specification group found. You can add group by clicking add group button" />
-                        }
-                    </div>
-                )}
+                <div className="flex-none flex gap-2.5">
+                    { showAttributeSection ?
+                        <>
+                            <button type="button" onClick={handleCancel} className={secondaryBtn}>Cancel</button>
+                            <button type="button" disabled={!title.trim()} className={primaryBtn} onClick={handleSaveAndClose}>
+                                { isEditing ?
+                                    <><Rotate /> Update Group</>
+                                    :
+                                    <><span className="text-[18px] leading-none -mt-px">+</span> Save Group</>
+                                }
+                            </button>
+                        </>
+                        :
+                        <button onClick={handleOpenAddPanel} className={primaryBtn}>
+                            <span className="text-[18px] leading-none -mt-px">+</span> Add Group
+                        </button>
+                    }
+                </div>
             </div>
 
-            {showAttributeSection && (
+            { ! showAttributeSection && (
                 <div>
-                    <div className="bg-white drop-shadow-[0_0_4px_rgba(26,26,26,0.15)] mb-5 items-center rounded">
-                        <h2 className="bg-[#F5F5FE] px-5 py-4 text-[15px] font-semibold rounded-tl rounded-tr">
-                            Attribute Name
-                        </h2>
-                        <div className="px-5 py-3.5">
-                            <TextInput type="text" placeholder="Enter Group Name" id="post-title" required value={title} onChange={(e) => {setTitle(e.target.value)}}/>
+                    { deleteProgress && <DeleteProgress done={deleteProgress.done} total={deleteProgress.total} /> }
+
+                    { groupCounts > 0 ?
+                        <div className={`${CARD} overflow-hidden`}>
+                            <TableSearch value={search} onChange={setSearch} placeholder="Search groups…" count={total} noun="groups" />
+                            <TableHeader table={table} template={GROUP_GRID} />
+                            <div>
+                                { ! isLoading ?
+                                    <>
+                                        { table.getRowModel().rows.map(row =>
+                                            <div className="grid items-center px-[22px] py-[15px] border-b border-[#F3F3F8] font-medium text-[14px] hover:bg-[#FAFAFB]" style={{ gridTemplateColumns: GROUP_GRID }} key={row.id}>
+                                                { row.getVisibleCells().map(cell =>
+                                                    <span key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</span>
+                                                ) }
+                                                <span className="text-right">
+                                                    <DropdownButton>
+                                                        <button onClick={() => fetchGroup(row.id)} className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-[13.5px] text-[#3A3A45] hover:bg-[#F5F5F9] transition-colors">Edit</button>
+                                                        <button type="button" onClick={() => deletePost(row.id)} className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-[13.5px] text-[#dc2626] hover:bg-[#FEF2F2] transition-colors">Delete</button>
+                                                    </DropdownButton>
+                                                </span>
+                                            </div>
+                                        ) }
+                                        { total === 0 &&
+                                            <div className="px-[22px] py-12 text-center text-[#9A9AAE]">No groups match your search.</div>
+                                        }
+                                    </>
+                                    :
+                                    [0,1,2,3,4,5].map(k =>
+                                        <div className="grid items-center px-[22px] py-[17px] border-b border-[#F3F3F8] gap-3" style={{ gridTemplateColumns: GROUP_GRID }} key={k}>
+                                            <span className="w-4 h-4 rounded bg-[#ECEBFF] animate-pulse" />
+                                            <span className="w-16 h-[13px] rounded bg-[#ECEBFF] animate-pulse" />
+                                            <span className="w-3/5 h-[13px] rounded bg-[#ECEBFF] animate-pulse" />
+                                            <span className="w-2/5 h-[13px] rounded bg-[#ECEBFF] animate-pulse" />
+                                            <span className="w-6 h-6 rounded-lg bg-[#ECEBFF] animate-pulse justify-self-end" />
+                                        </div>
+                                    )
+                                }
+                            </div>
+                            <TableFooter table={table} deletePosts={deletePosts} totalRows={total} />
+                        </div>
+                        :
+                        <div className={`${CARD} px-6 py-16 flex flex-col items-center text-center`}>
+                            <div className="w-[62px] h-[62px] rounded-2xl bg-[#F2F1FF] flex items-center justify-center mb-[18px]">
+                                <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect x="3" y="5" width="9" height="7" rx="2" stroke="#6B66F7" strokeWidth="1.8"/><rect x="14" y="5" width="9" height="7" rx="2" stroke="#B7B4FF" strokeWidth="1.8"/><rect x="3" y="15" width="9" height="7" rx="2" stroke="#B7B4FF" strokeWidth="1.8"/><rect x="14" y="15" width="9" height="7" rx="2" stroke="#6B66F7" strokeWidth="1.8"/></svg>
+                            </div>
+                            <div className="font-extrabold text-[17px] text-[#23232E]">No groups yet</div>
+                            <div className="font-medium text-[13.5px] text-[#9A9AAE] mt-1.5 max-w-[380px]">Create a group to organise the attributes that make up your specification tables.</div>
+                            <button onClick={handleOpenAddPanel} className={`${primaryBtn} mt-5`}>
+                                <span className="text-[18px] leading-none -mt-px">+</span> Add Group
+                            </button>
+                        </div>
+                    }
+                </div>
+            )}
+
+            { showAttributeSection && (
+                <div className="flex flex-col gap-5">
+                    <div className={`${CARD} overflow-hidden`}>
+                        <div className="px-6 py-4 border-b border-[#EFEFF4] font-extrabold text-[15px] text-[#23232E]">Group Name</div>
+                        <div className="grid grid-cols-[200px_1fr] items-center gap-5 px-6 py-5">
+                            <label htmlFor="post-title" className="font-bold text-[13px] text-[#3A3A45]">Enter Group Name</label>
+                            <input id="post-title" type="text" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Group name" className={FIELD} />
                         </div>
                     </div>
 
-                    <div className="bg-white drop-shadow-[0_0_4px_rgba(26,26,26,0.15)] mb-5 items-center rounded">
-                        <div className="bg-[#F5F5FE] px-5 py-4 text-[15px] font-semibold rounded-tl rounded-tr flex flex-auto">
-                            <div className="w-1/4">Attribute Type</div>
-                            <div className="w-1/4">Attribute Value</div>
-                            <div className="w-2/4">Values</div>
+                    <div className={`${CARD} overflow-hidden`}>
+                        <div className="grid grid-cols-[1fr_1fr_1fr_48px] gap-3.5 px-6 py-3.5 border-b border-[#EFEFF4] font-bold text-[10.5px] tracking-[0.09em] uppercase text-[#A2A2B4]">
+                            <span>Attribute Type</span><span>Attribute Value</span><span>Values</span><span></span>
                         </div>
-                        <div className="pb-5 px-5">
-                            <PostMetaRepeater
-                                metaFields={attributes}
-                                onAddField={handleAddField}
-                                onChange={handleChange}
-                                onRemoveField={handleRemoveField}
-                            />
-                        </div>
+                        <PostMetaRepeater
+                            metaFields={attributes}
+                            onAddField={handleAddField}
+                            onChange={handleChange}
+                            onRemoveField={handleRemoveField}
+                        />
                     </div>
                 </div>
             )}

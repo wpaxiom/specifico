@@ -158,3 +158,26 @@
     line-height: 1 !important;
     box-shadow: none !important;
 }
+
+/*
+ * Redesigned react-select (MultiSelect, classNamePrefix="specifico-rs").
+ * WP admin's global input rules (min-height / padding / line-height) would
+ * otherwise inflate the search input and push the control well past 38px, so
+ * neutralize the raw input here. All other styling is in the component's
+ * `styles` prop (which also survives the menu being portaled to <body>).
+ */
+.specifico-app .specifico-rs__input-container,
+.specifico-app .specifico-rs__input-container::after {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 20px !important;
+    font-size: 14px !important;
+}
+.specifico-app input.specifico-rs__input {
+    height: 20px !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 20px !important;
+    box-shadow: none !important;
+}

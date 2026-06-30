@@ -10,5 +10,6 @@ class Frontend {
 	function __construct() {
 		new Frontend\Tab();
 		new Frontend\Shortcode();
+		new Frontend\Structured_Data();
 	}
 }

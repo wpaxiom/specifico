@@ -181,6 +181,30 @@ class Specifico_Rest_Route {
 			'callback'            => array( $this, 'save_settings' ),
 			'permission_callback' => array( $this, 'save_permission_settings' ),
 		) );
+
+		/**
+		 * Import / Export
+		 */
+		register_rest_route( 'specifico/v1', '/export', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'export_data' ),
+			'permission_callback' => array( $this, 'get_permission_settings' ),
+		) );
+		register_rest_route( 'specifico/v1', '/import', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'import_data' ),
+			'permission_callback' => array( $this, 'save_permission_settings' ),
+		) );
+		register_rest_route( 'specifico/v1', '/import/prepare', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'prepare_import_data' ),
+			'permission_callback' => array( $this, 'save_permission_settings' ),
+		) );
+		register_rest_route( 'specifico/v1', '/import/step', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'step_import_data' ),
+			'permission_callback' => array( $this, 'save_permission_settings' ),
+		) );
 	}
 
 	/**
@@ -319,19 +343,30 @@ class Specifico_Rest_Route {
 	/**
 	 * Get Route Settings for specification table
 	 */
-	public function get_specifications() {
+	public function get_specifications( $request ) {
+		$per_page = isset( $request['per_page'] ) ? max( 1, (int) $request['per_page'] ) : 10;
+		$page     = isset( $request['page'] ) ? max( 1, (int) $request['page'] ) : 1;
+		$search   = isset( $request['search'] ) ? sanitize_text_field( $request['search'] ) : '';
+
 		$args = [
-			'post_type'   => 'specifico-table',
-			'numberposts' => -1,
-			'meta_key'    => '_specifico_status', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Admin-only listing of specification tables.
+			'post_type'      => 'specifico-table',
+			'posts_per_page' => $per_page,
+			'paged'          => $page,
+			'orderby'        => 'date',
+			'order'          => 'DESC',
+			'meta_key'       => '_specifico_status', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Admin-only listing of specification tables.
 		];
 
-		$specs = get_posts( $args );
+		if ( '' !== $search ) {
+			$args['s'] = $search;
+		}
+
+		$query = new \WP_Query( $args );
 
 		$data_arr = [];
 
 		$index = 0;
-		foreach ( $specs as $spec ) {
+		foreach ( $query->posts as $spec ) {
 			$data_arr[ $index ]['id'] = $spec->ID;
 			$data_arr[ $index ]['name'] = $spec->post_title;
 			$data_arr[ $index ]['status'] = (int) get_post_meta($spec->ID, '_specifico_status', true);
@@ -348,7 +383,12 @@ class Specifico_Rest_Route {
 			$index++;
 		}
 
-		return rest_ensure_response( $data_arr ) ;
+		return rest_ensure_response(
+			[
+				'rows'  => $data_arr,
+				'total' => (int) $query->found_posts,
+			]
+		);
 	}
 
 	/**
@@ -381,8 +421,16 @@ class Specifico_Rest_Route {
 	public function delete_specification( $res ) {
 		$deleted_post = wp_delete_post( $res['id'], true);
 
-		$tables = get_option( '_specifico_tables' );
-		update_option( '_specifico_tables', ( $tables - 1 ), true );
+		// Recount the actual published tables rather than decrementing, so the
+		// cached count can't drift out of sync with reality (mirrors groups).
+		$posts = get_posts(
+			[
+				'numberposts' => -1,
+				'post_type'   => 'specifico-table',
+				'fields'      => 'ids',
+			]
+		);
+		update_option( '_specifico_tables', count( $posts ), true );
 
 		return rest_ensure_response( $deleted_post ) ;
 	}
@@ -413,25 +461,41 @@ class Specifico_Rest_Route {
 	/**
 	 * Get Route Settings for Groups table
 	 */
-	public function get_groups() {
+	public function get_groups( $request ) {
+		$per_page = isset( $request['per_page'] ) ? max( 1, (int) $request['per_page'] ) : 10;
+		$page     = isset( $request['page'] ) ? max( 1, (int) $request['page'] ) : 1;
+		$search   = isset( $request['search'] ) ? sanitize_text_field( $request['search'] ) : '';
+
 		$args = [
-			'post_type'   => 'specifico-groups',
-			'numberposts' => -1,
+			'post_type'      => 'specifico-groups',
+			'posts_per_page' => $per_page,
+			'paged'          => $page,
+			'orderby'        => 'date',
+			'order'          => 'DESC',
 		];
 
-		$groups = get_posts( $args );
+		if ( '' !== $search ) {
+			$args['s'] = $search;
+		}
+
+		$query = new \WP_Query( $args );
 
 		$data_arr = [];
 
 		$index = 0;
-		foreach ( $groups as $group ) {
+		foreach ( $query->posts as $group ) {
 			$data_arr[ $index ]['id'] = $group->ID;
 			$data_arr[ $index ]['name'] = $group->post_title;
 			$data_arr[ $index ]['slug'] = $group->post_name;
 			$index++;
 		}
 
-		return rest_ensure_response( $data_arr ) ;
+		return rest_ensure_response(
+			[
+				'rows'  => $data_arr,
+				'total' => (int) $query->found_posts,
+			]
+		);
 	}
 
 	/**
@@ -700,6 +764,105 @@ class Specifico_Rest_Route {
 
 		update_option('_specifico_settings', $data);
 		return rest_ensure_response( 'settings updated successfully' );
+	}
+
+	/**
+	 * Export all Specifico data as a portable JSON envelope.
+	 */
+	public function export_data( $request ) {
+		$include_products = '0' !== (string) $request->get_param( 'include_products' );
+
+		return rest_ensure_response( Import_Export::build_export( $include_products ) );
+	}
+
+	/**
+	 * Import an uploaded JSON file (Specifico or competitor format, auto-detected).
+	 *
+	 * `mode=detect` returns a dry-run summary (counts only, no writes); any other
+	 * value applies the import.
+	 */
+	public function import_data( $request ) {
+		$data = $this->read_uploaded_json( $request );
+		if ( is_wp_error( $data ) ) {
+			return $data;
+		}
+
+		$dry_run = 'detect' === (string) $request->get_param( 'mode' );
+
+		// Block concurrent (apply) imports; detection is read-only.
+		if ( ! $dry_run ) {
+			if ( get_transient( 'specifico_importing' ) ) {
+				return new \WP_Error( 'specifico_busy', __( 'Another import is already in progress.', 'specifico' ), array( 'status' => 409 ) );
+			}
+			set_transient( 'specifico_importing', 1, 30 * MINUTE_IN_SECONDS );
+		}
+
+		$summary = Import_Export::import( $data, $dry_run );
+
+		if ( ! $dry_run ) {
+			delete_transient( 'specifico_importing' );
+		}
+
+		return rest_ensure_response( $summary );
+	}
+
+	/**
+	 * Begin a chunked import: validate the upload, normalize it, and return a
+	 * session id + totals. The actual writing happens in import_step().
+	 */
+	public function prepare_import_data( $request ) {
+		$data = $this->read_uploaded_json( $request );
+		if ( is_wp_error( $data ) ) {
+			return $data;
+		}
+
+		$result = Import_Export::prepare_import( $data );
+
+		if ( isset( $result['error'] ) ) {
+			return new \WP_Error( 'specifico_import_error', $result['error'], array( 'status' => 400 ) );
+		}
+
+		return rest_ensure_response( $result );
+	}
+
+	/**
+	 * Process the next batch of a prepared import and return its progress.
+	 */
+	public function step_import_data( $request ) {
+		$session = sanitize_text_field( (string) $request->get_param( 'session' ) );
+
+		if ( '' === $session ) {
+			return new \WP_Error( 'specifico_no_session', __( 'Missing import session.', 'specifico' ), array( 'status' => 400 ) );
+		}
+
+		return rest_ensure_response( Import_Export::step_import( $session ) );
+	}
+
+	/**
+	 * Read and JSON-decode an uploaded file from a REST request.
+	 *
+	 * @return array|\WP_Error Decoded array, or an error response.
+	 */
+	private function read_uploaded_json( $request ) {
+		$files = $request->get_file_params();
+		$file  = $files['file'] ?? null;
+
+		if ( empty( $file ) || empty( $file['tmp_name'] ) || ! empty( $file['error'] ) ) {
+			return new \WP_Error( 'specifico_no_file', __( 'No file was uploaded.', 'specifico' ), array( 'status' => 400 ) );
+		}
+
+		if ( (int) $file['size'] <= 0 || (int) $file['size'] > 20 * MB_IN_BYTES ) {
+			return new \WP_Error( 'specifico_bad_size', __( 'The file is empty or too large.', 'specifico' ), array( 'status' => 400 ) );
+		}
+
+		$contents = file_get_contents( $file['tmp_name'] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading an uploaded temp file.
+		$data     = json_decode( $contents, true );
+
+		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $data ) ) {
+			return new \WP_Error( 'specifico_bad_json', __( 'The file is not valid JSON.', 'specifico' ), array( 'status' => 400 ) );
+		}
+
+		return $data;
 	}
 }
 

@@ -4,10 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Api from "./../Utilites/Api";
 import Switch from "../components/Switch";
 import MultiSelect from "../components/MultiSelect";
-import Remove from "../components/Icons/Remove";
-import Trash from "../components/Icons/Trash";
-import Add from "../components/Icons/Add";
-import TextInput from "../components/TextInput";
 
 const MATCH_LABEL = {
     'product-id':       'product ID',
@@ -15,6 +11,14 @@ const MATCH_LABEL = {
     'product-category': 'category',
     'product-tag':      'tag',
 };
+
+const META_FIELD = "w-full !h-[38px] !min-h-[38px] box-border !border !border-[#E7E7EF] !rounded-[9px] !bg-white !px-3 !py-0 !m-0 font-medium !text-[13.5px] !text-[#23232E] !shadow-none !outline-none focus:!border-[#6B66F7] focus:!shadow-[0_0_0_3px_rgba(107,102,247,0.16)] focus:!ring-0";
+
+const TrashBtn = ( { onClick, label, size = 38 } ) => (
+    <button type="button" onClick={onClick} aria-label={label} className="inline-flex items-center justify-center border border-[#F4DADA] bg-[#FEF6F6] rounded-[8px] hover:bg-[#FCEAEA] transition-colors" style={{ width: size, height: size }}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    </button>
+);
 
 const Options = () => {
     const productId = specificoAdminSettings.post_id;
@@ -118,14 +122,16 @@ const Options = () => {
 
     const addAccordion = (e) => {
         e.preventDefault();
+        const id = Date.now();
         setAccordions([
             ...accordions,
             {
-                id: Date.now(),
+                id,
                 title: `New group`,
-                inputGroups: [[{ id: Date.now() + 1, value: '' }, { id: Date.now() + 2, value: '' }]],
+                inputGroups: [[{ id: id + 1, value: '' }, { id: id + 2, value: '' }]],
             },
         ]);
+        setActiveAccordion(id);
     };
 
     const removeAccordion = (accordionId, e) => {
@@ -169,66 +175,69 @@ const Options = () => {
     };
 
     if (isLoading) {
-        return <div className="p-4 text-[#555555]">Loading…</div>;
+        return <div className="p-4 text-[#9A9AAE] font-['Nunito']">Loading…</div>;
     }
 
     return (
-        <div className="font-['Nunito'] text-sm">
+        <div className="font-['Nunito'] text-sm text-[#54546A]">
             <input type="hidden" name="nonce" value={specificoAdminSettings.nonce} />
 
-            <Switch
-                id="_specifico_spec"
-                name="_specifico_spec"
-                placeholder="Enable specifications for this product"
-                checked={status}
-                onChange={() => setStatus(prev => !prev)}
-            />
+            {/* master toggle */}
+            <div className="flex items-center justify-between gap-3.5 px-[15px] py-[13px] bg-[#FAFAFC] border border-[#EFEFF4] rounded-xl">
+                <div>
+                    <div className="font-bold text-[13.5px] text-[#23232E]">Enable specifications for this product</div>
+                    <div className="font-medium text-[12px] text-[#9A9AAE] mt-0.5">Turn on to attach a spec table to this product.</div>
+                </div>
+                <Switch bare id="_specifico_spec" name="_specifico_spec" checked={status} onChange={() => setStatus(prev => !prev)} />
+            </div>
 
-            {status && (
+            {status ? (
                 <>
                     <input type="hidden" name="_specifico_override" value={overrideMode} />
 
-                    <div className="mt-5 space-y-3">
-                        <ModeCard
-                            selected={overrideMode === ''}
-                            onClick={chooseInherit}
-                            title="Inherit from mapping"
-                            subtitle="Use the rule from Specifico → Mapping. Update once, every matching product updates."
-                        >
-                            {overrideMode === '' && (
-                                <InheritPreview
-                                    inherited={inherited}
-                                    inheritValues={inheritValues}
-                                    onInheritValueChange={handleInheritValueChange}
-                                />
-                            )}
-                        </ModeCard>
+                    <div className="mt-4 flex flex-col gap-3.5">
+                        {/* mode selectors */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <ModeSelector
+                                selected={overrideMode === ''}
+                                onClick={chooseInherit}
+                                title="Inherit from mapping"
+                                subtitle="Use the rule from Specifico → Mapping. Update once, every matching product updates."
+                            />
+                            <ModeSelector
+                                selected={overrideMode === 'custom'}
+                                onClick={chooseCustomize}
+                                title="Customize for this product"
+                                subtitle="Override the mapping with a one-off table just for this product."
+                            />
+                        </div>
 
-                        <ModeCard
-                            selected={overrideMode === 'custom'}
-                            onClick={chooseCustomize}
-                            title="Customize for this product"
-                            subtitle="Override the mapping with a one-off table just for this product."
-                        >
-                            {overrideMode === 'custom' && (
-                                <CustomEditor
-                                    accordions={accordions}
-                                    activeAccordion={activeAccordion}
-                                    specOptions={specOptions}
-                                    seedTable={seedTable}
-                                    onSeed={seedFromTable}
-                                    onStartBlank={startBlank}
-                                    onStartOver={startOver}
-                                    onToggle={toggleAccordion}
-                                    onAdd={addAccordion}
-                                    onRemove={removeAccordion}
-                                    onAddRow={addInputGroup}
-                                    onRemoveRow={removeInputGroup}
-                                    onTitleChange={handleAccordionTitleChange}
-                                    onValueChange={handleInputChange}
-                                />
-                            )}
-                        </ModeCard>
+                        {overrideMode === '' && (
+                            <InheritPreview
+                                inherited={inherited}
+                                inheritValues={inheritValues}
+                                onInheritValueChange={handleInheritValueChange}
+                            />
+                        )}
+
+                        {overrideMode === 'custom' && (
+                            <CustomEditor
+                                accordions={accordions}
+                                activeAccordion={activeAccordion}
+                                specOptions={specOptions}
+                                seedTable={seedTable}
+                                onSeed={seedFromTable}
+                                onStartBlank={startBlank}
+                                onStartOver={startOver}
+                                onToggle={toggleAccordion}
+                                onAdd={addAccordion}
+                                onRemove={removeAccordion}
+                                onAddRow={addInputGroup}
+                                onRemoveRow={removeInputGroup}
+                                onTitleChange={handleAccordionTitleChange}
+                                onValueChange={handleInputChange}
+                            />
+                        )}
                     </div>
 
                     {overrideMode === 'custom' && (
@@ -238,55 +247,41 @@ const Options = () => {
                         <HiddenInheritValuesPayload inherited={inherited} inheritValues={inheritValues} />
                     )}
                 </>
+            ) : (
+                <div className="mt-3.5 p-[18px] border border-dashed border-[#E2DFEF] rounded-xl text-center font-medium text-[12.5px] text-[#9A9AAE]">
+                    Specifications are off for this product. Turn the switch on to choose a table.
+                </div>
             )}
         </div>
     );
 };
 
-const ModeCard = ({ selected, onClick, title, subtitle, children }) => (
+const ModeSelector = ({ selected, onClick, title, subtitle }) => (
     <div
         onClick={onClick}
         className={
-            "p-4 rounded border cursor-pointer transition " +
-            (selected
-                ? "border-[#6B66F7] bg-[#F5F5FE]"
-                : "border-[#E9E8FE] bg-white hover:border-[#C9C7FB]")
+            "flex gap-[11px] p-[14px] rounded-xl cursor-pointer border-[1.5px] transition-colors " +
+            (selected ? "border-[#6B66F7] bg-[#F6F5FF]" : "border-[#EFEFF4] bg-white hover:border-[#C9C7FB]")
         }
     >
-        <div className="flex items-start gap-3">
-            <div className={
-                "mt-1 w-4 h-4 rounded-full border-2 flex-shrink-0 " +
-                (selected ? "border-[#6B66F7]" : "border-[#C9C7FB]")
-            }>
-                {selected && <div className="w-2 h-2 bg-[#6B66F7] rounded-full m-auto mt-[2.5px]" />}
-            </div>
-            <div className="flex-1">
-                <div className="text-[15px] font-semibold text-[#333333]">{title}</div>
-                <div className="text-[#555555] mt-1">{subtitle}</div>
-            </div>
+        <span className={ "flex-none w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center mt-px " + (selected ? "border-[#6B66F7]" : "border-[#CFCFDD]") }>
+            {selected && <span className="w-2 h-2 rounded-full bg-[#6B66F7]" />}
+        </span>
+        <div>
+            <div className="font-extrabold text-[13.5px] text-[#23232E]">{title}</div>
+            <div className="font-medium text-[11.5px] leading-[1.45] text-[#9A9AAE] mt-[3px]">{subtitle}</div>
         </div>
-        {children && (
-            <div className="mt-4 pl-7" onClick={(e) => e.stopPropagation()}>
-                {children}
-            </div>
-        )}
     </div>
 );
 
 const InheritPreview = ({ inherited, inheritValues, onInheritValueChange }) => {
-    const [showFields, setShowFields] = useState(false);
+    const [showFields, setShowFields] = useState(true);
 
     if (!inherited) {
         return (
-            <div className="bg-white border border-[#E9E8FE] rounded p-3">
-                <p className="text-[#555555]">
-                    No mapping rule matches this product yet.
-                    {' '}
-                    <a href="admin.php?page=specifico-mapping" className="text-[#6B66F7] underline">
-                        Set up a mapping rule
-                    </a>
-                    {' '}or switch to Customize below.
-                </p>
+            <div className="p-[18px] border border-dashed border-[#E2DFEF] rounded-xl font-medium text-[12.5px] text-[#9A9AAE]">
+                No mapping rule matches this product yet.{' '}
+                <a href="admin.php?page=specifico-mapping" className="text-[#6B66F7] font-bold">Set up a mapping rule</a>{' '}or switch to Customize.
             </div>
         );
     }
@@ -295,52 +290,47 @@ const InheritPreview = ({ inherited, inheritValues, onInheritValueChange }) => {
     const previewGroups = Array.isArray(inherited.groups) ? inherited.groups : [];
 
     return (
-        <div className="bg-white border border-[#E9E8FE] rounded p-3">
-            <div className="flex items-start justify-between gap-3">
+        <div className="border border-[#EFEFF4] rounded-xl overflow-hidden">
+            <div className="px-4 py-3.5 bg-[#FAFAFC] border-b border-[#EFEFF4] flex items-center justify-between gap-3">
                 <div>
-                    <div className="text-[#333333]">
-                        Will display: <strong>{inherited.table_name}</strong>
-                    </div>
-                    <div className="text-[#555555] mt-1">
-                        Matched via {matchLabel}{inherited.match_value ? <>: <em>{inherited.match_value}</em></> : null}
+                    <div className="font-semibold text-[12.5px] text-[#54546A]">Will display: <b className="text-[#23232E]">{inherited.table_name}</b></div>
+                    <div className="font-semibold text-[11.5px] text-[#9A9AAE] mt-[3px]">
+                        Matched via {matchLabel}{inherited.match_value ? <>: <span className="text-[#6B66F7]">{inherited.match_value}</span></> : null}
                     </div>
                 </div>
                 {previewGroups.length > 0 && (
-                    <button
-                        type="button"
-                        onClick={() => setShowFields(prev => !prev)}
-                        className="text-[#6B66F7] underline text-sm flex-shrink-0"
-                    >
+                    <button type="button" onClick={() => setShowFields(prev => !prev)} className="inline-flex items-center gap-1.5 font-bold text-[12px] text-[#6B66F7] flex-none">
                         {showFields ? 'Hide fields' : 'Show fields'}
+                        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style={{ transform: showFields ? 'none' : 'rotate(-90deg)' }}><path d="M3 4.5 6 7.5 9 4.5" stroke="#6B66F7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </button>
                 )}
             </div>
 
             {showFields && previewGroups.length > 0 && (
-                <div className="space-y-4 mt-4">
+                <div className="px-4 pt-1.5 pb-4">
                     {previewGroups.map((g, gi) => (
                         <div key={gi}>
                             {g.title && (
-                                <div className="font-semibold text-[#333333] mb-2">{g.title}</div>
+                                <div className="font-bold text-[10.5px] tracking-[0.08em] uppercase text-[#A2A2B4] mt-3.5 mb-2">{g.title}</div>
                             )}
-                            <div className="space-y-1">
+                            <div className="flex flex-col gap-2">
                                 {(g.inputGroups || []).map((row, ri) => (
-                                    <div key={ri} className="flex gap-2">
-                                        <div className="flex-1 px-3 py-2 bg-[#F5F5FE] border border-[#E9E8FE] rounded text-[#555555] text-sm min-h-9 flex items-center">
+                                    <div key={ri} className="grid grid-cols-[140px_1fr] gap-2.5 items-center">
+                                        <span className="font-semibold text-[13px] text-[#A2A2B4] bg-[#F5F5F9] px-[11px] py-2 rounded-lg truncate" title={row[0]?.value}>
                                             {row[0]?.value}
-                                        </div>
-                                        <TextInput
-                                            hasLabel={false}
+                                        </span>
+                                        <input
                                             type="text"
                                             value={inheritValues[gi]?.[ri] ?? (row[1]?.value || '')}
                                             onChange={(e) => onInheritValueChange(gi, ri, e.target.value)}
-                                            className="!p-0 min-h-9 flex-1"
+                                            className={META_FIELD}
                                         />
                                     </div>
                                 ))}
                             </div>
                         </div>
                     ))}
+                    <div className="mt-3 font-medium text-[11.5px] text-[#9A9AAE]">Labels are locked to the mapped table. Edit values here to override them for this product only.</div>
                 </div>
             )}
         </div>
@@ -354,113 +344,75 @@ const CustomEditor = ({
 }) => {
     if (accordions.length === 0) {
         return (
-            <div className="bg-white border border-[#E9E8FE] rounded p-3">
-                <div className="text-[#333333] mb-2">Start with:</div>
-                <div className="mb-3">
-                    <MultiSelect
-                        id="specifico-seed"
-                        placeholder="Copy from an existing table…"
-                        options={specOptions}
-                        value={seedTable}
-                        onChange={onSeed}
-                    />
+            <div className="flex items-center gap-2.5 flex-wrap px-3.5 py-3 bg-[#FAFAFC] border border-[#EFEFF4] rounded-xl">
+                <span className="font-bold text-[12.5px] text-[#54546A]">Start with:</span>
+                <div className="flex-1 min-w-[180px]">
+                    <MultiSelect bare id="specifico-seed" placeholder="Copy from an existing table…" options={specOptions} value={seedTable} onChange={onSeed} />
                 </div>
-                <button
-                    onClick={onStartBlank}
-                    type="button"
-                    className="text-[#6B66F7] underline text-sm"
-                >
-                    or start blank
-                </button>
+                <span className="font-semibold text-[12.5px] text-[#A2A2B4]">or</span>
+                <button onClick={onStartBlank} type="button" className="font-bold text-[12.5px] text-[#6B66F7]">start blank</button>
             </div>
         );
     }
 
     return (
-        <div className="space-y-3">
-            <div className="flex items-center justify-between">
-                <span className="text-[#555555] text-sm">
-                    {seedTable ? <>Copied from <strong>{seedTable.label}</strong></> : 'Custom table'}
-                </span>
-                <button
-                    type="button"
-                    onClick={onStartOver}
-                    className="text-[#6B66F7] underline text-sm"
-                >
-                    Start over
-                </button>
-            </div>
-            {accordions.map((accordion) => (
-                <div key={accordion.id} className="bg-white border border-[#E9E8FE] rounded">
-                    <div
-                        onClick={() => onToggle(accordion.id)}
-                        className="cursor-pointer bg-[#F5F5FE] py-3 px-4 relative flex items-center justify-between rounded-t"
-                    >
-                        <span className="text-[#333333]">
-                            {accordion.title || 'Untitled group'} {activeAccordion === accordion.id ? '−' : '+'}
-                        </span>
-                        <button
-                            type="button"
-                            onClick={(e) => onRemove(accordion.id, e)}
-                            className="ml-3"
-                            aria-label="Remove group"
-                        >
-                            <Remove />
-                        </button>
-                    </div>
-
-                    {activeAccordion === accordion.id && (
-                        <div className="p-3">
-                            <TextInput
-                                placeholder="Group name"
+        <div className="flex flex-col gap-3">
+            {accordions.map((accordion) => {
+                const open = activeAccordion === accordion.id;
+                if (!open) {
+                    const attrCount = accordion.inputGroups?.length || 0;
+                    return (
+                        <div key={accordion.id} onClick={() => onToggle(accordion.id)} className="flex items-center gap-2.5 px-3.5 py-[11px] border border-[#EFEFF4] rounded-xl bg-white cursor-pointer hover:bg-[#FAFAFB] transition-colors">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: 'rotate(-90deg)' }}><path d="M3 4.5 6 7.5 9 4.5" stroke="#9A9AAE" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            <span className="flex-1 font-bold text-[13px] text-[#23232E]">{accordion.title || 'Untitled group'}</span>
+                            <span className="font-semibold text-[12px] text-[#A2A2B4]">{attrCount} attribute{attrCount === 1 ? '' : 's'}</span>
+                        </div>
+                    );
+                }
+                return (
+                    <div key={accordion.id} className="border border-[#EFEFF4] rounded-xl overflow-hidden">
+                        <div className="flex items-center gap-2.5 px-3.5 py-[11px] bg-[#F6F5FF] border-b border-[#EFEFF4]">
+                            <button type="button" onClick={() => onToggle(accordion.id)} aria-label="Collapse group">
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5 6 7.5 9 4.5" stroke="#6B66F7" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            </button>
+                            <input
                                 value={accordion.title}
                                 onChange={(e) => onTitleChange(accordion.id, e.target.value)}
-                                className="border-b border-[#E9E8FE] !p-0 !pb-3 min-h-0"
+                                placeholder="Group name"
+                                className="flex-1 !h-8 !min-h-0 box-border !border !border-[#E2DFFF] !bg-white !rounded-lg !px-[11px] !py-0 !m-0 font-bold !text-[13px] !text-[#23232E] !shadow-none !outline-none focus:!border-[#6B66F7] focus:!shadow-[0_0_0_3px_rgba(107,102,247,0.16)] focus:!ring-0"
                             />
-                            <div className="mt-3">
-                                {accordion.inputGroups.map((row, rowIndex) => (
-                                    <div key={rowIndex} className="flex gap-2 mb-2">
-                                        {row.map((input) => (
-                                            <TextInput
-                                                key={input.id}
-                                                hasLabel={false}
-                                                type="text"
-                                                value={input.value}
-                                                onChange={(e) => onValueChange(accordion.id, rowIndex, input.id, e.target.value)}
-                                                className="!p-0 min-h-9"
-                                            />
-                                        ))}
-                                        <button
-                                            type="button"
-                                            onClick={(e) => onRemoveRow(accordion.id, rowIndex, e)}
-                                            className="p-[7px] w-9 h-9 bg-[#FBFCFD] border border-[#E9E8FE] rounded"
-                                            aria-label="Remove row"
-                                        >
-                                            <Trash />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                            <button
-                                type="button"
-                                onClick={(e) => onAddRow(accordion.id, e)}
-                                className="flex gap-1 items-center px-3 py-2 bg-[#6B66F7] rounded text-white text-sm"
-                            >
-                                <Add />
-                                Add attribute
+                            <TrashBtn onClick={(e) => onRemove(accordion.id, e)} label="Remove group" size={30} />
+                        </div>
+                        <div className="px-3.5 py-3 flex flex-col gap-[9px]">
+                            {accordion.inputGroups.map((row, rowIndex) => (
+                                <div key={rowIndex} className="grid grid-cols-[1fr_1fr_32px] gap-[9px] items-center">
+                                    {row.map((input) => (
+                                        <input
+                                            key={input.id}
+                                            type="text"
+                                            value={input.value}
+                                            onChange={(e) => onValueChange(accordion.id, rowIndex, input.id, e.target.value)}
+                                            className="!h-9 !min-h-0 box-border !border !border-[#E7E7EF] !bg-white !rounded-lg !px-[11px] !py-0 !m-0 font-medium !text-[13px] !text-[#23232E] !shadow-none !outline-none focus:!border-[#6B66F7] focus:!shadow-[0_0_0_3px_rgba(107,102,247,0.16)] focus:!ring-0"
+                                        />
+                                    ))}
+                                    <button type="button" onClick={(e) => onRemoveRow(accordion.id, rowIndex, e)} aria-label="Remove row" className="inline-flex items-center justify-center w-8 h-8 bg-[#F5F5F9] rounded-lg hover:bg-[#EFE9E9] transition-colors">
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3l-6 6" stroke="#B4B4C2" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                                    </button>
+                                </div>
+                            ))}
+                            <button type="button" onClick={(e) => onAddRow(accordion.id, e)} className="self-start inline-flex items-center gap-1.5 h-8 px-3 bg-[#EDEBFF] text-[#6B66F7] border-none rounded-lg font-bold text-[12px] cursor-pointer hover:bg-[#E2DFFF] mt-0.5 transition-colors">
+                                <span className="text-[15px] leading-none">+</span> Add attribute
                             </button>
                         </div>
-                    )}
-                </div>
-            ))}
-            <button
-                type="button"
-                onClick={onAdd}
-                className="flex gap-1 items-center px-3 py-2 bg-[#6B66F7] rounded text-white text-sm"
-            >
-                <Add />
-                Add group
-            </button>
+                    </div>
+                );
+            })}
+            <div className="flex gap-2.5 mt-0.5">
+                <button type="button" onClick={onAdd} className="inline-flex items-center gap-[7px] h-[38px] px-3.5 bg-[#6B66F7] text-white border-none rounded-[9px] font-bold text-[12.5px] cursor-pointer shadow-[0_5px_14px_-4px_rgba(107,102,247,0.55)] hover:bg-[#5a55e8] transition-colors">
+                    <span className="text-[16px] leading-none">+</span> Add group
+                </button>
+                <button type="button" onClick={onStartOver} className="h-[38px] px-3.5 bg-white border border-[#E7E7EF] rounded-[9px] font-bold text-[12.5px] text-[#9A9AAE] cursor-pointer hover:bg-[#F5F5F9] hover:text-[#54546A] transition-colors">Start over</button>
+            </div>
         </div>
     );
 };

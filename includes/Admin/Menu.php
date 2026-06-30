@@ -11,6 +11,27 @@ class Menu {
 	public function __construct() {
 		add_action('admin_menu', [ $this, 'admin_menu' ]);
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'admin_assets' ) );
+		add_filter( 'wp_resource_hints', array( __CLASS__, 'resource_hints' ), 10, 2 );
+	}
+
+	/**
+	 * Preconnect to the Google Fonts hosts so Nunito downloads sooner and the
+	 * fallback-to-Nunito swap on first paint is as brief as possible.
+	 *
+	 * @param array  $urls          URLs to print for the resource hint.
+	 * @param string $relation_type The relation type the URLs are printed for.
+	 * @return array
+	 */
+	public static function resource_hints( $urls, $relation_type ) {
+		if ( 'preconnect' === $relation_type ) {
+			$urls[] = 'https://fonts.googleapis.com';
+			$urls[] = array(
+				'href'        => 'https://fonts.gstatic.com',
+				'crossorigin' => 'anonymous',
+			);
+		}
+
+		return $urls;
 	}
 
 	/**
@@ -22,6 +43,7 @@ class Menu {
 		add_submenu_page( 'specifico-options', __( 'Groups', 'specifico' ), __('Groups', 'specifico' ), 'manage_options', 'specifico-groups', [ $this, 'group_page' ] );
 		add_submenu_page( 'specifico-options', __( 'Specification Mapping', 'specifico' ), __('Mapping', 'specifico' ), 'manage_options', 'specifico-mapping', [ $this, 'specification_mapping' ] );
 		add_submenu_page( 'specifico-options', __( 'Settings', 'specifico' ), __('Settings', 'specifico' ), 'manage_options', 'specifico-settings', [ $this, 'specification_settings' ] );
+		add_submenu_page( 'specifico-options', __( 'Export & Import', 'specifico' ), __('Export / Import', 'specifico' ), 'manage_options', 'specifico-export-import', [ $this, 'export_import_page' ] );
 	}
 
 	/**
@@ -60,10 +82,19 @@ class Menu {
 		<?php
 	}
 
+	/**
+	 * Admin page callback function
+	 */
+	public function export_import_page() {
+		?>
+		<div id="specifico-export-import" class="specifico-app"></div>
+		<?php
+	}
+
 	public static function admin_assets() {
 		$current_screen = get_current_screen();
 
-		wp_enqueue_style( 'specifico-nunito-font', 'https://fonts.googleapis.com/css2?family=Nunito:wght@400;500&display=swap', array(), SPECIFICO_VERSION );
+		wp_enqueue_style( 'specifico-nunito-font', 'https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap', array(), SPECIFICO_VERSION );
 
 		if ( 'toplevel_page_specifico-options' === $current_screen->id ) {
 			wp_enqueue_script( 'specifico-admin-ui', SPECIFICO_URL . '/build/specification.js', array(
@@ -101,6 +132,15 @@ class Menu {
 		if ( 'specifico_page_specifico-settings' === $current_screen->id ) {
 			wp_enqueue_script( 'specifico-settings-ui', SPECIFICO_URL . '/build/settings.js', array( 'jquery', 'wp-element' ), SPECIFICO_VERSION, true );
 			wp_localize_script( 'specifico-settings-ui', 'specificoAdminSettings', array(
+				'url'     => esc_url_raw( rest_url() ),
+				'nonce'   => wp_create_nonce( 'wp_rest' ),
+				'version' => SPECIFICO_ASSETS,
+			) );
+		}
+
+		if ( 'specifico_page_specifico-export-import' === $current_screen->id ) {
+			wp_enqueue_script( 'specifico-export-import-ui', SPECIFICO_URL . '/build/exportImport.js', array( 'jquery', 'wp-element' ), SPECIFICO_VERSION, true );
+			wp_localize_script( 'specifico-export-import-ui', 'specificoAdminSettings', array(
 				'url'     => esc_url_raw( rest_url() ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
 				'version' => SPECIFICO_ASSETS,

@@ -2,9 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Api from "./Utilites/Api";
 import Logo from "./components/Icons/Logo"
-import Check from "./components/Icons/Check";
 import MappingRepeater from "./components/MappingRepeater";
-import MappingLoader from "./components/Loader/MappingLoader";
 
 const Attributes = () => {
     const [ attributes, setAttributes ] = useState([
@@ -148,49 +146,51 @@ const Attributes = () => {
         setAttributes(updatedFields);
     };
 
+    const CARD = "bg-white border border-[#ECECF3] rounded-2xl shadow-[0_1px_2px_rgba(20,20,45,0.04),0_18px_40px_-24px_rgba(30,28,80,0.18)]";
+
     return (
-        <div className="font-['Nunito'] text-sm mt-5 mr-5 relative">
-            <div>
-                <div className="flex bg-white drop-shadow-[0_0_4px_rgba(26,26,26,0.15)] px-5 py-4 mb-5 items-center rounded">
-                    <div className="flex flex-auto gap-3 items-center">
-                        <Logo/>
-                        <div>
-                            <h1 className="text-lg font-semibold text-[#333333]">Specification Mapping</h1>
-                            <p className="text-[#555555]">Here are you can map your specification tables.</p>
-                        </div>
+        <div className="font-['Nunito'] text-sm mt-5 mr-5 relative text-[#54546A]">
+            {/* page header card */}
+            <div className={`${CARD} flex items-center justify-between gap-4 px-6 py-[18px] mb-5`}>
+                <div className="flex items-center gap-[15px]">
+                    <span className="w-10 [&_svg]:w-10 [&_svg]:h-auto block"><Logo /></span>
+                    <div>
+                        <div className="font-extrabold text-[19px] text-[#23232E] tracking-[-0.2px]">Specification Mapping</div>
+                        <div className="font-medium text-[13px] text-[#9A9AAE] mt-0.5">Map specification tables to your products.</div>
                     </div>
-                    <div className="flex-initial text-right">
-                        <button className="flex gap-1 items-center px-3.5 py-2 bg-[#6B66F7] rounded text-white" onClick={() => updateData()}>
-                            Save Mapping
-                        </button>
-                    </div>
+                </div>
+                <div className="flex-none">
+                    <button type="button" onClick={() => updateData()} className="whitespace-nowrap inline-flex items-center gap-[7px] h-[38px] px-[18px] bg-[#6B66F7] text-white border-none rounded-[11px] font-bold text-[13.5px] cursor-pointer shadow-[0_5px_14px_-4px_rgba(107,102,247,0.55)] hover:bg-[#5a55e8] transition-colors">
+                        Save Mapping
+                    </button>
                 </div>
             </div>
-            <div>
-                <div className="bg-white drop-shadow-[0_0_4px_rgba(26,26,26,0.15)] mb-5 items-center rounded">
-                <div className="bg-[#F5F5FE] px-5 py-4 text-[15px] font-semibold rounded-tl rounded-tr flex flex-auto">
-                    <div className="w-1/3">Specifications</div>
-                    <div className="w-1/3">Type</div>
-                    <div className="w-1/3">Values</div>
+
+            <div className={`${CARD} overflow-hidden`}>
+                <div className="grid gap-3.5 px-6 py-3.5 border-b border-[#EFEFF4] font-bold text-[10.5px] tracking-[0.09em] uppercase text-[#A2A2B4]" style={{ gridTemplateColumns: "1fr 1fr 1.3fr 48px" }}>
+                    <span>Specifications</span><span>Type</span><span>Values</span><span></span>
                 </div>
-                <div className="pb-5 px-5">
-                    { ! isLoading &&
-                        <MappingRepeater
-                            metaFields={attributes}
-                            onAddField={handleAddField}
-                            onChange={handleChange}
-                            onRemoveField={handleRemoveField}
-                            onChangeType={handleTypeChange}
-                            spec={spec}
-                            type={type}
-                            optionsByType={optionsByType}
-                        />
-                        }
-                        { isLoading &&
-                            <MappingLoader count={specificoAdminSettings.mapping} />
-                        }
-                    </div>
-                </div>
+                { ! isLoading ?
+                    <MappingRepeater
+                        metaFields={attributes}
+                        onAddField={handleAddField}
+                        onChange={handleChange}
+                        onRemoveField={handleRemoveField}
+                        onChangeType={handleTypeChange}
+                        spec={spec}
+                        type={type}
+                        optionsByType={optionsByType}
+                    />
+                    :
+                    [0,1,2].map(k =>
+                        <div className="grid gap-3.5 items-center px-6 py-4 border-b border-[#F3F3F8]" style={{ gridTemplateColumns: "1fr 1fr 1.3fr 48px" }} key={k}>
+                            <span className="h-[38px] rounded-[10px] bg-[#ECEBFF] animate-pulse" />
+                            <span className="h-[38px] rounded-[10px] bg-[#ECEBFF] animate-pulse" />
+                            <span className="h-[38px] rounded-[10px] bg-[#ECEBFF] animate-pulse" />
+                            <span className="h-[38px] w-[38px] rounded-[10px] bg-[#ECEBFF] animate-pulse" />
+                        </div>
+                    )
+                }
             </div>
         </div>
     );

@@ -67,6 +67,10 @@ class Admin {
 			return;
 		}
 
+		// Load the compiled Tailwind stylesheet in <head> so the admin SPAs paint
+		// styled on first render. (Previously the CSS was injected at runtime by
+		// admin.js in the footer, which caused a flash of unstyled content.)
+		wp_enqueue_style( 'specifico-admin', SPECIFICO_ASSETS . '/dist/css/admin.css', array(), SPECIFICO_VERSION );
 		wp_enqueue_script( 'specifico-admin', SPECIFICO_ASSETS . '/dist/js/admin.js', array( 'jquery' ), SPECIFICO_VERSION, true );
 	}
 }

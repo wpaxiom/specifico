@@ -1,27 +1,37 @@
 /* global specificoAdminSettings */
 import React, { useState, useEffect } from 'react';
 import Api from "./../Utilites/Api";
-import TextInput from "../components/TextInput";
 import Switch from "../components/Switch";
 import IndeterminateCheckbox from "../components/IndeterminateCheckbox";
 
 import {
     useReactTable,
     getCoreRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
     flexRender,
 } from '@tanstack/react-table'
+import TableSearch from "../components/TableSearch";
 import DropdownButton from "../components/DropdownButton";
 import MultiSelect from "../components/MultiSelect";
 import Logo from "../components/Icons/Logo";
 import TableFooter from "../components/TableFooter";
 import TableHeader from "../components/TableHeader";
 import Rotate from "../components/Icons/Rotate";
-import Edit from "../components/Icons/Edit";
-import Delete from "../components/Icons/Delete";
-import SpecLoader from "../components/Loader/SpecLoader";
-import EmptySection from "../components/EmptySection";
+import DeleteProgress from "../components/DeleteProgress";
+
+// Shared design tokens for the redesigned admin.
+const CARD = "bg-white border border-[#ECECF3] rounded-2xl shadow-[0_1px_2px_rgba(20,20,45,0.04),0_18px_40px_-24px_rgba(30,28,80,0.18)]";
+const SPEC_GRID = "46px 104px minmax(150px,1fr) 120px 250px 50px";
+const FIELD = "w-full !h-[38px] !min-h-[38px] box-border !border !border-[#E7E7EF] !rounded-[10px] !bg-white !px-[14px] !py-0 !m-0 font-medium !text-[14px] !text-[#23232E] !shadow-none !outline-none focus:!border-[#6B66F7] focus:!shadow-[0_0_0_3px_rgba(107,102,247,0.16)] focus:!ring-0";
+
+// Keep group pills on a single line: collapse names longer than two words to
+// "first … last" so a long title can't wrap the row onto two lines.
+const formatGroupName = ( name ) => {
+    const words = String( name ).trim().split( /\s+/ );
+    if ( words.length <= 2 ) {
+        return name;
+    }
+    return `${ words[0] } … ${ words[ words.length - 1 ] }`;
+};
 
 const columns = [
     {
@@ -29,48 +39,50 @@ const columns = [
         header: ({ table }) => (
             <IndeterminateCheckbox
                 {...{
-                    checked: table.getIsAllRowsSelected(),
-                    indeterminate: table.getIsSomeRowsSelected(),
-                    onChange: table.getToggleAllRowsSelectedHandler(),
+                    checked: table.getIsAllPageRowsSelected(),
+                    indeterminate: table.getIsSomePageRowsSelected(),
+                    onChange: table.getToggleAllPageRowsSelectedHandler(),
                 }}
             />
         ),
         cell: ({ row }) => (
-            <div className="">
-                <IndeterminateCheckbox
-                    {...{
-                        checked: row.getIsSelected(),
-                        disabled: !row.getCanSelect(),
-                        indeterminate: row.getIsSomeSelected(),
-                        onChange: row.getToggleSelectedHandler(),
-                    }}
-                />
-            </div>
+            <IndeterminateCheckbox
+                {...{
+                    checked: row.getIsSelected(),
+                    disabled: !row.getCanSelect(),
+                    indeterminate: row.getIsSomeSelected(),
+                    onChange: row.getToggleSelectedHandler(),
+                }}
+            />
         ),
     },
     {
         accessorKey: 'id',
         header: 'ID',
-        cell: info => info.getValue(),
+        cell: info => <span className="font-mono font-semibold text-[13px] text-[#A2A2B4]">{info.getValue()}</span>,
         footer: props => props.column.id,
     },
     {
         accessorKey: 'name',
         header: 'Name',
-        cell: info => info.getValue(),
+        cell: info => <span className="text-[#23232E] font-bold">{info.getValue()}</span>,
         footer: props => props.column.id,
     },
     {
         accessorKey: 'status',
         header: 'Status',
         footer: props => props.column.id,
-        cell: ( info ) => {
-            const status = info.getValue() ? 'active' : 'inactive';
-
-            return (
-                <div className={ info.getValue() ? "px-2 py-[5px] inline-block capitalize rounded-full leading-none border border-[#1ABC9C] text-[#1ABC9C] bg-[#F1FDF8]" : "px-2 py-[5px] inline-block capitalize rounded-full leading-none border border-[#E74C3C] text-[#E74C3C] bg-[#FFF2F2]" }>{status}</div>
+        cell: ( info ) => (
+            info.getValue() ? (
+                <span className="inline-flex items-center gap-[7px] text-[#12A789] font-bold text-[13px]">
+                    <span className="w-[7px] h-[7px] rounded-full bg-[#16B391]" />Active
+                </span>
+            ) : (
+                <span className="inline-flex items-center gap-[7px] text-[#D9483B] font-bold text-[13px]">
+                    <span className="w-[7px] h-[7px] rounded-full bg-[#E74C3C]" />Inactive
+                </span>
             )
-        }
+        )
     },
     {
         id: 'groups',
@@ -83,16 +95,16 @@ const columns = [
             const remainGroups = groups.length - 2;
 
             return (
-                <div className="flex gap-2">
+                <div className="flex gap-1.5 flex-wrap">
                     {initGroups.map((item, index) => (
-                        <div key={index} className="px-2 py-[5px] inline-block capitalize rounded-full leading-none border border-[#E9E8FE]">
-                            {item}
-                        </div>
+                        <span key={index} title={item} className="px-[11px] py-1 rounded-lg bg-[#F2F2F7] text-[#54546A] text-[12.5px] font-semibold whitespace-nowrap">
+                            {formatGroupName(item)}
+                        </span>
                     ))}
                     {remainGroups > 0 && (
-                        <div className="px-2 py-[5px] inline-block capitalize rounded-full leading-none border border-[#E9E8FE]">
+                        <span className="px-[11px] py-1 rounded-lg bg-[#EDEBFF] text-[#6B66F7] text-[12.5px] font-bold">
                             +{remainGroups}
-                        </div>
+                        </span>
                     )}
                 </div>
             );
@@ -111,20 +123,53 @@ const SpecTable = () => {
     const [ showForm, setShowForm ] = useState(false);
 
     const [ isLoading, setIsLoading ] = useState( false );
+    const [ deleteProgress, setDeleteProgress ] = useState( null );
 
     const [ tableCounts, setTableCounts ] = useState( parseInt( specificoAdminSettings.tables ) );
+    const [ total, setTotal ] = useState( 0 );
+
+    const [ search, setSearch ] = useState( '' );
+    const [ debouncedSearch, setDebouncedSearch ] = useState( '' );
+
+    const PAGE_SIZE_KEY = 'specifico_spec_page_size';
+    const getInitialPageSize = () => {
+        const stored = parseInt( localStorage.getItem( PAGE_SIZE_KEY ), 10 );
+        return [ 10, 25, 50, 100, 200, 500 ].includes( stored ) ? stored : 10;
+    };
+    const [ pagination, setPagination ] = useState( { pageIndex: 0, pageSize: getInitialPageSize() } );
+
+    useEffect(() => {
+        localStorage.setItem( PAGE_SIZE_KEY, String( pagination.pageSize ) );
+    }, [ pagination.pageSize ]);
 
     const table = useReactTable({
         data,
         columns,
+        state: { pagination },
+        onPaginationChange: setPagination,
+        manualPagination: true,
+        rowCount: total,
         getCoreRowModel: getCoreRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
         getRowId: row => row.id
     });
 
+    // Debounce the search box before hitting the server, and snap back to the
+    // first page whenever the term changes.
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch( search );
+            setPagination( prev => prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 } );
+        }, 400);
+        return () => clearTimeout( timer );
+    }, [ search ]);
+
+    // Server-side pagination: refetch whenever the page, page size, or the
+    // (debounced) search term changes.
     useEffect(() => {
         fetchData();
+    }, [ pagination.pageIndex, pagination.pageSize, debouncedSearch ]);
+
+    useEffect(() => {
         fetchGroupsSelect();
     }, []);
 
@@ -175,8 +220,28 @@ const SpecTable = () => {
     const fetchData = async () => {
         try {
             setIsLoading( true );
-            const response = await Api.get('/specifico/v1/specification');
-            setData(response.data);
+            const response = await Api.get('/specifico/v1/specification', {
+                params: {
+                    page: pagination.pageIndex + 1,
+                    per_page: pagination.pageSize,
+                    search: debouncedSearch || undefined,
+                }
+            });
+            const rows = Array.isArray( response.data.rows ) ? response.data.rows : [];
+            const totalRows = parseInt( response.data.total, 10 ) || 0;
+            setData( rows );
+            setTotal( totalRows );
+            // Without an active search the server total is the authoritative
+            // overall count, so keep the empty-state gate in sync with it.
+            if ( ! debouncedSearch ) {
+                setTableCounts( totalRows );
+            }
+            // If a deletion emptied the current page, step back to the last
+            // page that still has rows.
+            const lastPage = Math.max( Math.ceil( totalRows / pagination.pageSize ) - 1, 0 );
+            if ( totalRows > 0 && rows.length === 0 && pagination.pageIndex > lastPage ) {
+                setPagination( prev => ({ ...prev, pageIndex: lastPage }) );
+            }
         } catch (error) {
             console.error('Error fetching specifications:', error);
         } finally {
@@ -198,7 +263,6 @@ const SpecTable = () => {
                     }
                 }
             );
-            setTableCounts( parseInt( specificoAdminSettings.tables ) + 1 );
             await fetchData();
         } catch (error) {
             console.error('Error creating specification:', error);
@@ -220,7 +284,6 @@ const SpecTable = () => {
                     }
                 }
             );
-            setTableCounts( parseInt( specificoAdminSettings.tables ) );
             await fetchData();
         } catch (error) {
             console.error('Error updating specification:', error);
@@ -233,7 +296,6 @@ const SpecTable = () => {
         try {
             setIsLoading( true );
             await Api.delete(`/specifico/v1/specification/${postId}`);
-            setTableCounts( parseInt( specificoAdminSettings.tables ) - 1 );
             await fetchData();
         } catch (error) {
             console.error('Error deleting specification:', error);
@@ -243,19 +305,41 @@ const SpecTable = () => {
     };
 
     const deletePosts = async (posts) => {
-        try {
-            setIsLoading( true );
-            await Promise.all(
-                posts.map(async (postId) => {
+        if ( ! posts || ! posts.length ) return;
+
+        const total = posts.length;
+        let done = 0;
+        setDeleteProgress( { total, done } );
+
+        // Bring the progress card into view at the top of the page.
+        window.scrollTo( { top: 0, behavior: 'smooth' } );
+
+        // Bounded concurrency: process a few deletes at a time instead of firing
+        // all of them at once, so large bulk deletes don't overwhelm the server
+        // and we can report progress as each one finishes.
+        const queue = [ ...posts ];
+        const concurrency = Math.min( 5, total );
+        const worker = async () => {
+            while ( queue.length ) {
+                const postId = queue.shift();
+                try {
                     await Api.delete(`/specifico/v1/specification/${postId}`);
-                    setTableCounts( parseInt( specificoAdminSettings.tables ) - 1 );
-                })
-            );
+                } catch (error) {
+                    console.error('Error deleting specification:', postId, error);
+                }
+                done++;
+                setDeleteProgress( { total, done } );
+            }
+        };
+
+        try {
+            await Promise.all( Array.from( { length: concurrency }, worker ) );
+            table.resetRowSelection();
             await fetchData();
         } catch (error) {
-            console.error('Error deleting specification:', error);
+            console.error('Error deleting specifications:', error);
         } finally {
-            setIsLoading( false );
+            setDeleteProgress( null );
         }
     };
 
@@ -271,111 +355,115 @@ const SpecTable = () => {
         }
     };
 
+    const primaryBtn = "whitespace-nowrap inline-flex items-center gap-[7px] h-[38px] px-[18px] bg-[#6B66F7] text-white border-none rounded-[11px] font-bold text-[13.5px] cursor-pointer shadow-[0_5px_14px_-4px_rgba(107,102,247,0.55)] hover:bg-[#5a55e8] disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
+    const secondaryBtn = "whitespace-nowrap inline-flex items-center gap-[7px] h-[38px] px-[18px] bg-white border border-[#E7E7EF] rounded-[11px] text-[#54546A] font-bold text-[13.5px] cursor-pointer hover:bg-[#F5F5F9] transition-colors";
 
     return (
-        <div className="font-['Nunito'] text-sm mt-5 mr-5 relative">
-            <div className="flex bg-white drop-shadow-[0_0_4px_rgba(26,26,26,0.15)] px-5 py-4 mb-5 items-center rounded">
-                <div className="flex flex-auto gap-3 items-center">
-                    <Logo />
+        <div className="font-['Nunito'] text-sm mt-5 mr-5 relative text-[#54546A]">
+            {/* page header card */}
+            <div className={`${CARD} flex items-center justify-between gap-4 px-6 py-[18px] mb-5`}>
+                <div className="flex items-center gap-[15px]">
+                    <span className="w-10 [&_svg]:w-10 [&_svg]:h-auto block"><Logo /></span>
                     <div>
-                        <h1 className="text-lg font-semibold text-[#333333]">Specification Tables</h1>
-                        <p className="text-[#555555]">Here are your specification tables. You can edit or delete them.</p>
+                        <div className="font-extrabold text-[19px] text-[#23232E] tracking-[-0.2px]">Specification Tables</div>
+                        <div className="font-medium text-[13px] text-[#9A9AAE] mt-0.5">Here are your specification tables. You can edit or delete them.</div>
                     </div>
                 </div>
-                <div className="flex-initial text-right flex gap-2">
-                    { showForm &&
+                <div className="flex-none flex gap-2.5">
+                    { showForm ?
                         <>
-                            <button type="button" onClick={handleCancel} className="px-3.5 py-2 bg-white border border-[#E9E8FE] rounded text-[#555555]">
-                                Cancel
-                            </button>
-                            <button type="button" disabled={!title.trim()} className="flex gap-1 items-center px-3.5 py-2 bg-[#6B66F7] rounded text-white disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleSaveAndClose}>
+                            <button type="button" onClick={handleCancel} className={secondaryBtn}>Cancel</button>
+                            <button type="button" disabled={!title.trim()} className={primaryBtn} onClick={handleSaveAndClose}>
                                 { editingId ?
-                                    <>
-                                        <Rotate />
-                                        Update Specification
-                                    </>
+                                    <><Rotate /> Update Specification</>
                                     :
-                                    <>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16"><path stroke="#fff" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 3.333v9.334M3.333 8h9.334"/></svg>
-                                        Save Specification
-                                    </>
+                                    <><span className="text-[18px] leading-none -mt-px">+</span> Save Specification</>
                                 }
                             </button>
                         </>
-                    }
-
-                    { ! showForm &&
-                        <button onClick={handleOpenAddPanel} className="flex gap-1 items-center px-3.5 py-2 bg-[#6B66F7] rounded text-white">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16"><path stroke="#fff" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 3.333v9.334M3.333 8h9.334"/></svg>
-                            Add Specification
+                        :
+                        <button onClick={handleOpenAddPanel} className={primaryBtn}>
+                            <span className="text-[18px] leading-none -mt-px">+</span> Add Specification
                         </button>
                     }
                 </div>
             </div>
 
             { ! showForm && (
-                <div className="bg-white drop-shadow-[0_0_4px_rgba(26,26,26,0.15)] rounded">
-                    { tableCounts > 0 &&
-                        <>
-                            <TableHeader table={table} />
+                <div>
+                    { deleteProgress && <DeleteProgress done={deleteProgress.done} total={deleteProgress.total} /> }
+
+                    { tableCounts > 0 ?
+                        <div className={`${CARD} overflow-hidden`}>
+                            <TableSearch value={search} onChange={setSearch} placeholder="Search specifications…" count={total} noun="tables" />
+                            <TableHeader table={table} template={SPEC_GRID} />
                             <div>
-                                { ! isLoading &&
+                                { ! isLoading ?
                                     <>
-                                        {
-                                            table.getRowModel().rows.length > 0 &&
-                                            table.getRowModel().rows.map(row =>
-                                                <div className="flex px-5 py-4 gap-5 items-center relative before:content-[''] before:w-full before:h-px before:bg-dash-border before:bg-repeat-x before:absolute before:bottom-0" key={row.id}>
-                                                    {row.getVisibleCells().map(cell =>
-                                                        <div className={cell.id.includes('checkbox') ? 'flex-initial w-[5%] max-w-3.5 text-[#555555]' : 'flex-initial w-[19%] text-[#555555]'} key={cell.id}> {flexRender(cell.column.columnDef.cell, cell.getContext())}</div>
-                                                    )}
-                                                    <div className="flex-initial w-[19%] text-[#555555] text-right">
-                                                        <DropdownButton>
-                                                            <button onClick={() => handleEditClick(row.id)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#555555] hover:bg-[#F5F5FE] hover:text-[#333333] transition-colors">
-                                                                <Edit />
-                                                                Edit
-                                                            </button>
-                                                            <button type="button" className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#E74C3C] hover:bg-[#FFF2F2] transition-colors" onClick={() => deletePost(row.id)}>
-                                                                <Delete />
-                                                                Delete
-                                                            </button>
-                                                        </DropdownButton>
-                                                    </div>
-                                                </div>
-                                            )
+                                        { table.getRowModel().rows.map(row =>
+                                            <div className="grid items-center px-[22px] py-[15px] border-b border-[#F3F3F8] font-medium text-[14px] hover:bg-[#FAFAFB]" style={{ gridTemplateColumns: SPEC_GRID }} key={row.id}>
+                                                { row.getVisibleCells().map(cell =>
+                                                    <span key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</span>
+                                                ) }
+                                                <span className="text-right">
+                                                    <DropdownButton>
+                                                        <button onClick={() => handleEditClick(row.id)} className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-[13.5px] text-[#3A3A45] hover:bg-[#F5F5F9] transition-colors">Edit</button>
+                                                        <button type="button" onClick={() => deletePost(row.id)} className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-[13.5px] text-[#dc2626] hover:bg-[#FEF2F2] transition-colors">Delete</button>
+                                                    </DropdownButton>
+                                                </span>
+                                            </div>
+                                        ) }
+                                        { total === 0 &&
+                                            <div className="px-[22px] py-12 text-center text-[#9A9AAE]">No specifications match your search.</div>
                                         }
                                     </>
-                                }
-                                {
-                                    isLoading &&
-                                    <SpecLoader count={specificoAdminSettings.tables} />
+                                    :
+                                    [0,1,2,3,4,5].map(k =>
+                                        <div className="grid items-center px-[22px] py-[17px] border-b border-[#F3F3F8] gap-3" style={{ gridTemplateColumns: SPEC_GRID }} key={k}>
+                                            <span className="w-4 h-4 rounded bg-[#ECEBFF] animate-pulse" />
+                                            <span className="w-16 h-[13px] rounded bg-[#ECEBFF] animate-pulse" />
+                                            <span className="w-3/5 h-[13px] rounded bg-[#ECEBFF] animate-pulse" />
+                                            <span className="w-16 h-[13px] rounded bg-[#ECEBFF] animate-pulse" />
+                                            <span className="flex gap-1.5"><span className="w-[62px] h-[22px] rounded-lg bg-[#ECEBFF] animate-pulse" /><span className="w-[62px] h-[22px] rounded-lg bg-[#ECEBFF] animate-pulse" /></span>
+                                            <span className="w-6 h-6 rounded-lg bg-[#ECEBFF] animate-pulse justify-self-end" />
+                                        </div>
+                                    )
                                 }
                             </div>
-                            <TableFooter table={table} deletePosts={deletePosts} />
-                        </>
-                    }
-                    { tableCounts <= 0 &&
-                        <EmptySection title="Specification not found" desc="Sorry ! No Specification table found. You can add specification by clicking add specification button" />
+                            <TableFooter table={table} deletePosts={deletePosts} totalRows={total} />
+                        </div>
+                        :
+                        <div className={`${CARD} px-6 py-16 flex flex-col items-center text-center`}>
+                            <div className="w-[62px] h-[62px] rounded-2xl bg-[#F2F1FF] flex items-center justify-center mb-[18px]">
+                                <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect x="4" y="3" width="18" height="20" rx="3" stroke="#6B66F7" strokeWidth="1.8"/><line x1="8" y1="9" x2="18" y2="9" stroke="#6B66F7" strokeWidth="1.8" strokeLinecap="round"/><line x1="8" y1="13" x2="18" y2="13" stroke="#B7B4FF" strokeWidth="1.8" strokeLinecap="round"/><line x1="8" y1="17" x2="14" y2="17" stroke="#B7B4FF" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                            </div>
+                            <div className="font-extrabold text-[17px] text-[#23232E]">No specification tables yet</div>
+                            <div className="font-medium text-[13.5px] text-[#9A9AAE] mt-1.5 max-w-[380px]">Create your first table to define the specs that appear on your WooCommerce products.</div>
+                            <button onClick={handleOpenAddPanel} className={`${primaryBtn} mt-5`}>
+                                <span className="text-[18px] leading-none -mt-px">+</span> Add Specification
+                            </button>
+                        </div>
                     }
                 </div>
             )}
 
             { showForm && (
-                <div>
-                    <div className="bg-white drop-shadow-[0_0_4px_rgba(26,26,26,0.15)] mb-5 items-center rounded">
-                        <h2 className="bg-[#F5F5FE] px-5 py-4 text-[15px] font-semibold rounded-tl rounded-tr">
-                            Specification Table
-                        </h2>
-                        <div className="px-5">
-                            <div className="relative before:content-[''] before:w-full before:h-px before:bg-dash-border before:bg-repeat-x before:absolute before:bottom-0">
-                                <TextInput type="text" placeholder="Table Name" id="spec-title" required value={title} onChange={(e) => setTitle(e.target.value)} />
-                            </div>
-                            <div className="relative before:content-[''] before:w-full before:h-px before:bg-dash-border before:bg-repeat-x before:absolute before:bottom-0">
-                                <Switch placeholder="Status" checked={status} onChange={() => setStatus((prev) => !prev)} />
-                            </div>
-                            <div className="relative">
-                                <MultiSelect id="group-selector" isMulti placeholder="Groups" value={selectedGroup} onChange={(Groups) => setSelectedGroup(Groups)} options={options} />
-                            </div>
+                <div className={`${CARD} overflow-hidden`}>
+                    <div className="px-6 py-4 border-b border-[#EFEFF4] font-extrabold text-[15px] text-[#23232E]">Specification Table</div>
+                    <div className="grid grid-cols-[200px_1fr] items-center gap-5 px-6 py-5 border-b border-[#F3F3F8]">
+                        <label htmlFor="spec-title" className="font-bold text-[13px] text-[#3A3A45]">Table Name</label>
+                        <input id="spec-title" type="text" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Table Name" className={FIELD} />
+                    </div>
+                    <div className="grid grid-cols-[200px_1fr] items-center gap-5 px-6 py-5 border-b border-[#F3F3F8]">
+                        <div>
+                            <div className="font-bold text-[13px] text-[#3A3A45]">Status</div>
+                            <div className="font-medium text-[12px] text-[#9A9AAE] mt-0.5">Active tables render on matching products.</div>
                         </div>
+                        <div><Switch bare id="spec-status" checked={status} onChange={() => setStatus((prev) => !prev)} /></div>
+                    </div>
+                    <div className="grid grid-cols-[200px_1fr] items-start gap-5 px-6 py-5">
+                        <label className="font-bold text-[13px] text-[#3A3A45] pt-2.5">Groups</label>
+                        <MultiSelect bare id="group-selector" isMulti placeholder="Add group…" value={selectedGroup} onChange={(Groups) => setSelectedGroup(Groups)} options={options} />
                     </div>
                 </div>
             )}

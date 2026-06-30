@@ -10,6 +10,7 @@ entry.specification =  path.resolve( `${ srcDir }/specification.js` );
 entry.groups =  path.resolve( `${ srcDir }/groups.js` );
 entry.mapping =  path.resolve( `${ srcDir }/mapping.js` );
 entry.settings =  path.resolve( `${ srcDir }/settings.js` );
+entry.exportImport =  path.resolve( `${ srcDir }/exportImport.js` );
 entry.productOptions =  path.resolve( `${ srcDir }/productOptions.js` );
 
 const reactConfig = {
@@ -29,7 +30,11 @@ const reactConfig = {
 const assetsConfig = {
     ...defaultConfig,
     entry: {
-        'admin': ['./assets/src/js/admin.js', './assets/src/css/admin.css'],
+        // admin.css is compiled separately by the `tailwind` npm script into
+        // assets/dist/css/admin.css and enqueued in <head> (see Admin.php), so it
+        // is intentionally NOT bundled here — bundling it made style-loader inject
+        // the CSS at runtime in the footer, flashing unstyled content on load.
+        'admin': ['./assets/src/js/admin.js'],
         'specifico': ['./assets/src/js/specifico.js']
     },
     output: {

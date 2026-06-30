@@ -1,18 +1,19 @@
 {
   "name": "specifico",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "=== Cartick - Advanced Cart for WooCommerce ===\r Contributors: wpaxiom\r Requires at least: 5.8\r Tested up to: 5.8.2\r Requires PHP: 7.3\r Stable tag: 1.0.0\r License: GPLv2 or later\r License URI: https://www.gnu.org/licenses/gpl-2.0.html",
   "main": "gulpfile.js",
   "scripts": {
     "clean": "rm -rf build/*",
-    "build": "wp-scripts build && npm run composer:build && npm run wp:i18n",
+    "build": "wp-scripts build && npm run tailwind:build && npm run composer:build && npm run wp:i18n",
+    "tailwind:build": "npx tailwindcss -i ./assets/src/css/admin.css -o ./assets/dist/css/admin.css --minify",
     "composer:build": "composer install --no-dev && composer dump-autoload -o",
     "wp:i18n": "wp i18n make-pot .",
     "make-zip": "node scripts/make-zip.js",
     "sync": "node scripts/sync-to-public.js",
     "sync:apply": "node scripts/sync-to-public.js --apply",
     "start": "wp-scripts start",
-    "tailwind": "npx tailwindcss -i ./assets/src/scss/utilities/base.css -o ./assets/dist/css/admin.css --watch"
+    "tailwind": "npx tailwindcss -i ./assets/src/css/admin.css -o ./assets/dist/css/admin.css --watch"
   },
   "repository": {
     "type": "git",
