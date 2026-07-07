@@ -1,4 +1,5 @@
 import React from 'react';
+import { __ } from '@wordpress/i18n';
 import Logo from "../components/Icons/Logo";
 import ExportCard from "../Settings/ExportCard";
 import ImportCard from "../Settings/ImportCard";
@@ -14,8 +15,8 @@ const ExportImport = () => {
             <div className={`${CARD} flex items-center gap-[15px] px-6 py-[18px] mb-5`}>
                 <span className="w-10 [&_svg]:w-10 [&_svg]:h-auto block"><Logo /></span>
                 <div>
-                    <div className="font-extrabold text-[19px] text-[#23232E] tracking-[-0.2px]">Export &amp; Import</div>
-                    <div className="font-medium text-[13px] text-[#9A9AAE] mt-0.5">Back up your specifications, or migrate them in from another plugin.</div>
+                    <div className="font-extrabold text-[19px] text-[#23232E] tracking-[-0.2px]">{ __( 'Export & Import', 'specifico' ) }</div>
+                    <div className="font-medium text-[13px] text-[#9A9AAE] mt-0.5">{ __( 'Back up your specifications, or migrate them in from another plugin.', 'specifico' ) }</div>
                 </div>
             </div>
 

@@ -12,10 +12,11 @@
  * the readme will list any important changes.
  *
  * @package specifico
- * @version 1.0.2
+ * @version 1.1.0
  *
  * @var array  $groups     Render-ready specification groups.
  * @var string $style      Table style slug from settings.
+ * @var string $style_vars Inline CSS custom properties for the "custom" style.
  * @var bool   $show_sub   Whether to render group sub-headings.
  * @var int    $product_id Product ID the table is rendered for.
  */
@@ -42,8 +43,13 @@ $specifico_classes = array_filter( array_map( 'sanitize_html_class', (array) $sp
  * @param int   $product_id Product ID.
  */
 do_action( 'specifico_before_table', $groups, $specifico_product_id );
+
+$specifico_style_attr = 'width: 100%';
+if ( ! empty( $style_vars ) ) {
+	$specifico_style_attr .= ';' . $style_vars;
+}
 ?>
-<table class="<?php echo esc_attr( implode( ' ', $specifico_classes ) ); ?>" style="width: 100%">
+<table class="<?php echo esc_attr( implode( ' ', $specifico_classes ) ); ?>" style="<?php echo esc_attr( $specifico_style_attr ); ?>">
 	<?php foreach ( $groups as $specifico_group ) :
 		if ( empty( $specifico_group ) ) {
 			continue;

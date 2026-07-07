@@ -1,9 +1,10 @@
 import React from "react";
+import { __ } from '@wordpress/i18n';
 
 // Search box for the server-paginated admin tables. Controlled by the parent;
 // the parent debounces the value before issuing the REST request. The optional
 // result count is shown on the right of the toolbar row.
-const TableSearch = ( { value, onChange, placeholder = "Search…", count, noun } ) => {
+const TableSearch = ( { value, onChange, placeholder = __( 'Search…', 'specifico' ), count, noun } ) => {
     return (
         <div className="flex items-center justify-between gap-4 px-[22px] pt-[18px] pb-4">
             <div className="relative w-[330px] max-w-full">
@@ -18,7 +19,7 @@ const TableSearch = ( { value, onChange, placeholder = "Search…", count, noun 
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                     placeholder={placeholder}
-                    aria-label="Search"
+                    aria-label={ __( 'Search', 'specifico' ) }
                     className="w-full !h-[38px] !min-h-[38px] box-border !border-none !rounded-[10px] !pl-[38px] !pr-[14px] !py-0 !m-0 leading-[38px] font-medium !text-[14px] !text-[#3A3A45] !bg-[#F5F5F9] placeholder:!text-[#9A9AAE] !outline-none focus:!bg-white focus:!shadow-[0_0_0_3px_rgba(107,102,247,0.18)] focus:!ring-0"
                 />
             </div>

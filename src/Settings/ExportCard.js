@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { __ } from '@wordpress/i18n';
 import Api from '../Utilites/Api';
 import Switch from '../components/Switch';
 
@@ -37,7 +38,7 @@ const ExportCard = ( { loading = false } ) => {
 
     return (
         <div className={`${CARD} overflow-hidden`}>
-            <div className="px-6 py-4 border-b border-[#EFEFF4] font-extrabold text-[15px] text-[#23232E]">Export</div>
+            <div className="px-6 py-4 border-b border-[#EFEFF4] font-extrabold text-[15px] text-[#23232E]">{ __( 'Export', 'specifico' ) }</div>
             { loading ? (
                 <div className="px-6 py-5 flex flex-col gap-4">
                     <div className="h-2 bg-[#ECEBFF] rounded w-3/4"></div>
@@ -47,12 +48,12 @@ const ExportCard = ( { loading = false } ) => {
             ) : (
                 <div className="px-6 py-5 flex flex-col gap-[18px]">
                     <p className="m-0 font-medium text-[13.5px] leading-[1.6] text-[#9A9AAE] max-w-[640px]">
-                        Download all your specification tables, groups, mapping rules and settings as a JSON file. Use it as a backup or to move your specifications to another site.
+                        { __( 'Download all your specification tables, groups, mapping rules and settings as a JSON file. Use it as a backup or to move your specifications to another site.', 'specifico' ) }
                     </p>
                     <div className="flex items-center justify-between gap-4 max-w-[640px] px-4 py-3.5 bg-[#FAFAFC] border border-[#EFEFF4] rounded-xl">
                         <div>
-                            <div className="font-bold text-[13px] text-[#3A3A45]">Include per-product specification data</div>
-                            <div className="font-medium text-[12px] text-[#9A9AAE] mt-0.5">Bundles each product’s customized tables.</div>
+                            <div className="font-bold text-[13px] text-[#3A3A45]">{ __( 'Include per-product specification data', 'specifico' ) }</div>
+                            <div className="font-medium text-[12px] text-[#9A9AAE] mt-0.5">{ __( 'Bundles each product’s customized tables.', 'specifico' ) }</div>
                         </div>
                         <Switch
                             bare
@@ -70,7 +71,7 @@ const ExportCard = ( { loading = false } ) => {
                             className="inline-flex items-center gap-2 h-[38px] px-[18px] bg-[#6B66F7] text-white border-none rounded-[10px] font-bold text-[13.5px] cursor-pointer shadow-[0_5px_14px_-4px_rgba(107,102,247,0.55)] hover:bg-[#5a55e8] transition-colors disabled:opacity-60"
                         >
                             <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7l3 3 3-3M3 13h10" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                            <span>{ busy ? 'Preparing…' : 'Download Export File' }</span>
+                            <span>{ busy ? __( 'Preparing…', 'specifico' ) : __( 'Download Export File', 'specifico' ) }</span>
                         </button>
                     </div>
                 </div>

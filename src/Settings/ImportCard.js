@@ -1,26 +1,27 @@
 import React, { useRef, useState } from 'react';
+import { __, _n, sprintf } from '@wordpress/i18n';
 import Api from '../Utilites/Api';
 
 const CARD = "bg-white border border-[#ECECF3] rounded-2xl shadow-[0_1px_2px_rgba(20,20,45,0.04),0_18px_40px_-24px_rgba(30,28,80,0.18)]";
 
 const FORMAT_LABELS = {
-    specifico: 'Specifico export',
-    dornaweb: 'Compatible specification export',
-    unknown: 'Unrecognised file',
+    specifico: __( 'Specifico export', 'specifico' ),
+    dornaweb: __( 'Compatible specification export', 'specifico' ),
+    unknown: __( 'Unrecognised file', 'specifico' ),
 };
 
 // Shown as a contextual notice only when an uploaded file is recognised as the
 // export of another known plugin, so users know it will be migrated.
 const SOURCE_NOTICES = {
-    dornaweb: 'This file looks like an export from the “Product Specifications” plugin. Specifico will import its tables, groups and product specifications.',
+    dornaweb: __( 'This file looks like an export from the “Product Specifications” plugin. Specifico will import its tables, groups and product specifications.', 'specifico' ),
 };
 
 // Phases shown in the progress UI (settings is an internal one-off, hidden).
 const PHASES = [
-    [ 'groups', 'Groups' ],
-    [ 'tables', 'Specifications' ],
-    [ 'mapping', 'Mapping rules' ],
-    [ 'products', 'Products' ],
+    [ 'groups', __( 'Groups', 'specifico' ) ],
+    [ 'tables', __( 'Specifications', 'specifico' ) ],
+    [ 'mapping', __( 'Mapping rules', 'specifico' ) ],
+    [ 'products', __( 'Products', 'specifico' ) ],
 ];
 
 const FileIcon = () => (
@@ -56,7 +57,7 @@ const ImportCard = ( { loading = false } ) => {
     };
 
     const errorMessage = ( err ) =>
-        err?.response?.data?.message || 'Something went wrong. Please check the file and try again.';
+        err?.response?.data?.message || __( 'Something went wrong. Please check the file and try again.', 'specifico' );
 
     const handleFiles = ( fileList ) => {
         const selected = fileList?.[ 0 ] || null;
@@ -169,11 +170,11 @@ const ImportCard = ( { loading = false } ) => {
             </div>
             { spinner ? (
                 <span className="inline-flex items-center gap-[7px] font-bold text-[12px] text-[#6B66F7] flex-none">
-                    <span className="w-[14px] h-[14px] rounded-full border-2 border-[#ECEBFF] border-t-[#6B66F7] inline-block animate-spin" />Background import
+                    <span className="w-[14px] h-[14px] rounded-full border-2 border-[#ECEBFF] border-t-[#6B66F7] inline-block animate-spin" />{ __( 'Background import', 'specifico' ) }
                 </span>
             ) : (
                 <button type="button" onClick={ clearFile } className="inline-flex items-center gap-[7px] h-[34px] px-3.5 bg-white border border-[#F4DADA] rounded-[9px] font-bold text-[12.5px] text-[#DC2626] cursor-pointer hover:bg-[#FEF6F6] flex-none transition-colors">
-                    <TrashIcon /> Remove
+                    <TrashIcon /> { __( 'Remove', 'specifico' ) }
                 </button>
             ) }
         </div>
@@ -181,7 +182,7 @@ const ImportCard = ( { loading = false } ) => {
 
     return (
         <div className={`${CARD} overflow-hidden`}>
-            <div className="px-6 py-4 border-b border-[#EFEFF4] font-extrabold text-[15px] text-[#23232E]">Import</div>
+            <div className="px-6 py-4 border-b border-[#EFEFF4] font-extrabold text-[15px] text-[#23232E]">{ __( 'Import', 'specifico' ) }</div>
             { loading ? (
                 <div className="px-6 py-5 flex flex-col gap-4">
                     <div className="h-2 bg-[#ECEBFF] rounded w-3/4"></div>
@@ -190,7 +191,7 @@ const ImportCard = ( { loading = false } ) => {
             ) : (
             <div className="px-6 py-5 flex flex-col gap-[18px]">
                 <p className="m-0 font-medium text-[13.5px] leading-[1.6] text-[#9A9AAE] max-w-[680px]">
-                    Upload a Specifico export, or a compatible specification export from another plugin, to migrate it. The format is detected automatically. Large files import in the background, so they won’t time out.
+                    { __( 'Upload a Specifico export, or a compatible specification export from another plugin, to migrate it. The format is detected automatically. Large files import in the background, so they won’t time out.', 'specifico' ) }
                 </p>
 
                 <input
@@ -217,8 +218,8 @@ const ImportCard = ( { loading = false } ) => {
                         <div className="w-[52px] h-[52px] rounded-[14px] bg-[#EDEBFF] flex items-center justify-center mb-3.5">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 16V6M8 10l4-4 4 4M5 18h14" stroke="#6B66F7" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                         </div>
-                        <div className="font-extrabold text-[15px] text-[#23232E]">Drag &amp; drop your file here</div>
-                        <div className="font-medium text-[13px] text-[#9A9AAE] mt-[5px]">or <span className="text-[#6B66F7] font-bold">browse</span> to choose a .json file</div>
+                        <div className="font-extrabold text-[15px] text-[#23232E]">{ __( 'Drag & drop your file here', 'specifico' ) }</div>
+                        <div className="font-medium text-[13px] text-[#9A9AAE] mt-[5px]">{ __( 'or', 'specifico' ) } <span className="text-[#6B66F7] font-bold">{ __( 'browse', 'specifico' ) }</span> { __( 'to choose a .json file', 'specifico' ) }</div>
                     </div>
                 ) }
 
@@ -235,7 +236,10 @@ const ImportCard = ( { loading = false } ) => {
                         <FileChip />
                         <div className="bg-[#F6F5FF] border border-[#E7E4FF] rounded-xl p-[18px]">
                             <div className="font-extrabold text-[14px] text-[#23232E] mb-[11px]">
-                                Detected: { FORMAT_LABELS[ prepared.format ] || prepared.format }
+                                {
+                                    /* translators: %s: detected file format label. */
+                                    sprintf( __( 'Detected: %s', 'specifico' ), FORMAT_LABELS[ prepared.format ] || prepared.format )
+                                }
                             </div>
                             { SOURCE_NOTICES[ prepared.format ] && (
                                 <div className="border-l-[3px] border-[#6B66F7] bg-white rounded-r-lg px-3.5 py-[11px] font-medium text-[13px] leading-[1.55] text-[#54546A]">
@@ -243,20 +247,25 @@ const ImportCard = ( { loading = false } ) => {
                                 </div>
                             ) }
                             { nothingToImport ? (
-                                <p className="m-0 mt-2 text-[#b45309] font-semibold">This file contains no specifications to import.</p>
+                                <p className="m-0 mt-2 text-[#b45309] font-semibold">{ __( 'This file contains no specifications to import.', 'specifico' ) }</p>
                             ) : detectedUnknown ? (
-                                <p className="m-0 mt-2 text-[#b45309] font-semibold">This file format isn’t recognised.</p>
+                                <p className="m-0 mt-2 text-[#b45309] font-semibold">{ __( 'This file format isn’t recognised.', 'specifico' ) }</p>
                             ) : (
                                 <>
-                                    <div className="font-semibold text-[12.5px] text-[#9A9AAE] mt-4 mb-[9px]">This import will create / update:</div>
+                                    <div className="font-semibold text-[12.5px] text-[#9A9AAE] mt-4 mb-[9px]">{ __( 'This import will create / update:', 'specifico' ) }</div>
                                     <ul className="m-0 pl-[18px] flex flex-col gap-1.5 font-semibold text-[13px] text-[#54546A]">
-                                        <li>{ prepared.totals.tables } specification table{ 1 === prepared.totals.tables ? '' : 's' }</li>
-                                        <li>{ prepared.totals.groups } group{ 1 === prepared.totals.groups ? '' : 's' } ({ prepared.totals.attributes } attributes)</li>
-                                        <li>{ prepared.totals.products } product{ 1 === prepared.totals.products ? '' : 's' }</li>
+                                        <li>{ sprintf( _n( '%s specification table', '%s specification tables', prepared.totals.tables, 'specifico' ), prepared.totals.tables ) }</li>
+                                        <li>
+                                            {
+                                                /* translators: 1: number of groups, 2: number of attributes. */
+                                                sprintf( _n( '%1$s group (%2$s attributes)', '%1$s groups (%2$s attributes)', prepared.totals.groups, 'specifico' ), prepared.totals.groups, prepared.totals.attributes )
+                                            }
+                                        </li>
+                                        <li>{ sprintf( _n( '%s product', '%s products', prepared.totals.products, 'specifico' ), prepared.totals.products ) }</li>
                                     </ul>
                                     <div className="flex gap-2.5 mt-[18px]">
-                                        <button type="button" onClick={ handleImport } className="h-[38px] px-[18px] bg-[#6B66F7] text-white border-none rounded-[10px] font-bold text-[13.5px] cursor-pointer shadow-[0_5px_14px_-4px_rgba(107,102,247,0.55)] hover:bg-[#5a55e8] transition-colors">Import Now</button>
-                                        <button type="button" onClick={ clearFile } className="h-[38px] px-4 bg-white border border-[#E7E7EF] rounded-[10px] font-bold text-[13.5px] text-[#54546A] cursor-pointer hover:bg-[#F5F5F9] transition-colors">Choose another</button>
+                                        <button type="button" onClick={ handleImport } className="h-[38px] px-[18px] bg-[#6B66F7] text-white border-none rounded-[10px] font-bold text-[13.5px] cursor-pointer shadow-[0_5px_14px_-4px_rgba(107,102,247,0.55)] hover:bg-[#5a55e8] transition-colors">{ __( 'Import Now', 'specifico' ) }</button>
+                                        <button type="button" onClick={ clearFile } className="h-[38px] px-4 bg-white border border-[#E7E7EF] rounded-[10px] font-bold text-[13.5px] text-[#54546A] cursor-pointer hover:bg-[#F5F5F9] transition-colors">{ __( 'Choose another', 'specifico' ) }</button>
                                     </div>
                                 </>
                             ) }
@@ -270,7 +279,7 @@ const ImportCard = ( { loading = false } ) => {
                         <FileChip spinner />
                         <div className="border border-[#EFEFF4] rounded-2xl p-5">
                             <div className="flex items-center justify-between mb-[9px]">
-                                <span className="font-extrabold text-[14px] text-[#23232E]">Importing…</span>
+                                <span className="font-extrabold text-[14px] text-[#23232E]">{ __( 'Importing…', 'specifico' ) }</span>
                                 <span className="font-extrabold text-[14px] text-[#23232E]">{ overallPct }%</span>
                             </div>
                             <div className="h-2 rounded-full bg-[#ECEBFF] overflow-hidden mb-1.5">
@@ -310,20 +319,25 @@ const ImportCard = ( { loading = false } ) => {
                                 <span className="w-[26px] h-[26px] flex-none rounded-lg bg-[#D6F5E7] flex items-center justify-center">
                                     <svg width="15" height="15" viewBox="0 0 18 18" fill="none"><path d="M4 9.5 7.5 13 14 5" stroke="#065F46" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                                 </span>
-                                <span className="font-extrabold text-[14.5px] text-[#065F46]">Import complete.</span>
+                                <span className="font-extrabold text-[14.5px] text-[#065F46]">{ __( 'Import complete.', 'specifico' ) }</span>
                             </div>
                             <ul className="m-0 pl-[18px] flex flex-col gap-1.5 font-semibold text-[13px] text-[#0a7f5e]">
-                                <li>{ result.tables } table{ 1 === result.tables ? '' : 's' }</li>
-                                <li>{ result.groups } group{ 1 === result.groups ? '' : 's' } ({ result.attributes } attributes)</li>
-                                <li>{ result.products } product{ 1 === result.products ? '' : 's' }</li>
+                                <li>{ sprintf( _n( '%s table', '%s tables', result.tables, 'specifico' ), result.tables ) }</li>
+                                <li>
+                                    {
+                                        /* translators: 1: number of groups, 2: number of attributes. */
+                                        sprintf( _n( '%1$s group (%2$s attributes)', '%1$s groups (%2$s attributes)', result.groups, 'specifico' ), result.groups, result.attributes )
+                                    }
+                                </li>
+                                <li>{ sprintf( _n( '%s product', '%s products', result.products, 'specifico' ), result.products ) }</li>
                             </ul>
                             { result.skipped?.products > 0 && (
-                                <div className="font-semibold text-[12.5px] text-[#b45309] mt-3 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[#b45309] flex-none" />{ result.skipped.products } product(s) skipped — no matching product found.</div>
+                                <div className="font-semibold text-[12.5px] text-[#b45309] mt-3 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[#b45309] flex-none" />{ sprintf( _n( '%s product skipped — no matching product found.', '%s products skipped — no matching product found.', result.skipped.products, 'specifico' ), result.skipped.products ) }</div>
                             ) }
                             { result.skipped?.mapping_values > 0 && (
-                                <div className="font-semibold text-[12.5px] text-[#b45309] mt-1.5 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[#b45309] flex-none" />{ result.skipped.mapping_values } mapping value(s) skipped — category/tag/product not found.</div>
+                                <div className="font-semibold text-[12.5px] text-[#b45309] mt-1.5 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[#b45309] flex-none" />{ sprintf( _n( '%s mapping value skipped — category/tag/product not found.', '%s mapping values skipped — category/tag/product not found.', result.skipped.mapping_values, 'specifico' ), result.skipped.mapping_values ) }</div>
                             ) }
-                            <button type="button" onClick={ clearFile } className="mt-4 h-9 px-3.5 bg-white border border-[#CDECDF] rounded-[9px] font-bold text-[12.5px] text-[#065F46] cursor-pointer hover:bg-white/60 transition-colors">Import another file</button>
+                            <button type="button" onClick={ clearFile } className="mt-4 h-9 px-3.5 bg-white border border-[#CDECDF] rounded-[9px] font-bold text-[12.5px] text-[#065F46] cursor-pointer hover:bg-white/60 transition-colors">{ __( 'Import another file', 'specifico' ) }</button>
                         </div>
                     </div>
                 ) }

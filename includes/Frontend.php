@@ -11,5 +11,6 @@ class Frontend {
 		new Frontend\Tab();
 		new Frontend\Shortcode();
 		new Frontend\Structured_Data();
+		new Frontend\Comparison();
 	}
 }

@@ -1,5 +1,6 @@
 /* global specificoAdminSettings */
 import React, { useState, useEffect } from 'react';
+import { __ } from '@wordpress/i18n';
 import Api from "./Utilites/Api";
 import Logo from "./components/Icons/Logo"
 import MappingRepeater from "./components/MappingRepeater";
@@ -30,19 +31,19 @@ const Attributes = () => {
         const data = [
             {
                 "value": "product-id",
-                "label": "Product ID"
+                "label": __( 'Product ID', 'specifico' )
             },
             {
                 "value": "product-name",
-                "label": "Product Name"
+                "label": __( 'Product Name', 'specifico' )
             },
             {
                 "value": "product-category",
-                "label": "Product Category"
+                "label": __( 'Product Category', 'specifico' )
             },
             {
                 "value": "product-tag",
-                "label": "Product Tag"
+                "label": __( 'Product Tag', 'specifico' )
             },
         ];
         setType( data );
@@ -155,20 +156,20 @@ const Attributes = () => {
                 <div className="flex items-center gap-[15px]">
                     <span className="w-10 [&_svg]:w-10 [&_svg]:h-auto block"><Logo /></span>
                     <div>
-                        <div className="font-extrabold text-[19px] text-[#23232E] tracking-[-0.2px]">Specification Mapping</div>
-                        <div className="font-medium text-[13px] text-[#9A9AAE] mt-0.5">Map specification tables to your products.</div>
+                        <div className="font-extrabold text-[19px] text-[#23232E] tracking-[-0.2px]">{ __( 'Specification Mapping', 'specifico' ) }</div>
+                        <div className="font-medium text-[13px] text-[#9A9AAE] mt-0.5">{ __( 'Map specification tables to your products.', 'specifico' ) }</div>
                     </div>
                 </div>
                 <div className="flex-none">
                     <button type="button" onClick={() => updateData()} className="whitespace-nowrap inline-flex items-center gap-[7px] h-[38px] px-[18px] bg-[#6B66F7] text-white border-none rounded-[11px] font-bold text-[13.5px] cursor-pointer shadow-[0_5px_14px_-4px_rgba(107,102,247,0.55)] hover:bg-[#5a55e8] transition-colors">
-                        Save Mapping
+                        { __( 'Save Mapping', 'specifico' ) }
                     </button>
                 </div>
             </div>
 
             <div className={`${CARD} overflow-hidden`}>
                 <div className="grid gap-3.5 px-6 py-3.5 border-b border-[#EFEFF4] font-bold text-[10.5px] tracking-[0.09em] uppercase text-[#A2A2B4]" style={{ gridTemplateColumns: "1fr 1fr 1.3fr 48px" }}>
-                    <span>Specifications</span><span>Type</span><span>Values</span><span></span>
+                    <span>{ __( 'Specifications', 'specifico' ) }</span><span>{ __( 'Type', 'specifico' ) }</span><span>{ __( 'Values', 'specifico' ) }</span><span></span>
                 </div>
                 { ! isLoading ?
                     <MappingRepeater

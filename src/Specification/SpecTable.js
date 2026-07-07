@@ -1,5 +1,6 @@
 /* global specificoAdminSettings */
 import React, { useState, useEffect } from 'react';
+import { __ } from '@wordpress/i18n';
 import Api from "./../Utilites/Api";
 import Switch from "../components/Switch";
 import IndeterminateCheckbox from "../components/IndeterminateCheckbox";
@@ -58,35 +59,35 @@ const columns = [
     },
     {
         accessorKey: 'id',
-        header: 'ID',
+        header: () => __( 'ID', 'specifico' ),
         cell: info => <span className="font-mono font-semibold text-[13px] text-[#A2A2B4]">{info.getValue()}</span>,
         footer: props => props.column.id,
     },
     {
         accessorKey: 'name',
-        header: 'Name',
+        header: () => __( 'Name', 'specifico' ),
         cell: info => <span className="text-[#23232E] font-bold">{info.getValue()}</span>,
         footer: props => props.column.id,
     },
     {
         accessorKey: 'status',
-        header: 'Status',
+        header: () => __( 'Status', 'specifico' ),
         footer: props => props.column.id,
         cell: ( info ) => (
             info.getValue() ? (
                 <span className="inline-flex items-center gap-[7px] text-[#12A789] font-bold text-[13px]">
-                    <span className="w-[7px] h-[7px] rounded-full bg-[#16B391]" />Active
+                    <span className="w-[7px] h-[7px] rounded-full bg-[#16B391]" />{ __( 'Active', 'specifico' ) }
                 </span>
             ) : (
                 <span className="inline-flex items-center gap-[7px] text-[#D9483B] font-bold text-[13px]">
-                    <span className="w-[7px] h-[7px] rounded-full bg-[#E74C3C]" />Inactive
+                    <span className="w-[7px] h-[7px] rounded-full bg-[#E74C3C]" />{ __( 'Inactive', 'specifico' ) }
                 </span>
             )
         )
     },
     {
         id: 'groups',
-        Header: "Groups",
+        header: () => __( 'Groups', 'specifico' ),
         accessorKey: 'groups',
         footer: props => props.column.id,
         cell: (info) => {
@@ -365,25 +366,25 @@ const SpecTable = () => {
                 <div className="flex items-center gap-[15px]">
                     <span className="w-10 [&_svg]:w-10 [&_svg]:h-auto block"><Logo /></span>
                     <div>
-                        <div className="font-extrabold text-[19px] text-[#23232E] tracking-[-0.2px]">Specification Tables</div>
-                        <div className="font-medium text-[13px] text-[#9A9AAE] mt-0.5">Here are your specification tables. You can edit or delete them.</div>
+                        <div className="font-extrabold text-[19px] text-[#23232E] tracking-[-0.2px]">{ __( 'Specification Tables', 'specifico' ) }</div>
+                        <div className="font-medium text-[13px] text-[#9A9AAE] mt-0.5">{ __( 'Here are your specification tables. You can edit or delete them.', 'specifico' ) }</div>
                     </div>
                 </div>
                 <div className="flex-none flex gap-2.5">
                     { showForm ?
                         <>
-                            <button type="button" onClick={handleCancel} className={secondaryBtn}>Cancel</button>
+                            <button type="button" onClick={handleCancel} className={secondaryBtn}>{ __( 'Cancel', 'specifico' ) }</button>
                             <button type="button" disabled={!title.trim()} className={primaryBtn} onClick={handleSaveAndClose}>
                                 { editingId ?
-                                    <><Rotate /> Update Specification</>
+                                    <><Rotate /> { __( 'Update Specification', 'specifico' ) }</>
                                     :
-                                    <><span className="text-[18px] leading-none -mt-px">+</span> Save Specification</>
+                                    <><span className="text-[18px] leading-none -mt-px">+</span> { __( 'Save Specification', 'specifico' ) }</>
                                 }
                             </button>
                         </>
                         :
                         <button onClick={handleOpenAddPanel} className={primaryBtn}>
-                            <span className="text-[18px] leading-none -mt-px">+</span> Add Specification
+                            <span className="text-[18px] leading-none -mt-px">+</span> { __( 'Add Specification', 'specifico' ) }
                         </button>
                     }
                 </div>
@@ -395,7 +396,7 @@ const SpecTable = () => {
 
                     { tableCounts > 0 ?
                         <div className={`${CARD} overflow-hidden`}>
-                            <TableSearch value={search} onChange={setSearch} placeholder="Search specifications…" count={total} noun="tables" />
+                            <TableSearch value={search} onChange={setSearch} placeholder={ __( 'Search specifications…', 'specifico' ) } count={total} noun={ __( 'tables', 'specifico' ) } />
                             <TableHeader table={table} template={SPEC_GRID} />
                             <div>
                                 { ! isLoading ?
@@ -407,14 +408,14 @@ const SpecTable = () => {
                                                 ) }
                                                 <span className="text-right">
                                                     <DropdownButton>
-                                                        <button onClick={() => handleEditClick(row.id)} className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-[13.5px] text-[#3A3A45] hover:bg-[#F5F5F9] transition-colors">Edit</button>
-                                                        <button type="button" onClick={() => deletePost(row.id)} className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-[13.5px] text-[#dc2626] hover:bg-[#FEF2F2] transition-colors">Delete</button>
+                                                        <button onClick={() => handleEditClick(row.id)} className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-[13.5px] text-[#3A3A45] hover:bg-[#F5F5F9] transition-colors">{ __( 'Edit', 'specifico' ) }</button>
+                                                        <button type="button" onClick={() => deletePost(row.id)} className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-[13.5px] text-[#dc2626] hover:bg-[#FEF2F2] transition-colors">{ __( 'Delete', 'specifico' ) }</button>
                                                     </DropdownButton>
                                                 </span>
                                             </div>
                                         ) }
                                         { total === 0 &&
-                                            <div className="px-[22px] py-12 text-center text-[#9A9AAE]">No specifications match your search.</div>
+                                            <div className="px-[22px] py-12 text-center text-[#9A9AAE]">{ __( 'No specifications match your search.', 'specifico' ) }</div>
                                         }
                                     </>
                                     :
@@ -437,10 +438,10 @@ const SpecTable = () => {
                             <div className="w-[62px] h-[62px] rounded-2xl bg-[#F2F1FF] flex items-center justify-center mb-[18px]">
                                 <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect x="4" y="3" width="18" height="20" rx="3" stroke="#6B66F7" strokeWidth="1.8"/><line x1="8" y1="9" x2="18" y2="9" stroke="#6B66F7" strokeWidth="1.8" strokeLinecap="round"/><line x1="8" y1="13" x2="18" y2="13" stroke="#B7B4FF" strokeWidth="1.8" strokeLinecap="round"/><line x1="8" y1="17" x2="14" y2="17" stroke="#B7B4FF" strokeWidth="1.8" strokeLinecap="round"/></svg>
                             </div>
-                            <div className="font-extrabold text-[17px] text-[#23232E]">No specification tables yet</div>
-                            <div className="font-medium text-[13.5px] text-[#9A9AAE] mt-1.5 max-w-[380px]">Create your first table to define the specs that appear on your WooCommerce products.</div>
+                            <div className="font-extrabold text-[17px] text-[#23232E]">{ __( 'No specification tables yet', 'specifico' ) }</div>
+                            <div className="font-medium text-[13.5px] text-[#9A9AAE] mt-1.5 max-w-[380px]">{ __( 'Create your first table to define the specs that appear on your WooCommerce products.', 'specifico' ) }</div>
                             <button onClick={handleOpenAddPanel} className={`${primaryBtn} mt-5`}>
-                                <span className="text-[18px] leading-none -mt-px">+</span> Add Specification
+                                <span className="text-[18px] leading-none -mt-px">+</span> { __( 'Add Specification', 'specifico' ) }
                             </button>
                         </div>
                     }
@@ -449,21 +450,21 @@ const SpecTable = () => {
 
             { showForm && (
                 <div className={`${CARD} overflow-hidden`}>
-                    <div className="px-6 py-4 border-b border-[#EFEFF4] font-extrabold text-[15px] text-[#23232E]">Specification Table</div>
+                    <div className="px-6 py-4 border-b border-[#EFEFF4] font-extrabold text-[15px] text-[#23232E]">{ __( 'Specification Table', 'specifico' ) }</div>
                     <div className="grid grid-cols-[200px_1fr] items-center gap-5 px-6 py-5 border-b border-[#F3F3F8]">
-                        <label htmlFor="spec-title" className="font-bold text-[13px] text-[#3A3A45]">Table Name</label>
-                        <input id="spec-title" type="text" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Table Name" className={FIELD} />
+                        <label htmlFor="spec-title" className="font-bold text-[13px] text-[#3A3A45]">{ __( 'Table Name', 'specifico' ) }</label>
+                        <input id="spec-title" type="text" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder={ __( 'Table Name', 'specifico' ) } className={FIELD} />
                     </div>
                     <div className="grid grid-cols-[200px_1fr] items-center gap-5 px-6 py-5 border-b border-[#F3F3F8]">
                         <div>
-                            <div className="font-bold text-[13px] text-[#3A3A45]">Status</div>
-                            <div className="font-medium text-[12px] text-[#9A9AAE] mt-0.5">Active tables render on matching products.</div>
+                            <div className="font-bold text-[13px] text-[#3A3A45]">{ __( 'Status', 'specifico' ) }</div>
+                            <div className="font-medium text-[12px] text-[#9A9AAE] mt-0.5">{ __( 'Active tables render on matching products.', 'specifico' ) }</div>
                         </div>
                         <div><Switch bare id="spec-status" checked={status} onChange={() => setStatus((prev) => !prev)} /></div>
                     </div>
                     <div className="grid grid-cols-[200px_1fr] items-start gap-5 px-6 py-5">
-                        <label className="font-bold text-[13px] text-[#3A3A45] pt-2.5">Groups</label>
-                        <MultiSelect bare id="group-selector" isMulti placeholder="Add group…" value={selectedGroup} onChange={(Groups) => setSelectedGroup(Groups)} options={options} />
+                        <label className="font-bold text-[13px] text-[#3A3A45] pt-2.5">{ __( 'Groups', 'specifico' ) }</label>
+                        <MultiSelect bare id="group-selector" isMulti placeholder={ __( 'Add group…', 'specifico' ) } value={selectedGroup} onChange={(Groups) => setSelectedGroup(Groups)} options={options} />
                     </div>
                 </div>
             )}

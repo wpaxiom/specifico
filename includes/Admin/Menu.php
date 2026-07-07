@@ -91,6 +91,19 @@ class Menu {
 		<?php
 	}
 
+	/**
+	 * Cache-busting version for a built asset. Uses the file's modification time
+	 * so a rebuilt bundle busts the browser cache even between plugin releases;
+	 * falls back to the plugin version if the file is missing.
+	 *
+	 * @param string $relative Path relative to the plugin root, e.g. 'build/settings.js'.
+	 * @return string
+	 */
+	private static function asset_ver( string $relative ): string {
+		$path = SPECIFICO_PATH . $relative;
+		return file_exists( $path ) ? (string) filemtime( $path ) : SPECIFICO_VERSION;
+	}
+
 	public static function admin_assets() {
 		$current_screen = get_current_screen();
 
@@ -100,7 +113,9 @@ class Menu {
 			wp_enqueue_script( 'specifico-admin-ui', SPECIFICO_URL . '/build/specification.js', array(
 				'jquery',
 				'wp-element',
-			), SPECIFICO_VERSION, true );
+				'wp-i18n',
+			), self::asset_ver( 'build/specification.js' ), true );
+			wp_set_script_translations( 'specifico-admin-ui', 'specifico', SPECIFICO_PATH . 'languages' );
 			wp_localize_script( 'specifico-admin-ui', 'specificoAdminSettings', array(
 				'url'     => esc_url_raw( rest_url() ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
@@ -110,7 +125,8 @@ class Menu {
 		}
 
 		if ( 'specifico_page_specifico-groups' === $current_screen->id ) {
-			wp_enqueue_script( 'specifico-groups-ui', SPECIFICO_URL . '/build/groups.js', array( 'jquery', 'wp-element' ), SPECIFICO_VERSION, true );
+			wp_enqueue_script( 'specifico-groups-ui', SPECIFICO_URL . '/build/groups.js', array( 'jquery', 'wp-element', 'wp-i18n' ), self::asset_ver( 'build/groups.js' ), true );
+			wp_set_script_translations( 'specifico-groups-ui', 'specifico', SPECIFICO_PATH . 'languages' );
 			wp_localize_script( 'specifico-groups-ui', 'specificoAdminSettings', array(
 				'url'     => esc_url_raw( rest_url() ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
@@ -120,7 +136,8 @@ class Menu {
 		}
 
 		if ( 'specifico_page_specifico-mapping' === $current_screen->id ) {
-			wp_enqueue_script( 'specifico-mapping-ui', SPECIFICO_URL . '/build/mapping.js', array( 'jquery', 'wp-element' ), SPECIFICO_VERSION, true );
+			wp_enqueue_script( 'specifico-mapping-ui', SPECIFICO_URL . '/build/mapping.js', array( 'jquery', 'wp-element', 'wp-i18n' ), self::asset_ver( 'build/mapping.js' ), true );
+			wp_set_script_translations( 'specifico-mapping-ui', 'specifico', SPECIFICO_PATH . 'languages' );
 			wp_localize_script( 'specifico-mapping-ui', 'specificoAdminSettings', array(
 				'url'     => esc_url_raw( rest_url() ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
@@ -130,7 +147,8 @@ class Menu {
 		}
 
 		if ( 'specifico_page_specifico-settings' === $current_screen->id ) {
-			wp_enqueue_script( 'specifico-settings-ui', SPECIFICO_URL . '/build/settings.js', array( 'jquery', 'wp-element' ), SPECIFICO_VERSION, true );
+			wp_enqueue_script( 'specifico-settings-ui', SPECIFICO_URL . '/build/settings.js', array( 'jquery', 'wp-element', 'wp-i18n' ), self::asset_ver( 'build/settings.js' ), true );
+			wp_set_script_translations( 'specifico-settings-ui', 'specifico', SPECIFICO_PATH . 'languages' );
 			wp_localize_script( 'specifico-settings-ui', 'specificoAdminSettings', array(
 				'url'     => esc_url_raw( rest_url() ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
@@ -139,7 +157,8 @@ class Menu {
 		}
 
 		if ( 'specifico_page_specifico-export-import' === $current_screen->id ) {
-			wp_enqueue_script( 'specifico-export-import-ui', SPECIFICO_URL . '/build/exportImport.js', array( 'jquery', 'wp-element' ), SPECIFICO_VERSION, true );
+			wp_enqueue_script( 'specifico-export-import-ui', SPECIFICO_URL . '/build/exportImport.js', array( 'jquery', 'wp-element', 'wp-i18n' ), self::asset_ver( 'build/exportImport.js' ), true );
+			wp_set_script_translations( 'specifico-export-import-ui', 'specifico', SPECIFICO_PATH . 'languages' );
 			wp_localize_script( 'specifico-export-import-ui', 'specificoAdminSettings', array(
 				'url'     => esc_url_raw( rest_url() ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
@@ -148,7 +167,8 @@ class Menu {
 		}
 
 		if ( 'post' === $current_screen->base && 'product' === $current_screen->post_type ) {
-			wp_enqueue_script( 'specifico-product-options', SPECIFICO_URL . '/build/productOptions.js', array( 'jquery', 'wp-element' ), SPECIFICO_VERSION, true );
+			wp_enqueue_script( 'specifico-product-options', SPECIFICO_URL . '/build/productOptions.js', array( 'jquery', 'wp-element', 'wp-i18n' ), self::asset_ver( 'build/productOptions.js' ), true );
+			wp_set_script_translations( 'specifico-product-options', 'specifico', SPECIFICO_PATH . 'languages' );
 			wp_localize_script( 'specifico-product-options', 'specificoAdminSettings', array(
 				'url'     => esc_url_raw( rest_url() ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),

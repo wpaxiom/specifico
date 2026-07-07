@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { __ } from '@wordpress/i18n';
 
 const DropdownButton = ( {children} ) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -26,7 +27,7 @@ const DropdownButton = ( {children} ) => {
                 type="button"
                 className="inline-flex items-center justify-center w-8 h-8 rounded-[9px] border-none bg-transparent hover:bg-[#EFEEFF] cursor-pointer transition-colors"
                 onClick={toggleDropdown}
-                aria-label="Row actions"
+                aria-label={ __( 'Row actions', 'specifico' ) }
             >
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="#B4B4C2">
                     <circle cx="9" cy="4" r="1.5"/>

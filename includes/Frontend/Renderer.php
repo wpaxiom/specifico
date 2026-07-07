@@ -54,6 +54,7 @@ class Renderer {
 			[
 				'groups'     => $groups,
 				'style'      => $style,
+				'style_vars' => Custom_Style::inline_vars( $style ),
 				'show_sub'   => $show_sub,
 				'product_id' => $product_id,
 			],

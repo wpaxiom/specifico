@@ -62,7 +62,11 @@ class Tab {
 	}
 
 	function enqueue_scripts() {
-		wp_enqueue_script( 'specifico-scripts', SPECIFICO_URL . '/assets/dist/js/specifico.js', [], SPECIFICO_VERSION, true );
+		// Version by file mtime so a rebuilt bundle busts the browser cache even
+		// between plugin releases (the CSS is injected by this JS bundle).
+		$path = SPECIFICO_PATH . 'assets/dist/js/specifico.js';
+		$ver  = file_exists( $path ) ? (string) filemtime( $path ) : SPECIFICO_VERSION;
+		wp_enqueue_script( 'specifico-scripts', SPECIFICO_URL . '/assets/dist/js/specifico.js', [], $ver, true );
 	}
 
 	/**

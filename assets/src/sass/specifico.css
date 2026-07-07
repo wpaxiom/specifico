@@ -64,3 +64,460 @@
     padding: 8px;
     border: 1px solid black;
 }
+
+/* ==========================================================================
+   Custom table style (Settings → Table style → "Custom")
+
+   Every property reads from a CSS custom property with a neutral fallback, so
+   an all-blank "Custom" table renders clean and inherits the theme. The
+   merchant's saved values are emitted inline on the table element (spec) or the
+   wrapper (comparison) and override only the properties they filled in.
+   ========================================================================== */
+.specifico-custom {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: var(--specifico-radius, 0);
+    overflow: hidden;
+    color: var(--specifico-text-color, inherit);
+    font-size: var(--specifico-font-size, inherit);
+    font-weight: var(--specifico-font-weight, inherit);
+}
+
+.specifico-custom th,
+.specifico-custom td {
+    padding: var(--specifico-cell-padding, 8px);
+    border: 1px solid var(--specifico-border-color, #e5e7eb);
+    color: var(--specifico-text-color, inherit);
+    background: var(--specifico-cell-bg, transparent);
+    font-size: var(--specifico-font-size, inherit);
+    font-weight: var(--specifico-font-weight, inherit);
+}
+
+.specifico-custom tbody tr:nth-child(odd) td {
+    background: var(--specifico-stripe-bg, transparent);
+}
+
+.specifico-custom thead th {
+    background: var(--specifico-header-bg, transparent);
+    color: var(--specifico-header-color, inherit);
+    font-weight: var(--specifico-header-weight, 600);
+}
+
+/* Custom comparison-table style (Settings → Product comparison → Comparison
+   table style → "Custom"). Independent from the spec table. The wrapper carries
+   the --specifico-ct-* vars inline; selectors reach the inner table and beat the
+   comparison-table defaults on specificity. Radius is omitted (the table uses
+   border-collapse, which ignores it). */
+.specifico-compare-custom .specifico-comparison-table th,
+.specifico-compare-custom .specifico-comparison-table td {
+    padding: var(--specifico-ct-padding, 10px 12px);
+    border-color: var(--specifico-ct-border, #e5e7eb);
+    color: var(--specifico-ct-color, inherit);
+    font-size: var(--specifico-ct-font-size, inherit);
+    font-weight: var(--specifico-ct-font-weight, inherit);
+}
+
+.specifico-compare-custom .specifico-comparison-table__value {
+    background: var(--specifico-ct-value-bg, transparent);
+}
+
+.specifico-compare-custom .specifico-comparison-table__label {
+    background: var(--specifico-ct-label-bg, #f9fafb);
+}
+
+.specifico-compare-custom .specifico-comparison-table__group th {
+    background: var(--specifico-ct-header-bg, #f3f4f6);
+    color: var(--specifico-ct-header-color, inherit);
+    font-weight: var(--specifico-ct-header-weight, 600);
+}
+
+.specifico-compare-custom .specifico-comparison-table__row.is-diff .specifico-comparison-table__value {
+    background: var(--specifico-ct-diff-bg, #fffbeb);
+}
+
+/* ==========================================================================
+   Product comparison
+   ========================================================================== */
+
+/* The [hidden] attribute must win over the display rules below. An author
+   `display` declaration otherwise overrides the UA [hidden]{display:none},
+   leaving the empty drawer/overlay/tray visible on load. */
+.specifico-compare-tray[hidden],
+.specifico-compare-overlay[hidden],
+.specifico-compare-drawer[hidden] {
+    display: none;
+}
+
+/* Add-to-compare button.
+   It carries the theme's button classes (button / alt / wp-element-button) and
+   inherits their visual design — color, padding, radius, font. We touch LAYOUT
+   only, never colors/padding/borders, and we do NOT restructure form.cart (that
+   disturbs the quantity field).
+
+   WooCommerce fires our button inside form.cart, right after the add-to-cart
+   button. That form is often a flex/grid column, where a plain `width:auto`
+   STRETCHES a flex item to full width. Giving the button a definite width
+   keyword (`fit-content`) stops the stretch on its own, so it stays its natural
+   size — no form-level flex needed. */
+.specifico-compare-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: fit-content !important;
+    max-width: 100%;
+    flex: 0 0 auto;
+    margin: 8px 0 0 0;
+    vertical-align: middle;
+}
+
+/* Single product page: whether the theme keeps it beside add-to-cart or drops
+   it onto its own line, it must read cleanly. Force its own line, flush-left,
+   with no left indent (the old left margin looked like a stray indent when it
+   wrapped). */
+.specifico-compare-btn--single {
+    display: flex !important;
+    margin: 12px 0 0 0 !important;
+}
+
+/* On shop/archive cards the button is NOT next to add-to-cart — it sits on its
+   own line inside a card that is usually centered. Drop the single-page left
+   offset and center it so it reads as part of the card instead of hanging off
+   the left edge. */
+.specifico-compare-btn--archive {
+    display: inline-flex !important;
+    margin: 8px auto 0 !important;
+}
+
+li.product .specifico-compare-btn--archive,
+.wc-block-grid__product .specifico-compare-btn--archive,
+.wp-block-post .specifico-compare-btn--archive {
+    display: flex !important;
+}
+
+/* Style presets (Settings → Compare button style). Chosen when the merchant
+   does NOT want to inherit the theme's button look; the theme button classes
+   are then not emitted, so these rules fully own the appearance and stay
+   identical across themes. Colors use Specifico's brand violet. */
+.specifico-compare-btn--style-solid,
+.specifico-compare-btn--style-outline,
+.specifico-compare-btn--style-pill,
+.specifico-compare-btn--style-custom {
+    font: inherit;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+/* Custom preset (Settings → Compare button style → "Custom"). Each property
+   reads a CSS variable emitted inline on the button; unset ones fall back to
+   Specifico's solid violet, so a blank "Custom" still looks like a button and
+   each filled field overrides just that property. */
+.specifico-compare-btn--style-custom {
+    padding: var(--specifico-btn-padding, 0.65em 1.3em);
+    color: var(--specifico-btn-color, #fff);
+    background: var(--specifico-btn-bg, #6B66F7);
+    border: 1px solid var(--specifico-btn-border, #6B66F7);
+    border-radius: var(--specifico-btn-radius, 8px);
+    font-size: var(--specifico-btn-font-size, inherit);
+    font-weight: var(--specifico-btn-font-weight, 600);
+}
+.specifico-compare-btn--style-custom:hover {
+    background: var(--specifico-btn-hover-bg, #5a55e8);
+    border-color: var(--specifico-btn-hover-bg, #5a55e8);
+    color: var(--specifico-btn-hover-color, #fff);
+}
+
+.specifico-compare-btn--style-solid {
+    background: #6B66F7;
+    color: #fff;
+    border: 1px solid #6B66F7;
+    border-radius: 8px;
+    padding: 0.65em 1.3em;
+}
+.specifico-compare-btn--style-solid:hover {
+    background: #5a55e8;
+    border-color: #5a55e8;
+    color: #fff;
+}
+
+.specifico-compare-btn--style-outline {
+    background: transparent;
+    color: #6B66F7;
+    border: 1.5px solid #6B66F7;
+    border-radius: 8px;
+    padding: 0.6em 1.25em;
+}
+.specifico-compare-btn--style-outline:hover {
+    background: #6B66F7;
+    color: #fff;
+}
+
+.specifico-compare-btn--style-pill {
+    background: #6B66F7;
+    color: #fff;
+    border: 1px solid #6B66F7;
+    border-radius: 999px;
+    padding: 0.65em 1.4em;
+}
+.specifico-compare-btn--style-pill:hover {
+    background: #5a55e8;
+    border-color: #5a55e8;
+    color: #fff;
+}
+
+.specifico-compare-btn.is-active {
+    opacity: 0.85;
+}
+
+.specifico-compare-btn.is-active .specifico-compare-btn__label::before {
+    content: "\2713"; /* check mark */
+    font-weight: 700;
+    margin-inline-end: 4px;
+}
+
+/* Floating tray */
+.specifico-compare-tray {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 99998;
+    background: #111827;
+    color: #fff;
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
+}
+
+.specifico-compare-tray__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 12px 16px;
+}
+
+.specifico-compare-tray__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex: 1 1 auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.specifico-compare-tray__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 220px;
+    padding: 4px 8px;
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+}
+
+.specifico-compare-tray__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.specifico-compare-tray__remove,
+.specifico-comparison-table__remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    font-size: 16px;
+    line-height: 1;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+.specifico-compare-tray__remove:hover,
+.specifico-comparison-table__remove:hover {
+    opacity: 1;
+}
+
+.specifico-compare-tray__actions {
+    display: flex;
+    gap: 8px;
+}
+
+.specifico-compare-tray__compare,
+.specifico-compare-tray__clear {
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 0;
+    cursor: pointer;
+}
+
+.specifico-compare-tray__compare {
+    color: #fff;
+    background: #2563eb;
+}
+
+.specifico-compare-tray__compare:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.specifico-compare-tray__clear {
+    color: #fff;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Drawer + overlay */
+.specifico-compare-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.specifico-compare-drawer {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-end: 0;
+    z-index: 100000;
+    display: flex;
+    flex-direction: column;
+    width: min(960px, 100%);
+    background: #fff;
+    box-shadow: -12px 0 32px rgba(0, 0, 0, 0.2);
+}
+
+.specifico-compare-drawer__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.specifico-compare-drawer__title {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.specifico-compare-drawer__close {
+    width: 32px;
+    height: 32px;
+    font-size: 22px;
+    line-height: 1;
+    color: #374151;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+}
+
+.specifico-compare-drawer__body {
+    flex: 1 1 auto;
+    overflow: auto;
+    padding: 20px;
+}
+
+.specifico-compare-loading {
+    width: 28px;
+    height: 28px;
+    margin: 40px auto;
+    border: 3px solid #e5e7eb;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: specifico-spin 0.8s linear infinite;
+}
+
+@keyframes specifico-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Comparison table */
+.specifico-comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.specifico-comparison-table th,
+.specifico-comparison-table td {
+    padding: 10px 12px;
+    text-align: start;
+    vertical-align: top;
+    border: 1px solid #e5e7eb;
+}
+
+.specifico-comparison-table__product {
+    position: relative;
+    text-align: center;
+}
+
+.specifico-comparison-table__product-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+.specifico-comparison-table__product-image img {
+    max-width: 96px;
+    height: auto;
+    margin: 0 auto 8px;
+}
+
+.specifico-comparison-table__product-name {
+    display: block;
+    font-weight: 600;
+}
+
+.specifico-comparison-table__product-price {
+    display: block;
+    margin-top: 4px;
+    font-size: 14px;
+}
+
+.specifico-comparison-table__remove {
+    position: absolute;
+    top: 4px;
+    inset-inline-end: 4px;
+    color: #6b7280;
+}
+
+.specifico-comparison-table__group th {
+    font-weight: 600;
+    background: #f3f4f6;
+}
+
+.specifico-comparison-table__label {
+    width: 200px;
+    font-weight: 500;
+    background: #f9fafb;
+}
+
+.specifico-comparison-table__row.is-diff .specifico-comparison-table__value {
+    background: #fffbeb;
+}
+
+.specifico-compare-empty {
+    padding: 24px;
+    text-align: center;
+    color: #6b7280;
+}
+
+@media (max-width: 600px) {
+    .specifico-comparison-table__label {
+        width: 120px;
+    }
+
+    .specifico-comparison-table__product-image img {
+        max-width: 64px;
+    }
+}

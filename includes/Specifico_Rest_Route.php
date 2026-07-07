@@ -183,6 +183,21 @@ class Specifico_Rest_Route {
 		) );
 
 		/**
+		 * Product comparison (public — powers the frontend compare drawer).
+		 */
+		register_rest_route( 'specifico/v1', '/compare', array(
+			'methods'             => 'GET',
+			'callback'            => array( $this, 'get_comparison' ),
+			'permission_callback' => '__return_true',
+			'args'                => array(
+				'ids' => array(
+					'required'          => true,
+					'sanitize_callback' => 'sanitize_text_field',
+				),
+			),
+		) );
+
+		/**
 		 * Import / Export
 		 */
 		register_rest_route( 'specifico/v1', '/export', array(
@@ -760,10 +775,69 @@ class Specifico_Rest_Route {
 				$allowed                    = [ 'keep', 'remove', 'remove_if_specs' ];
 				$data['wc_additional_info'] = in_array( $data['wc_additional_info'], $allowed, true ) ? $data['wc_additional_info'] : 'keep';
 			}
+
+			// Product comparison.
+			foreach ( [ 'enable_comparison', 'compare_highlight', 'compare_on_single', 'compare_on_archive' ] as $bool_key ) {
+				if ( isset( $data[ $bool_key ] ) ) {
+					$data[ $bool_key ] = (bool) $data[ $bool_key ];
+				}
+			}
+			if ( isset( $data['compare_max'] ) ) {
+				$data['compare_max'] = max( 2, min( 4, (int) $data['compare_max'] ) );
+			}
+			if ( isset( $data['compare_page'] ) ) {
+				$data['compare_page'] = absint( $data['compare_page'] );
+			}
+			$allowed_btn_styles = [ 'theme', 'solid', 'outline', 'pill', 'custom' ];
+			if ( isset( $data['compare_btn_style'] ) ) {
+				$data['compare_btn_style'] = in_array( $data['compare_btn_style'], $allowed_btn_styles, true ) ? $data['compare_btn_style'] : 'theme';
+			}
+			// Shop/archive-card compare button is styled independently of the single-page one.
+			if ( isset( $data['compare_btn_style_archive'] ) ) {
+				$data['compare_btn_style_archive'] = in_array( $data['compare_btn_style_archive'], $allowed_btn_styles, true ) ? $data['compare_btn_style_archive'] : 'theme';
+			}
+
+			// Custom table appearance — whitelist keys and sanitize each CSS value.
+			if ( isset( $data['custom_styles'] ) && is_array( $data['custom_styles'] ) ) {
+				$data['custom_styles'] = \WpAxiom\Specifico\Frontend\Custom_Style::sanitize_table( $data['custom_styles'] );
+			}
+
+			// Custom compare-button appearance (single page + shop/archive card).
+			if ( isset( $data['compare_btn_styles'] ) && is_array( $data['compare_btn_styles'] ) ) {
+				$data['compare_btn_styles'] = \WpAxiom\Specifico\Frontend\Custom_Style::sanitize_button( $data['compare_btn_styles'] );
+			}
+			if ( isset( $data['compare_btn_styles_archive'] ) && is_array( $data['compare_btn_styles_archive'] ) ) {
+				$data['compare_btn_styles_archive'] = \WpAxiom\Specifico\Frontend\Custom_Style::sanitize_button( $data['compare_btn_styles_archive'] );
+			}
+
+			// Comparison-table style + custom appearance.
+			if ( isset( $data['compare_table_style'] ) ) {
+				$allowed                     = [ 'default', 'custom' ];
+				$data['compare_table_style'] = in_array( $data['compare_table_style'], $allowed, true ) ? $data['compare_table_style'] : 'default';
+			}
+			if ( isset( $data['compare_table_styles'] ) && is_array( $data['compare_table_styles'] ) ) {
+				$data['compare_table_styles'] = \WpAxiom\Specifico\Frontend\Custom_Style::sanitize_compare_table( $data['compare_table_styles'] );
+			}
 		}
 
 		update_option('_specifico_settings', $data);
 		return rest_ensure_response( 'settings updated successfully' );
+	}
+
+	/**
+	 * Return the rendered comparison table for a set of product IDs.
+	 *
+	 * Public and read-only: it exposes the same specification data already
+	 * printed in each product's Specifications tab, so no auth is required.
+	 */
+	public function get_comparison( $request ) {
+		$ids = Frontend\Comparison::parse_ids( (string) $request->get_param( 'ids' ) );
+
+		if ( count( $ids ) < 2 ) {
+			return new \WP_Error( 'specifico_compare_min', __( 'Select at least two products to compare.', 'specifico' ), array( 'status' => 400 ) );
+		}
+
+		return rest_ensure_response( array( 'html' => Frontend\Comparison::get_html( $ids ) ) );
 	}
 
 	/**

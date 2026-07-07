@@ -1,4 +1,5 @@
 import React from "react";
+import { __, sprintf } from '@wordpress/i18n';
 
 /**
  * Standalone progress card shown above the table while a bulk delete runs:
@@ -17,9 +18,14 @@ const DeleteProgress = ( { done, total } ) => {
             <div className="flex items-center justify-between gap-3.5 mb-[11px]">
                 <div className="flex items-center gap-2.5">
                     <span className="w-[18px] h-[18px] rounded-full border-[2.5px] border-[#ECEBFF] border-t-[#6B66F7] inline-block animate-spin" />
-                    <span className="font-extrabold text-[14px] text-[#23232E]">Deleting…</span>
+                    <span className="font-extrabold text-[14px] text-[#23232E]">{ __( 'Deleting…', 'specifico' ) }</span>
                 </div>
-                <span className="font-bold text-[13px] text-[#6B66F7]">{done} of {total} deleted ({percent}%)</span>
+                <span className="font-bold text-[13px] text-[#6B66F7]">
+                    {
+                        /* translators: 1: number deleted, 2: total, 3: percentage complete. */
+                        sprintf( __( '%1$d of %2$d deleted (%3$d%%)', 'specifico' ), done, total, percent )
+                    }
+                </span>
             </div>
             <div className="h-2 rounded-full bg-[#ECEBFF] overflow-hidden">
                 <div

@@ -1,5 +1,6 @@
 /* global specificoAdminSettings */
 import React, { useState, useEffect } from 'react';
+import { __ } from '@wordpress/i18n';
 import Api from "./../Utilites/Api";
 import IndeterminateCheckbox from "../components/IndeterminateCheckbox";
 import PostMetaRepeater from "../components/PostMetaRepeater";
@@ -45,19 +46,19 @@ const columns = [
     },
     {
         accessorKey: 'id',
-        header: 'ID',
+        header: () => __( 'ID', 'specifico' ),
         cell: info => <span className="font-mono font-semibold text-[13px] text-[#A2A2B4]">{info.getValue()}</span>,
         footer: props => props.column.id,
     },
     {
         accessorKey: 'name',
-        header: 'Name',
+        header: () => __( 'Name', 'specifico' ),
         cell: info => <span className="text-[#23232E] font-bold">{info.getValue()}</span>,
         footer: props => props.column.id,
     },
     {
         accessorKey: 'slug',
-        header: 'Slug',
+        header: () => __( 'Slug', 'specifico' ),
         cell: info => <span className="font-mono font-semibold text-[13px] text-[#9A9AAE]">{info.getValue()}</span>,
         footer: props => props.column.id,
     },
@@ -312,25 +313,25 @@ const GroupsTable = () => {
                 <div className="flex items-center gap-[15px]">
                     <span className="w-10 [&_svg]:w-10 [&_svg]:h-auto block"><Logo /></span>
                     <div>
-                        <div className="font-extrabold text-[19px] text-[#23232E] tracking-[-0.2px]">Specification Groups</div>
-                        <div className="font-medium text-[13px] text-[#9A9AAE] mt-0.5">Here are your groups tables. You can edit or delete them.</div>
+                        <div className="font-extrabold text-[19px] text-[#23232E] tracking-[-0.2px]">{ __( 'Specification Groups', 'specifico' ) }</div>
+                        <div className="font-medium text-[13px] text-[#9A9AAE] mt-0.5">{ __( 'Here are your groups tables. You can edit or delete them.', 'specifico' ) }</div>
                     </div>
                 </div>
                 <div className="flex-none flex gap-2.5">
                     { showAttributeSection ?
                         <>
-                            <button type="button" onClick={handleCancel} className={secondaryBtn}>Cancel</button>
+                            <button type="button" onClick={handleCancel} className={secondaryBtn}>{ __( 'Cancel', 'specifico' ) }</button>
                             <button type="button" disabled={!title.trim()} className={primaryBtn} onClick={handleSaveAndClose}>
                                 { isEditing ?
-                                    <><Rotate /> Update Group</>
+                                    <><Rotate /> { __( 'Update Group', 'specifico' ) }</>
                                     :
-                                    <><span className="text-[18px] leading-none -mt-px">+</span> Save Group</>
+                                    <><span className="text-[18px] leading-none -mt-px">+</span> { __( 'Save Group', 'specifico' ) }</>
                                 }
                             </button>
                         </>
                         :
                         <button onClick={handleOpenAddPanel} className={primaryBtn}>
-                            <span className="text-[18px] leading-none -mt-px">+</span> Add Group
+                            <span className="text-[18px] leading-none -mt-px">+</span> { __( 'Add Group', 'specifico' ) }
                         </button>
                     }
                 </div>
@@ -342,7 +343,7 @@ const GroupsTable = () => {
 
                     { groupCounts > 0 ?
                         <div className={`${CARD} overflow-hidden`}>
-                            <TableSearch value={search} onChange={setSearch} placeholder="Search groups…" count={total} noun="groups" />
+                            <TableSearch value={search} onChange={setSearch} placeholder={ __( 'Search groups…', 'specifico' ) } count={total} noun={ __( 'groups', 'specifico' ) } />
                             <TableHeader table={table} template={GROUP_GRID} />
                             <div>
                                 { ! isLoading ?
@@ -354,14 +355,14 @@ const GroupsTable = () => {
                                                 ) }
                                                 <span className="text-right">
                                                     <DropdownButton>
-                                                        <button onClick={() => fetchGroup(row.id)} className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-[13.5px] text-[#3A3A45] hover:bg-[#F5F5F9] transition-colors">Edit</button>
-                                                        <button type="button" onClick={() => deletePost(row.id)} className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-[13.5px] text-[#dc2626] hover:bg-[#FEF2F2] transition-colors">Delete</button>
+                                                        <button onClick={() => fetchGroup(row.id)} className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-[13.5px] text-[#3A3A45] hover:bg-[#F5F5F9] transition-colors">{ __( 'Edit', 'specifico' ) }</button>
+                                                        <button type="button" onClick={() => deletePost(row.id)} className="block w-full text-left px-3 py-2 rounded-lg font-semibold text-[13.5px] text-[#dc2626] hover:bg-[#FEF2F2] transition-colors">{ __( 'Delete', 'specifico' ) }</button>
                                                     </DropdownButton>
                                                 </span>
                                             </div>
                                         ) }
                                         { total === 0 &&
-                                            <div className="px-[22px] py-12 text-center text-[#9A9AAE]">No groups match your search.</div>
+                                            <div className="px-[22px] py-12 text-center text-[#9A9AAE]">{ __( 'No groups match your search.', 'specifico' ) }</div>
                                         }
                                     </>
                                     :
@@ -383,10 +384,10 @@ const GroupsTable = () => {
                             <div className="w-[62px] h-[62px] rounded-2xl bg-[#F2F1FF] flex items-center justify-center mb-[18px]">
                                 <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect x="3" y="5" width="9" height="7" rx="2" stroke="#6B66F7" strokeWidth="1.8"/><rect x="14" y="5" width="9" height="7" rx="2" stroke="#B7B4FF" strokeWidth="1.8"/><rect x="3" y="15" width="9" height="7" rx="2" stroke="#B7B4FF" strokeWidth="1.8"/><rect x="14" y="15" width="9" height="7" rx="2" stroke="#6B66F7" strokeWidth="1.8"/></svg>
                             </div>
-                            <div className="font-extrabold text-[17px] text-[#23232E]">No groups yet</div>
-                            <div className="font-medium text-[13.5px] text-[#9A9AAE] mt-1.5 max-w-[380px]">Create a group to organise the attributes that make up your specification tables.</div>
+                            <div className="font-extrabold text-[17px] text-[#23232E]">{ __( 'No groups yet', 'specifico' ) }</div>
+                            <div className="font-medium text-[13.5px] text-[#9A9AAE] mt-1.5 max-w-[380px]">{ __( 'Create a group to organise the attributes that make up your specification tables.', 'specifico' ) }</div>
                             <button onClick={handleOpenAddPanel} className={`${primaryBtn} mt-5`}>
-                                <span className="text-[18px] leading-none -mt-px">+</span> Add Group
+                                <span className="text-[18px] leading-none -mt-px">+</span> { __( 'Add Group', 'specifico' ) }
                             </button>
                         </div>
                     }
@@ -396,16 +397,16 @@ const GroupsTable = () => {
             { showAttributeSection && (
                 <div className="flex flex-col gap-5">
                     <div className={`${CARD} overflow-hidden`}>
-                        <div className="px-6 py-4 border-b border-[#EFEFF4] font-extrabold text-[15px] text-[#23232E]">Group Name</div>
+                        <div className="px-6 py-4 border-b border-[#EFEFF4] font-extrabold text-[15px] text-[#23232E]">{ __( 'Group Name', 'specifico' ) }</div>
                         <div className="grid grid-cols-[200px_1fr] items-center gap-5 px-6 py-5">
-                            <label htmlFor="post-title" className="font-bold text-[13px] text-[#3A3A45]">Enter Group Name</label>
-                            <input id="post-title" type="text" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Group name" className={FIELD} />
+                            <label htmlFor="post-title" className="font-bold text-[13px] text-[#3A3A45]">{ __( 'Enter Group Name', 'specifico' ) }</label>
+                            <input id="post-title" type="text" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder={ __( 'Group name', 'specifico' ) } className={FIELD} />
                         </div>
                     </div>
 
                     <div className={`${CARD} overflow-hidden`}>
                         <div className="grid grid-cols-[1fr_1fr_1fr_48px] gap-3.5 px-6 py-3.5 border-b border-[#EFEFF4] font-bold text-[10.5px] tracking-[0.09em] uppercase text-[#A2A2B4]">
-                            <span>Attribute Type</span><span>Attribute Value</span><span>Values</span><span></span>
+                            <span>{ __( 'Attribute Type', 'specifico' ) }</span><span>{ __( 'Attribute Value', 'specifico' ) }</span><span>{ __( 'Values', 'specifico' ) }</span><span></span>
                         </div>
                         <PostMetaRepeater
                             metaFields={attributes}

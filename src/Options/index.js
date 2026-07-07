@@ -1,15 +1,16 @@
 /* global specificoAdminSettings */
 
 import React, { useState, useEffect } from 'react';
+import { __, _n, sprintf } from '@wordpress/i18n';
 import Api from "./../Utilites/Api";
 import Switch from "../components/Switch";
 import MultiSelect from "../components/MultiSelect";
 
 const MATCH_LABEL = {
-    'product-id':       'product ID',
-    'product-name':     'product',
-    'product-category': 'category',
-    'product-tag':      'tag',
+    'product-id':       __( 'product ID', 'specifico' ),
+    'product-name':     __( 'product', 'specifico' ),
+    'product-category': __( 'category', 'specifico' ),
+    'product-tag':      __( 'tag', 'specifico' ),
 };
 
 const META_FIELD = "w-full !h-[38px] !min-h-[38px] box-border !border !border-[#E7E7EF] !rounded-[9px] !bg-white !px-3 !py-0 !m-0 font-medium !text-[13.5px] !text-[#23232E] !shadow-none !outline-none focus:!border-[#6B66F7] focus:!shadow-[0_0_0_3px_rgba(107,102,247,0.16)] focus:!ring-0";
@@ -93,7 +94,7 @@ const Options = () => {
         e.preventDefault();
         setAccordions([{
             id: Date.now(),
-            title: 'New group',
+            title: __( 'New group', 'specifico' ),
             inputGroups: [[{ id: 1, value: '' }, { id: 2, value: '' }]],
         }]);
     };
@@ -127,7 +128,7 @@ const Options = () => {
             ...accordions,
             {
                 id,
-                title: `New group`,
+                title: __( 'New group', 'specifico' ),
                 inputGroups: [[{ id: id + 1, value: '' }, { id: id + 2, value: '' }]],
             },
         ]);
@@ -175,7 +176,7 @@ const Options = () => {
     };
 
     if (isLoading) {
-        return <div className="p-4 text-[#9A9AAE] font-['Nunito']">Loading…</div>;
+        return <div className="p-4 text-[#9A9AAE] font-['Nunito']">{ __( 'Loading…', 'specifico' ) }</div>;
     }
 
     return (
@@ -185,8 +186,8 @@ const Options = () => {
             {/* master toggle */}
             <div className="flex items-center justify-between gap-3.5 px-[15px] py-[13px] bg-[#FAFAFC] border border-[#EFEFF4] rounded-xl">
                 <div>
-                    <div className="font-bold text-[13.5px] text-[#23232E]">Enable specifications for this product</div>
-                    <div className="font-medium text-[12px] text-[#9A9AAE] mt-0.5">Turn on to attach a spec table to this product.</div>
+                    <div className="font-bold text-[13.5px] text-[#23232E]">{ __( 'Enable specifications for this product', 'specifico' ) }</div>
+                    <div className="font-medium text-[12px] text-[#9A9AAE] mt-0.5">{ __( 'Turn on to attach a spec table to this product.', 'specifico' ) }</div>
                 </div>
                 <Switch bare id="_specifico_spec" name="_specifico_spec" checked={status} onChange={() => setStatus(prev => !prev)} />
             </div>
@@ -201,14 +202,14 @@ const Options = () => {
                             <ModeSelector
                                 selected={overrideMode === ''}
                                 onClick={chooseInherit}
-                                title="Inherit from mapping"
-                                subtitle="Use the rule from Specifico → Mapping. Update once, every matching product updates."
+                                title={ __( 'Inherit from mapping', 'specifico' ) }
+                                subtitle={ __( 'Use the rule from Specifico → Mapping. Update once, every matching product updates.', 'specifico' ) }
                             />
                             <ModeSelector
                                 selected={overrideMode === 'custom'}
                                 onClick={chooseCustomize}
-                                title="Customize for this product"
-                                subtitle="Override the mapping with a one-off table just for this product."
+                                title={ __( 'Customize for this product', 'specifico' ) }
+                                subtitle={ __( 'Override the mapping with a one-off table just for this product.', 'specifico' ) }
                             />
                         </div>
 
@@ -249,7 +250,7 @@ const Options = () => {
                 </>
             ) : (
                 <div className="mt-3.5 p-[18px] border border-dashed border-[#E2DFEF] rounded-xl text-center font-medium text-[12.5px] text-[#9A9AAE]">
-                    Specifications are off for this product. Turn the switch on to choose a table.
+                    { __( 'Specifications are off for this product. Turn the switch on to choose a table.', 'specifico' ) }
                 </div>
             )}
         </div>
@@ -280,8 +281,8 @@ const InheritPreview = ({ inherited, inheritValues, onInheritValueChange }) => {
     if (!inherited) {
         return (
             <div className="p-[18px] border border-dashed border-[#E2DFEF] rounded-xl font-medium text-[12.5px] text-[#9A9AAE]">
-                No mapping rule matches this product yet.{' '}
-                <a href="admin.php?page=specifico-mapping" className="text-[#6B66F7] font-bold">Set up a mapping rule</a>{' '}or switch to Customize.
+                { __( 'No mapping rule matches this product yet.', 'specifico' ) }{' '}
+                <a href="admin.php?page=specifico-mapping" className="text-[#6B66F7] font-bold">{ __( 'Set up a mapping rule', 'specifico' ) }</a>{' '}{ __( 'or switch to Customize.', 'specifico' ) }
             </div>
         );
     }
@@ -293,14 +294,14 @@ const InheritPreview = ({ inherited, inheritValues, onInheritValueChange }) => {
         <div className="border border-[#EFEFF4] rounded-xl overflow-hidden">
             <div className="px-4 py-3.5 bg-[#FAFAFC] border-b border-[#EFEFF4] flex items-center justify-between gap-3">
                 <div>
-                    <div className="font-semibold text-[12.5px] text-[#54546A]">Will display: <b className="text-[#23232E]">{inherited.table_name}</b></div>
+                    <div className="font-semibold text-[12.5px] text-[#54546A]">{ __( 'Will display:', 'specifico' ) } <b className="text-[#23232E]">{inherited.table_name}</b></div>
                     <div className="font-semibold text-[11.5px] text-[#9A9AAE] mt-[3px]">
-                        Matched via {matchLabel}{inherited.match_value ? <>: <span className="text-[#6B66F7]">{inherited.match_value}</span></> : null}
+                        { sprintf( /* translators: %s: match type (category, tag, product, etc.). */ __( 'Matched via %s', 'specifico' ), matchLabel ) }{inherited.match_value ? <>: <span className="text-[#6B66F7]">{inherited.match_value}</span></> : null}
                     </div>
                 </div>
                 {previewGroups.length > 0 && (
                     <button type="button" onClick={() => setShowFields(prev => !prev)} className="inline-flex items-center gap-1.5 font-bold text-[12px] text-[#6B66F7] flex-none">
-                        {showFields ? 'Hide fields' : 'Show fields'}
+                        {showFields ? __( 'Hide fields', 'specifico' ) : __( 'Show fields', 'specifico' )}
                         <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style={{ transform: showFields ? 'none' : 'rotate(-90deg)' }}><path d="M3 4.5 6 7.5 9 4.5" stroke="#6B66F7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </button>
                 )}
@@ -330,7 +331,7 @@ const InheritPreview = ({ inherited, inheritValues, onInheritValueChange }) => {
                             </div>
                         </div>
                     ))}
-                    <div className="mt-3 font-medium text-[11.5px] text-[#9A9AAE]">Labels are locked to the mapped table. Edit values here to override them for this product only.</div>
+                    <div className="mt-3 font-medium text-[11.5px] text-[#9A9AAE]">{ __( 'Labels are locked to the mapped table. Edit values here to override them for this product only.', 'specifico' ) }</div>
                 </div>
             )}
         </div>
@@ -345,12 +346,12 @@ const CustomEditor = ({
     if (accordions.length === 0) {
         return (
             <div className="flex items-center gap-2.5 flex-wrap px-3.5 py-3 bg-[#FAFAFC] border border-[#EFEFF4] rounded-xl">
-                <span className="font-bold text-[12.5px] text-[#54546A]">Start with:</span>
+                <span className="font-bold text-[12.5px] text-[#54546A]">{ __( 'Start with:', 'specifico' ) }</span>
                 <div className="flex-1 min-w-[180px]">
-                    <MultiSelect bare id="specifico-seed" placeholder="Copy from an existing table…" options={specOptions} value={seedTable} onChange={onSeed} />
+                    <MultiSelect bare id="specifico-seed" placeholder={ __( 'Copy from an existing table…', 'specifico' ) } options={specOptions} value={seedTable} onChange={onSeed} />
                 </div>
-                <span className="font-semibold text-[12.5px] text-[#A2A2B4]">or</span>
-                <button onClick={onStartBlank} type="button" className="font-bold text-[12.5px] text-[#6B66F7]">start blank</button>
+                <span className="font-semibold text-[12.5px] text-[#A2A2B4]">{ __( 'or', 'specifico' ) }</span>
+                <button onClick={onStartBlank} type="button" className="font-bold text-[12.5px] text-[#6B66F7]">{ __( 'start blank', 'specifico' ) }</button>
             </div>
         );
     }
@@ -364,24 +365,24 @@ const CustomEditor = ({
                     return (
                         <div key={accordion.id} onClick={() => onToggle(accordion.id)} className="flex items-center gap-2.5 px-3.5 py-[11px] border border-[#EFEFF4] rounded-xl bg-white cursor-pointer hover:bg-[#FAFAFB] transition-colors">
                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: 'rotate(-90deg)' }}><path d="M3 4.5 6 7.5 9 4.5" stroke="#9A9AAE" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                            <span className="flex-1 font-bold text-[13px] text-[#23232E]">{accordion.title || 'Untitled group'}</span>
-                            <span className="font-semibold text-[12px] text-[#A2A2B4]">{attrCount} attribute{attrCount === 1 ? '' : 's'}</span>
+                            <span className="flex-1 font-bold text-[13px] text-[#23232E]">{accordion.title || __( 'Untitled group', 'specifico' )}</span>
+                            <span className="font-semibold text-[12px] text-[#A2A2B4]">{ sprintf( _n( '%s attribute', '%s attributes', attrCount, 'specifico' ), attrCount ) }</span>
                         </div>
                     );
                 }
                 return (
                     <div key={accordion.id} className="border border-[#EFEFF4] rounded-xl overflow-hidden">
                         <div className="flex items-center gap-2.5 px-3.5 py-[11px] bg-[#F6F5FF] border-b border-[#EFEFF4]">
-                            <button type="button" onClick={() => onToggle(accordion.id)} aria-label="Collapse group">
+                            <button type="button" onClick={() => onToggle(accordion.id)} aria-label={ __( 'Collapse group', 'specifico' ) }>
                                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5 6 7.5 9 4.5" stroke="#6B66F7" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                             </button>
                             <input
                                 value={accordion.title}
                                 onChange={(e) => onTitleChange(accordion.id, e.target.value)}
-                                placeholder="Group name"
+                                placeholder={ __( 'Group name', 'specifico' ) }
                                 className="flex-1 !h-8 !min-h-0 box-border !border !border-[#E2DFFF] !bg-white !rounded-lg !px-[11px] !py-0 !m-0 font-bold !text-[13px] !text-[#23232E] !shadow-none !outline-none focus:!border-[#6B66F7] focus:!shadow-[0_0_0_3px_rgba(107,102,247,0.16)] focus:!ring-0"
                             />
-                            <TrashBtn onClick={(e) => onRemove(accordion.id, e)} label="Remove group" size={30} />
+                            <TrashBtn onClick={(e) => onRemove(accordion.id, e)} label={ __( 'Remove group', 'specifico' ) } size={30} />
                         </div>
                         <div className="px-3.5 py-3 flex flex-col gap-[9px]">
                             {accordion.inputGroups.map((row, rowIndex) => (
@@ -395,13 +396,13 @@ const CustomEditor = ({
                                             className="!h-9 !min-h-0 box-border !border !border-[#E7E7EF] !bg-white !rounded-lg !px-[11px] !py-0 !m-0 font-medium !text-[13px] !text-[#23232E] !shadow-none !outline-none focus:!border-[#6B66F7] focus:!shadow-[0_0_0_3px_rgba(107,102,247,0.16)] focus:!ring-0"
                                         />
                                     ))}
-                                    <button type="button" onClick={(e) => onRemoveRow(accordion.id, rowIndex, e)} aria-label="Remove row" className="inline-flex items-center justify-center w-8 h-8 bg-[#F5F5F9] rounded-lg hover:bg-[#EFE9E9] transition-colors">
+                                    <button type="button" onClick={(e) => onRemoveRow(accordion.id, rowIndex, e)} aria-label={ __( 'Remove row', 'specifico' ) } className="inline-flex items-center justify-center w-8 h-8 bg-[#F5F5F9] rounded-lg hover:bg-[#EFE9E9] transition-colors">
                                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3l-6 6" stroke="#B4B4C2" strokeWidth="1.6" strokeLinecap="round"/></svg>
                                     </button>
                                 </div>
                             ))}
                             <button type="button" onClick={(e) => onAddRow(accordion.id, e)} className="self-start inline-flex items-center gap-1.5 h-8 px-3 bg-[#EDEBFF] text-[#6B66F7] border-none rounded-lg font-bold text-[12px] cursor-pointer hover:bg-[#E2DFFF] mt-0.5 transition-colors">
-                                <span className="text-[15px] leading-none">+</span> Add attribute
+                                <span className="text-[15px] leading-none">+</span> { __( 'Add attribute', 'specifico' ) }
                             </button>
                         </div>
                     </div>
@@ -409,9 +410,9 @@ const CustomEditor = ({
             })}
             <div className="flex gap-2.5 mt-0.5">
                 <button type="button" onClick={onAdd} className="inline-flex items-center gap-[7px] h-[38px] px-3.5 bg-[#6B66F7] text-white border-none rounded-[9px] font-bold text-[12.5px] cursor-pointer shadow-[0_5px_14px_-4px_rgba(107,102,247,0.55)] hover:bg-[#5a55e8] transition-colors">
-                    <span className="text-[16px] leading-none">+</span> Add group
+                    <span className="text-[16px] leading-none">+</span> { __( 'Add group', 'specifico' ) }
                 </button>
-                <button type="button" onClick={onStartOver} className="h-[38px] px-3.5 bg-white border border-[#E7E7EF] rounded-[9px] font-bold text-[12.5px] text-[#9A9AAE] cursor-pointer hover:bg-[#F5F5F9] hover:text-[#54546A] transition-colors">Start over</button>
+                <button type="button" onClick={onStartOver} className="h-[38px] px-3.5 bg-white border border-[#E7E7EF] rounded-[9px] font-bold text-[12.5px] text-[#9A9AAE] cursor-pointer hover:bg-[#F5F5F9] hover:text-[#54546A] transition-colors">{ __( 'Start over', 'specifico' ) }</button>
             </div>
         </div>
     );
