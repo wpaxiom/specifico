@@ -52,8 +52,7 @@ class Specifico_Rest_Route {
 			'methods'             => 'GET',
 			'callback'            => [ $this, 'get_specification' ],
 			'permission_callback' => [ $this, 'get_permission_settings' ],
-		] );
-		register_rest_route('specifico/v1', '/specification/(?P<id>\d+)', [
+		] );		register_rest_route('specifico/v1', '/specification/(?P<id>\d+)', [
 			'methods'             => 'DELETE',
 			'callback'            => [ $this, 'delete_specification' ],
 			'permission_callback' => [ $this, 'delete_permission_settings' ],
@@ -62,6 +61,11 @@ class Specifico_Rest_Route {
 			'methods'             => 'PUT',
 			'callback'            => [ $this, 'update_specification' ],
 			'permission_callback' => [ $this, 'update_permission_settings' ],
+		] );
+		register_rest_route('specifico/v1', '/specification/(?P<id>\d+)/preview', [
+			'methods'             => 'GET',
+			'callback'            => [ $this, 'get_specification_preview' ],
+			'permission_callback' => [ $this, 'can_manage_products' ],
 		] );
 		
 		/**
@@ -334,7 +338,7 @@ class Specifico_Rest_Route {
 	}
 
 	/**
-	 * Get Single specification
+	 * Get single specification
 	 */
 	public function get_specification( $res ) {
 		$post = get_post( $res['id'] );
@@ -353,6 +357,34 @@ class Specifico_Rest_Route {
 
 			return rest_ensure_response( $data );
 		}
+	}
+
+	/**
+	 * Render-ready preview data for a specification table (block editor preview).
+	 *
+	 * Mirrors the frontend "specific-table" render path so the Gutenberg block
+	 * shows the same table (groups, style, sub-headings) as the storefront.
+	 *
+	 * @param WP_REST_Request $res Request object.
+	 * @return WP_REST_Response
+	 */
+	public function get_specification_preview( $res ) {
+		$table_id = (int) $res['id'];
+
+		$groups = \WpAxiom\Specifico\Mapping_Resolver::get_table_groups( $table_id );
+		$groups = apply_filters( 'specifico_table_groups', $groups, 0 );
+
+		$settings = get_option( '_specifico_settings' );
+		$style    = is_array( $settings ) && isset( $settings['styles']['value'] ) ? $settings['styles']['value'] : '';
+		$show_sub = is_array( $settings ) && ! empty( $settings['enable_sub_heading'] );
+
+		return rest_ensure_response( [
+			'id'        => $table_id,
+			'groups'    => $groups,
+			'style'     => $style,
+			'style_vars' => \WpAxiom\Specifico\Frontend\Custom_Style::inline_vars( $style ),
+			'show_sub'  => $show_sub,
+		] );
 	}
 
 	/**

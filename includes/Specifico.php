@@ -17,6 +17,7 @@
 namespace WpAxiom\Specifico;
 
 use WpAxiom\Specifico\Traits\Singleton;
+use WpAxiom\Specifico\Blocks\Block;
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
@@ -97,6 +98,9 @@ final class Specifico {
 		}
 
 		new Specifico_Rest_Route();
+
+		// Gutenberg block (editor + frontend).
+		Block::init();
 
 		// Enable HPOS for WooCommerce
 		add_action( 'before_woocommerce_init', array( $this, 'enable_hpos' ) );

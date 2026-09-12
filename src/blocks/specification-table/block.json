@@ -1,0 +1,29 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "specifico/specification-table",
+	"title": "Specification Table",
+	"category": "specifico",
+	"icon": "list-view",
+	"description": "Display a WooCommerce product specification table.",
+	"keywords": [ "specification", "specs", "product", "table", "woocommerce" ],
+	"attributes": {
+		"source": {
+			"type": "string",
+			"default": "current-product",
+			"enum": [ "current-product", "specific-table" ]
+		},
+		"tableId": {
+			"type": "number",
+			"default": 0
+		}
+	},
+	"supports": {
+		"html": false,
+		"align": [ "wide", "full" ]
+	},
+	"editorScript": "file:../../blocks.js",
+	"editorStyle": "file:../../blocks.css",
+	"style": "file:../../blocks.css",
+	"render": "file:./render.php"
+}

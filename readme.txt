@@ -3,11 +3,11 @@ Contributors: wpaxiom, shuvo586
 Donate link: https://www.wpaxiom.com/donate
 Tags: woocommerce, product specification, specifications table, Product Information, ecommerce
 Requires at least: 5.8
-Tested up to: 7.0
+Tested up to: 7.1
 WC requires at least: 6.3
-WC tested up to: 10.9
+WC tested up to: 11.0
 Requires PHP: 7.4
-Stable tag: 1.0.5
+Stable tag: 1.0.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -122,6 +122,10 @@ To build the plugin from source:
 
 == Changelog ==
 
+= 1.0.6 =
+* New: Specification Table Gutenberg block - place any saved table or the current product's table on any post or page straight from the block editor, with a source selector for current-product or a specific table.
+* Improve: Full uninstall cleanup - deactivating still keeps all your data, but uninstalling the plugin now deletes its options, transients, specification tables and groups, and per-product specification data from the database.
+
 = 1.0.5 =
 * New: Product comparison - shoppers can add products to a compare tray and view their specification tables side by side, with differing rows highlighted. Compared specs reuse the same mapping resolution as the Specifications tab, so they always match.
 * New: "Add to compare" buttons on the single product page and the shop/archive loop, plus a slide-in comparison drawer. Both surfaces can be enabled or disabled from Settings.
@@ -171,6 +175,9 @@ To build the plugin from source:
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.6 =
+Adds the Specification Table block for the block editor, plus full uninstall cleanup. Recommended for all users.
 
 = 1.0.5 =
 Adds side-by-side product comparison, custom table and compare-button styling, and full localization support. Recommended for all users.

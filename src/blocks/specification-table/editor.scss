@@ -1,0 +1,33 @@
+@import '../../../assets/src/sass/specifico.css';
+
+/* The specification-table block uses an outlined (stroke) lucide icon.
+   WordPress core forces `fill: currentColor` onto block icons via
+   `.block-editor-block-icon.has-colors svg`, which would flood the outline's
+   interior and turn it into a solid blob. Re-assert the outline here, at equal
+   or higher specificity, and keep the per-shape presentation attributes as a
+   second line of defence. */
+.block-editor-block-icon.has-colors .wp-block-specifico-specification-table-icon {
+	fill: none;
+	stroke: currentColor;
+}
+
+.wp-block-specifico-specification-table {
+	&.is-placeholder {
+		border: 1px dashed #ccc;
+		padding: 24px;
+		text-align: center;
+		background: #f9f9f9;
+		border-radius: 4px;
+
+		.spec-placeholder__title {
+			font-size: 14px;
+			font-weight: 600;
+			margin-bottom: 4px;
+		}
+
+		.spec-block__hint {
+			font-size: 13px;
+			color: #757575;
+		}
+	}
+}

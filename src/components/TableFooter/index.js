@@ -50,8 +50,10 @@ const TableFooter = ({ table, deletePosts, totalRows }) => {
             <div className="flex items-center gap-3.5">
                 <span className="font-semibold text-[13px] text-[#9A9AAE]">
                     <b className="text-[#54546A]">{start}–{end}</b>{' '}
-                    { /* translators: %s: total number of rows. */ }
-                    { sprintf( __( 'of %s', 'specifico' ), Number(total).toLocaleString() ) }
+                    {
+                        /* translators: %s: total number of rows. */
+                        sprintf( __( 'of %s', 'specifico' ), Number(total).toLocaleString() )
+                    }
                 </span>
                 <div className="inline-flex items-center bg-white border border-[#E7E7EF] rounded-[10px] overflow-hidden">
                     <button

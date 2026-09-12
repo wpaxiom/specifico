@@ -254,14 +254,24 @@ const ImportCard = ( { loading = false } ) => {
                                 <>
                                     <div className="font-semibold text-[12.5px] text-[#9A9AAE] mt-4 mb-[9px]">{ __( 'This import will create / update:', 'specifico' ) }</div>
                                     <ul className="m-0 pl-[18px] flex flex-col gap-1.5 font-semibold text-[13px] text-[#54546A]">
-                                        <li>{ sprintf( _n( '%s specification table', '%s specification tables', prepared.totals.tables, 'specifico' ), prepared.totals.tables ) }</li>
+                                        <li>
+                                            {
+                                                /* translators: %s: number of specification tables. */
+                                                sprintf( _n( '%s specification table', '%s specification tables', prepared.totals.tables, 'specifico' ), prepared.totals.tables )
+                                            }
+                                        </li>
                                         <li>
                                             {
                                                 /* translators: 1: number of groups, 2: number of attributes. */
                                                 sprintf( _n( '%1$s group (%2$s attributes)', '%1$s groups (%2$s attributes)', prepared.totals.groups, 'specifico' ), prepared.totals.groups, prepared.totals.attributes )
                                             }
                                         </li>
-                                        <li>{ sprintf( _n( '%s product', '%s products', prepared.totals.products, 'specifico' ), prepared.totals.products ) }</li>
+                                        <li>
+                                            {
+                                                /* translators: %s: number of products. */
+                                                sprintf( _n( '%s product', '%s products', prepared.totals.products, 'specifico' ), prepared.totals.products )
+                                            }
+                                        </li>
                                     </ul>
                                     <div className="flex gap-2.5 mt-[18px]">
                                         <button type="button" onClick={ handleImport } className="h-[38px] px-[18px] bg-[#6B66F7] text-white border-none rounded-[10px] font-bold text-[13.5px] cursor-pointer shadow-[0_5px_14px_-4px_rgba(107,102,247,0.55)] hover:bg-[#5a55e8] transition-colors">{ __( 'Import Now', 'specifico' ) }</button>
@@ -322,20 +332,40 @@ const ImportCard = ( { loading = false } ) => {
                                 <span className="font-extrabold text-[14.5px] text-[#065F46]">{ __( 'Import complete.', 'specifico' ) }</span>
                             </div>
                             <ul className="m-0 pl-[18px] flex flex-col gap-1.5 font-semibold text-[13px] text-[#0a7f5e]">
-                                <li>{ sprintf( _n( '%s table', '%s tables', result.tables, 'specifico' ), result.tables ) }</li>
+                                <li>
+                                    {
+                                        /* translators: %s: number of tables. */
+                                        sprintf( _n( '%s table', '%s tables', result.tables, 'specifico' ), result.tables )
+                                    }
+                                </li>
                                 <li>
                                     {
                                         /* translators: 1: number of groups, 2: number of attributes. */
                                         sprintf( _n( '%1$s group (%2$s attributes)', '%1$s groups (%2$s attributes)', result.groups, 'specifico' ), result.groups, result.attributes )
                                     }
                                 </li>
-                                <li>{ sprintf( _n( '%s product', '%s products', result.products, 'specifico' ), result.products ) }</li>
+                                <li>
+                                    {
+                                        /* translators: %s: number of products. */
+                                        sprintf( _n( '%s product', '%s products', result.products, 'specifico' ), result.products )
+                                    }
+                                </li>
                             </ul>
                             { result.skipped?.products > 0 && (
-                                <div className="font-semibold text-[12.5px] text-[#b45309] mt-3 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[#b45309] flex-none" />{ sprintf( _n( '%s product skipped — no matching product found.', '%s products skipped — no matching product found.', result.skipped.products, 'specifico' ), result.skipped.products ) }</div>
+                                <>
+                                <div className="font-semibold text-[12.5px] text-[#b45309] mt-3 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[#b45309] flex-none" />{
+                                    /* translators: %s: number of products skipped. */
+                                    sprintf( _n( '%s product skipped — no matching product found.', '%s products skipped — no matching product found.', result.skipped.products, 'specifico' ), result.skipped.products )
+                                }</div>
+                                </>
                             ) }
                             { result.skipped?.mapping_values > 0 && (
-                                <div className="font-semibold text-[12.5px] text-[#b45309] mt-1.5 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[#b45309] flex-none" />{ sprintf( _n( '%s mapping value skipped — category/tag/product not found.', '%s mapping values skipped — category/tag/product not found.', result.skipped.mapping_values, 'specifico' ), result.skipped.mapping_values ) }</div>
+                                <>
+                                <div className="font-semibold text-[12.5px] text-[#b45309] mt-1.5 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[#b45309] flex-none" />{
+                                    /* translators: %s: number of mapping values skipped. */
+                                    sprintf( _n( '%s mapping value skipped — category/tag/product not found.', '%s mapping values skipped — category/tag/product not found.', result.skipped.mapping_values, 'specifico' ), result.skipped.mapping_values )
+                                }</div>
+                                </>
                             ) }
                             <button type="button" onClick={ clearFile } className="mt-4 h-9 px-3.5 bg-white border border-[#CDECDF] rounded-[9px] font-bold text-[12.5px] text-[#065F46] cursor-pointer hover:bg-white/60 transition-colors">{ __( 'Import another file', 'specifico' ) }</button>
                         </div>

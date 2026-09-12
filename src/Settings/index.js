@@ -364,8 +364,10 @@ const Settings = () => {
                         <span className={ ( n > 0 ? "bg-[#6B66F7] text-white" : "bg-[#EDEBFF] text-[#6B66F7]" ) + " px-2 py-[2px] rounded-[7px] font-extrabold text-[10.5px]" }>
                             {
                                 n > 0
-                                    /* translators: %d: number of overridden custom style fields. */
-                                    ? sprintf( __( '%d custom', 'specifico' ), n )
+                                    ? sprintf(
+                                        /* translators: %d: number of overridden custom style fields. */
+                                        __( '%d custom', 'specifico' ), n
+                                    )
                                     : __( 'Inherits theme', 'specifico' )
                             }
                         </span>

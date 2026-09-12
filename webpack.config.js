@@ -12,6 +12,7 @@ entry.mapping =  path.resolve( `${ srcDir }/mapping.js` );
 entry.settings =  path.resolve( `${ srcDir }/settings.js` );
 entry.exportImport =  path.resolve( `${ srcDir }/exportImport.js` );
 entry.productOptions =  path.resolve( `${ srcDir }/productOptions.js` );
+entry.blocks =  path.resolve( `${ srcDir }/blocks.js` );
 
 const reactConfig = {
     ...defaultConfig,

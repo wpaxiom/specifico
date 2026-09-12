@@ -366,7 +366,10 @@ const CustomEditor = ({
                         <div key={accordion.id} onClick={() => onToggle(accordion.id)} className="flex items-center gap-2.5 px-3.5 py-[11px] border border-[#EFEFF4] rounded-xl bg-white cursor-pointer hover:bg-[#FAFAFB] transition-colors">
                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: 'rotate(-90deg)' }}><path d="M3 4.5 6 7.5 9 4.5" stroke="#9A9AAE" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                             <span className="flex-1 font-bold text-[13px] text-[#23232E]">{accordion.title || __( 'Untitled group', 'specifico' )}</span>
-                            <span className="font-semibold text-[12px] text-[#A2A2B4]">{ sprintf( _n( '%s attribute', '%s attributes', attrCount, 'specifico' ), attrCount ) }</span>
+                            <span className="font-semibold text-[12px] text-[#A2A2B4]">{
+                                /* translators: %s: number of attributes. */
+                                sprintf( _n( '%s attribute', '%s attributes', attrCount, 'specifico' ), attrCount )
+                            }</span>
                         </div>
                     );
                 }
