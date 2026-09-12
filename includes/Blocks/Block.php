@@ -2,9 +2,10 @@
 /**
  * Gutenberg block registration for Specifico.
  *
- * Registers the "Specification Table" block and its custom category.
- * Editor/frontend assets are enqueued automatically by WordPress from the
- * block.json `file:` references in build/blocks/specification-table/.
+ * Registers the "Specification Table" and "Comparison Table" blocks and the
+ * shared "Specifico" category. Editor/frontend assets are enqueued
+ * automatically by WordPress from each block.json's `file:` references to
+ * the compiled build/blocks directories.
  *
  * @package specifico
  */
@@ -16,6 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class Block {
+
+	/**
+	 * Registered block slugs, matching the directories under build/blocks/.
+	 *
+	 * @var string[]
+	 */
+	const BLOCKS = [ 'specification-table', 'comparison-table' ];
 
 	/**
 	 * Boot the block infrastructure. Called once from Specifico::init_plugin().
@@ -43,20 +51,22 @@ class Block {
 	}
 
 	/**
-	 * Register the Specification Table block (server-side metadata + render).
+	 * Register all Specifico blocks (server-side metadata + render).
 	 *
-	 * Points at the compiled build/blocks/specification-table/ directory where
-	 * wp-scripts has copied block.json and render.php from src/blocks/.
+	 * Points at the compiled build/blocks/<slug>/ directories where wp-scripts
+	 * has copied block.json and render.php from src/blocks/.
 	 *
 	 * @return void
 	 */
 	public static function register_block() {
-		$dir = SPECIFICO_PATH . 'build/blocks/specification-table';
+		foreach ( self::BLOCKS as $slug ) {
+			$dir = SPECIFICO_PATH . 'build/blocks/' . $slug;
 
-		if ( ! file_exists( $dir . '/block.json' ) ) {
-			return;
+			if ( ! file_exists( $dir . '/block.json' ) ) {
+				continue;
+			}
+
+			register_block_type( $dir );
 		}
-
-		register_block_type( $dir );
 	}
 }

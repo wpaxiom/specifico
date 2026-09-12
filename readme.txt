@@ -1,13 +1,13 @@
-=== Specifico – Product Specification for WooCommerce ===
+=== Specifico - Product Specifications & Comparison for WooCommerce ===
 Contributors: wpaxiom, shuvo586
 Donate link: https://www.wpaxiom.com/donate
-Tags: woocommerce, product specification, specifications table, Product Information, ecommerce
+Tags: product specifications, product specs, specifications, specifications table, product attributes
 Requires at least: 5.8
 Tested up to: 7.1
 WC requires at least: 6.3
-WC tested up to: 11.0
+WC tested up to: 11.1
 Requires PHP: 7.4
-Stable tag: 1.0.6
+Stable tag: 1.0.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,7 +21,7 @@ Instead of re-entering the same specs for every product, you build reusable attr
 
 [youtube https://www.youtube.com/watch?v=lNAtGRf2PnA]
 
-[Documentation](https://www.wpaxiom.com/docs/specifico/) | [Get Support](https://www.wpaxiom.com/support)
+[Documentation](https://www.wpaxiom.com/docs/specifico/) | [Get Support](https://www.wpaxiom.com/contact)
 
 = Key Features =
 * A structured product specification table shown in a dedicated "Specifications" tab on the product page, keeping key product information organized and easy to scan.
@@ -29,9 +29,10 @@ Instead of re-entering the same specs for every product, you build reusable attr
 * Category, tag, and per-product mapping rules to decide which table each product uses - no manual assignment needed.
 * Per-product overrides: inherit values from the mapped table, or customize values for a single product while labels stay locked to the mapping.
 * Show/Hide toggle for inherited fields so the table stays tidy in the product editor.
-* Product comparison - shoppers add products to a compare tray and view their specification tables side by side in a slide-in drawer, with differing rows highlighted. "Add to compare" buttons can be shown on the single product page and the shop/archive loop, and a `[specifico_compare ids="1,2,3"]` shortcode/block embeds a comparison anywhere.
+* Product comparison - shoppers add products to a compare tray and view their specification tables side by side in a slide-in drawer, with differing rows highlighted. "Add to compare" buttons can be shown on the single product page and the shop/archive loop, and a `[specifico_compare ids="1,2,3"]` shortcode or the Comparison Table block embeds a comparison anywhere.
 * Customizable table styles via the Settings page, plus a customizable Specifications tab title.
 * `[specifico]` shortcode to display a product's specification table anywhere - including the block editor (use `[specifico id="123"]` to target a specific product).
+* Gutenberg blocks - a Specification Table block (current product or a specific table) and a Comparison Table block (pick two to four products) for the block editor.
 * Theme template override - copy the bundled table template into your theme to fully control the markup.
 * Developer hooks to filter the groups, labels, values, tab title, table classes, and to inject markup before/after the table.
 * Schema.org structured data - specifications are added to the product's `Product` JSON-LD as `additionalProperty` entries, helping search engines understand your product specs.
@@ -45,7 +46,7 @@ After activating the plugin (WooCommerce must be active), you'll find Specifico 
 3. **Map tables to products** - Go to *Specifico → Mapping* and create rules that assign a specification table to products by category, tag, or specific product ID. Products matching a rule automatically use that table.
 4. **Adjust a single product (optional)** - On the WooCommerce product edit screen, open the *Specification Settings* panel. Enable the Specifications tab, then either inherit the mapped values or switch to "Customize" to set per-product values.
 5. **Style the table** - Go to *Specifico → Settings* to choose the table style that best matches your theme.
-6. **Enable product comparison (optional)** - In *Specifico → Settings*, turn on comparison and choose where the "Add to compare" buttons appear (single product page, shop/archive loop). Shoppers can then add products to the compare tray and open a side-by-side comparison. Use the `[specifico_compare ids="1,2,3"]` shortcode or block to embed a comparison on a dedicated page.
+6. **Enable product comparison (optional)** - In *Specifico → Settings*, turn on comparison and choose where the "Add to compare" buttons appear (single product page, shop/archive loop). Shoppers can then add products to the compare tray and open a side-by-side comparison. Use the `[specifico_compare ids="1,2,3"]` shortcode or the Comparison Table block to embed a comparison on a dedicated page.
 
 The specification table then appears automatically in the "Specifications" tab on the front-end product page.
 
@@ -122,6 +123,10 @@ To build the plugin from source:
 
 == Changelog ==
 
+= 1.0.7 =
+* New: Comparison Table block - pick two to four products in the block editor and compare them side by side on any page, straight from the products search.
+* New: Comparison Table block preview - the editor shows the live table exactly as shoppers see it, reusing the same renderer as the shortcode and drawer.
+
 = 1.0.6 =
 * New: Specification Table Gutenberg block - place any saved table or the current product's table on any post or page straight from the block editor, with a source selector for current-product or a specific table.
 * Improve: Full uninstall cleanup - deactivating still keeps all your data, but uninstalling the plugin now deletes its options, transients, specification tables and groups, and per-product specification data from the database.
@@ -175,6 +180,9 @@ To build the plugin from source:
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.7 =
+Adds the Comparison Table block for the block editor. Recommended for all users.
 
 = 1.0.6 =
 Adds the Specification Table block for the block editor, plus full uninstall cleanup. Recommended for all users.

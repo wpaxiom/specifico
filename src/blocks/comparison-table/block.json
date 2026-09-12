@@ -1,0 +1,25 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "specifico/comparison-table",
+	"title": "Comparison Table",
+	"category": "specifico",
+	"icon": "columns",
+	"description": "Display a side-by-side WooCommerce product specification comparison.",
+	"keywords": [ "comparison", "compare", "product", "specs", "table", "woocommerce" ],
+	"attributes": {
+		"ids": {
+			"type": "array",
+			"items": { "type": "number" },
+			"default": []
+		}
+	},
+	"supports": {
+		"html": false,
+		"align": [ "wide", "full" ]
+	},
+	"editorScript": "file:../../blocks.js",
+	"editorStyle": "file:../../blocks.css",
+	"style": "file:../../blocks.css",
+	"render": "file:./render.php"
+}
