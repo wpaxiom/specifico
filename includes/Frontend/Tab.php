@@ -2,13 +2,24 @@
 
 namespace WpAxiom\Specifico\Frontend;
 
+use WpAxiom\Specifico\Mapping_Resolver;
+
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 class Tab {
 
+	/**
+	 * Parent-level groups per product for the current request, so attaching
+	 * spec deltas does not re-resolve them once per variation.
+	 *
+	 * @var array
+	 */
+	private static $group_cache = [];
+
 	function __construct() {
 		add_filter( 'woocommerce_product_tabs', [ $this, 'specification_tab' ] );
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
+		add_filter( 'woocommerce_available_variation', [ $this, 'attach_variation_specs' ], 10, 3 );
 	}
 
 	/**
@@ -66,7 +77,60 @@ class Tab {
 		// between plugin releases (the CSS is injected by this JS bundle).
 		$path = SPECIFICO_PATH . 'assets/dist/js/specifico.js';
 		$ver  = file_exists( $path ) ? (string) filemtime( $path ) : SPECIFICO_VERSION;
-		wp_enqueue_script( 'specifico-scripts', SPECIFICO_URL . '/assets/dist/js/specifico.js', [], $ver, true );
+		// jQuery is required: WooCommerce announces the chosen variation through
+		// jQuery-only events (found_variation, reset_data), which no native
+		// listener can hear.
+		wp_enqueue_script( 'specifico-scripts', SPECIFICO_URL . '/assets/dist/js/specifico.js', [ 'jquery' ], $ver, true );
+	}
+
+	/**
+	 * Attach the specification rows that differ for a variation to its
+	 * `woocommerce_available_variation` payload, keyed by stable row ID.
+	 *
+	 * The variations JSON already ships to the browser on page load, so the
+	 * shopper's selection swaps cells without another request.
+	 *
+	 * @param array             $data      Variation payload.
+	 * @param \WC_Product       $product   Parent product.
+	 * @param \WC_Product_Variation $variation Variation being described.
+	 * @return array
+	 */
+	function attach_variation_specs( $data, $product, $variation ) {
+		if ( ! is_array( $data ) || ! $variation instanceof \WC_Product_Variation ) {
+			return $data;
+		}
+
+		$parent_id = $product instanceof \WC_Product ? $product->get_id() : $variation->get_parent_id();
+
+		if ( ! isset( self::$group_cache[ $parent_id ] ) ) {
+			self::$group_cache[ $parent_id ] = Mapping_Resolver::resolve_product_groups( $parent_id );
+		}
+
+		$parent_groups = self::$group_cache[ $parent_id ];
+
+		if ( empty( $parent_groups ) ) {
+			return $data;
+		}
+
+		$variation_groups = Mapping_Resolver::apply_variation_values( $parent_groups, $variation->get_id() );
+		$deltas           = [];
+
+		foreach ( $variation_groups as $gi => $group ) {
+			foreach ( ( $group['inputGroups'] ?? [] ) as $ri => $row ) {
+				$value  = $row[1]['value'] ?? '';
+				$parent = $parent_groups[ $gi ]['inputGroups'][ $ri ][1]['value'] ?? null;
+
+				if ( null !== $parent && $value !== $parent ) {
+					$deltas[ Mapping_Resolver::row_key( $row, $gi, $ri ) ] = $value;
+				}
+			}
+		}
+
+		if ( ! empty( $deltas ) ) {
+			$data['specifico'] = $deltas;
+		}
+
+		return $data;
 	}
 
 	/**

@@ -80,6 +80,8 @@ function specifico_uninstall_cleanup() {
 		'_specifico_spec',
 		'_specifico_override',
 		'_specifico_groups',
+		'_specifico_inherit_values',
+		'_specifico_var_values',
 		'_specifico_type',
 		'_specifico_table',
 	);

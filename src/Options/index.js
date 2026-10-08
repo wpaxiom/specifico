@@ -15,6 +15,24 @@ const MATCH_LABEL = {
 
 const META_FIELD = "w-full !h-[38px] !min-h-[38px] box-border !border !border-[#E7E7EF] !rounded-[9px] !bg-white !px-3 !py-0 !m-0 font-medium !text-[13.5px] !text-[#23232E] !shadow-none !outline-none focus:!border-[#6B66F7] focus:!shadow-[0_0_0_3px_rgba(107,102,247,0.16)] focus:!ring-0";
 
+const createRowKey = () => {
+    if (window.crypto?.randomUUID) {
+        return `row-${window.crypto.randomUUID()}`;
+    }
+    return `row-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
+
+const ensureRowKeys = (groups) => (Array.isArray(groups) ? groups : []).map(group => ({
+    ...group,
+    inputGroups: (group.inputGroups || []).map(row => {
+        const cells = Array.isArray(row) ? row.map(cell => ({ ...cell })) : [];
+        if (cells[0] && !cells[0].key) {
+            cells[0].key = createRowKey();
+        }
+        return cells;
+    }),
+}));
+
 const TrashBtn = ( { onClick, label, size = 38 } ) => (
     <button type="button" onClick={onClick} aria-label={label} className="inline-flex items-center justify-center border border-[#F4DADA] bg-[#FEF6F6] rounded-[8px] hover:bg-[#FCEAEA] transition-colors" style={{ width: size, height: size }}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -34,11 +52,15 @@ const Options = () => {
     const [specOptions, setSpecOptions] = useState([]);
     const [seedTable, setSeedTable] = useState(null);
 
+    const [variations, setVariations] = useState([]);
+    const [varValues, setVarValues] = useState({});
+    const [activeVariation, setActiveVariation] = useState(null);
+
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const bootstrap = async () => {
-            await Promise.all([fetchOption(), fetchSpecOptions()]);
+            await Promise.all([fetchOption(), fetchSpecOptions(), fetchVariations()]);
             setIsLoading(false);
         };
         bootstrap();
@@ -50,7 +72,7 @@ const Options = () => {
             const d = response.data || {};
             setStatus(!!d.spec);
             setOverrideMode(d.override === 'custom' ? 'custom' : '');
-            setAccordions(Array.isArray(d.groups) ? d.groups : []);
+            setAccordions(ensureRowKeys(d.groups));
             setInherited(d.inherited || null);
 
             // Pre-populate inherit values: saved overrides take priority, mapping defaults fill the rest
@@ -79,12 +101,57 @@ const Options = () => {
         }
     };
 
+    // Variable products only: which variations exist, and the values already
+    // stored for each one. Simple products come back with an empty list.
+    const fetchVariations = async () => {
+        try {
+            const response = await Api.get(`/specifico/v1/option/variations/${productId}`);
+            const d = response.data || {};
+            const list = Array.isArray(d.variations) ? d.variations : [];
+            setVariations(list);
+            setVarValues(d.values || {});
+            setActiveVariation(list.length ? list.find(v => v.default)?.id ?? list[0].id : null);
+        } catch (e) {
+            console.error('Error fetching variations:', e);
+        }
+    };
+
+    const handleVariationValueChange = (rowKey, value) => {
+        if (!activeVariation) {
+            return;
+        }
+        setVarValues(prev => ({
+            ...prev,
+            [activeVariation]: {
+                ...(prev[activeVariation] || {}),
+                [rowKey]: value,
+            },
+        }));
+    };
+
+    const resetActiveVariation = () => {
+        if (!activeVariation) return;
+        setVarValues(prev => ({ ...prev, [activeVariation]: {} }));
+    };
+
+    const copyActiveVariationToAll = () => {
+        if (!activeVariation) return;
+        const source = { ...(varValues[activeVariation] || {}) };
+        setVarValues(prev => {
+            const next = { ...prev };
+            variations.forEach(variation => {
+                next[variation.id] = { ...source };
+            });
+            return next;
+        });
+    };
+
     const seedFromTable = async (option) => {
         if (!option) return;
         setSeedTable(option);
         try {
             const response = await Api.get(`/specifico/v1/attribute/${option.value}`);
-            setAccordions(Array.isArray(response.data) ? response.data : []);
+            setAccordions(ensureRowKeys(response.data));
         } catch (e) {
             console.error('Error seeding from table:', e);
         }
@@ -95,7 +162,7 @@ const Options = () => {
         setAccordions([{
             id: Date.now(),
             title: __( 'New group', 'specifico' ),
-            inputGroups: [[{ id: 1, value: '' }, { id: 2, value: '' }]],
+            inputGroups: [[{ id: 1, key: createRowKey(), value: '' }, { id: 2, value: '' }]],
         }]);
     };
 
@@ -129,7 +196,7 @@ const Options = () => {
             {
                 id,
                 title: __( 'New group', 'specifico' ),
-                inputGroups: [[{ id: id + 1, value: '' }, { id: id + 2, value: '' }]],
+                inputGroups: [[{ id: id + 1, key: createRowKey(), value: '' }, { id: id + 2, value: '' }]],
             },
         ]);
         setActiveAccordion(id);
@@ -143,7 +210,7 @@ const Options = () => {
     const addInputGroup = (accordionId, e) => {
         e.preventDefault();
         setAccordions(accordions.map(acc => acc.id === accordionId
-            ? { ...acc, inputGroups: [...acc.inputGroups, [{ id: Date.now(), value: '' }, { id: Date.now() + 1, value: '' }]] }
+            ? { ...acc, inputGroups: [...acc.inputGroups, [{ id: Date.now(), key: createRowKey(), value: '' }, { id: Date.now() + 1, value: '' }]] }
             : acc));
     };
 
@@ -178,6 +245,12 @@ const Options = () => {
     if (isLoading) {
         return <div className="p-4 text-[#9A9AAE] font-['Nunito']">{ __( 'Loading…', 'specifico' ) }</div>;
     }
+
+    // The rows the variation editor offers: labels and product-level values
+    // come from whichever table this product renders.
+    const effectiveGroups = overrideMode === 'custom'
+        ? accordions
+        : (Array.isArray(inherited?.groups) ? inherited.groups : []);
 
     return (
         <div className="font-['Nunito'] text-sm text-[#54546A]">
@@ -239,6 +312,18 @@ const Options = () => {
                                 onValueChange={handleInputChange}
                             />
                         )}
+                        {variations.length > 0 && (
+                            <VariationValues
+                                variations={variations}
+                                activeVariation={activeVariation}
+                                onSelectVariation={setActiveVariation}
+                                groups={effectiveGroups}
+                                values={varValues[activeVariation] || {}}
+                                onChange={handleVariationValueChange}
+                                onReset={resetActiveVariation}
+                                onCopyToAll={copyActiveVariationToAll}
+                            />
+                        )}
                     </div>
 
                     {overrideMode === 'custom' && (
@@ -246,6 +331,9 @@ const Options = () => {
                     )}
                     {overrideMode === '' && inherited && (
                         <HiddenInheritValuesPayload inherited={inherited} inheritValues={inheritValues} />
+                    )}
+                    {variations.length > 0 && (
+                        <HiddenVariationPayload variations={variations} varValues={varValues} />
                     )}
                 </>
             ) : (
@@ -432,8 +520,15 @@ const HiddenGroupsPayload = ({ accordions }) => (
                         <input
                             type="hidden"
                             name={`_specifico_groups[${ai}][inputGroups][${ri}][${fi}][id]`}
-                            value={fi + 1}
+                            value={field.id || fi + 1}
                         />
+                        {fi === 0 && (
+                            <input
+                                type="hidden"
+                                name={`_specifico_groups[${ai}][inputGroups][${ri}][${fi}][key]`}
+                                value={field.key || ''}
+                            />
+                        )}
                         <input
                             type="hidden"
                             name={`_specifico_groups[${ai}][inputGroups][${ri}][${fi}][value]`}
@@ -462,6 +557,112 @@ const HiddenInheritValuesPayload = ({ inherited, inheritValues }) => {
             )}
         </>
     );
+};
+
+const VariationValues = ({ variations, activeVariation, onSelectVariation, groups, values, onChange, onReset, onCopyToAll }) => {
+    const [showFields, setShowFields] = useState(true);
+    const previewGroups = Array.isArray(groups) ? groups : [];
+
+    if (previewGroups.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="border border-[#EFEFF4] rounded-xl overflow-hidden">
+            <div className="px-4 py-3.5 bg-[#FAFAFC] border-b border-[#EFEFF4] flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex-1 min-w-[210px]">
+                    <div className="font-semibold text-[12.5px] text-[#54546A]">{ __( 'Per-variation values', 'specifico' ) }</div>
+                    <div className="font-semibold text-[11.5px] text-[#9A9AAE] mt-[3px]">{ __( 'Edit a value for one variation. Empty fields fall back to the product value.', 'specifico' ) }</div>
+                </div>
+                <div className="flex-none min-w-[230px]">
+                    <select
+                        aria-label={ __( 'Variation', 'specifico' ) }
+                        value={activeVariation ?? ''}
+                        onChange={(e) => onSelectVariation(Number(e.target.value))}
+                        className={META_FIELD + ' w-full cursor-pointer'}
+                    >
+                        {variations.map(v => (
+                            <option key={v.id} value={v.id}>
+                                {v.label || `#${v.id}`}{v.default ? ` · ${__( 'default', 'specifico' )}` : ''}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <button type="button" onClick={() => setShowFields(prev => !prev)} className="inline-flex items-center gap-1.5 font-bold text-[12px] text-[#6B66F7] flex-none">
+                    {showFields ? __( 'Hide fields', 'specifico' ) : __( 'Show fields', 'specifico' )}
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style={{ transform: showFields ? 'none' : 'rotate(-90deg)' }}><path d="M3 4.5 6 7.5 9 4.5" stroke="#6B66F7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+            </div>
+
+            {showFields && (
+                <div className="px-4 pt-1.5 pb-4">
+                    {previewGroups.map((g, gi) => (
+                        <div key={gi}>
+                            {g.title && (
+                                <div className="font-bold text-[10.5px] tracking-[0.08em] uppercase text-[#A2A2B4] mt-3.5 mb-2">{g.title}</div>
+                            )}
+                            <div className="flex flex-col gap-2">
+                                {(g.inputGroups || []).map((row, ri) => {
+                                    const rowKey = row[0]?.key || `position-${gi}-${ri}`;
+                                    return (
+                                    <div key={rowKey} className="grid grid-cols-[140px_1fr] gap-2.5 items-center">
+                                        <span className="font-semibold text-[13px] text-[#A2A2B4] bg-[#F5F5F9] px-[11px] py-2 rounded-lg truncate" title={row[0]?.value}>
+                                            {row[0]?.value}
+                                        </span>
+                                        <input
+                                            type="text"
+                                            value={values[rowKey] ?? ''}
+                                            placeholder={row[1]?.value || ''}
+                                            onChange={(e) => onChange(rowKey, e.target.value)}
+                                            className={META_FIELD}
+                                        />
+                                    </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
+                    <div className="mt-3 flex items-center justify-between gap-3 flex-wrap">
+                        <div className="font-medium text-[11.5px] text-[#9A9AAE]">{ __( 'Empty fields inherit the product value. Attribute rows update automatically and cannot be edited here.', 'specifico' ) }</div>
+                        <div className="flex items-center gap-2">
+                            <button type="button" onClick={onReset} className="h-8 px-3 bg-white border border-[#E7E7EF] rounded-lg font-bold text-[12px] text-[#77778B] hover:bg-[#F5F5F9] transition-colors">
+                                { __( 'Reset variation', 'specifico' ) }
+                            </button>
+                            {variations.length > 1 && (
+                                <button type="button" onClick={onCopyToAll} className="h-8 px-3 bg-[#EDEBFF] border-none rounded-lg font-bold text-[12px] text-[#6B66F7] hover:bg-[#E2DFFF] transition-colors">
+                                    { __( 'Copy to all', 'specifico' ) }
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const HiddenVariationPayload = ({ variations, varValues }) => {
+    const inputs = [
+        <input key="present" type="hidden" name="_specifico_var_values_present" value="1" />,
+    ];
+    variations.forEach(v => {
+        const rows = varValues[v.id] || {};
+        Object.keys(rows).forEach(rowKey => {
+            const value = rows[rowKey];
+            if (value === undefined || value === null || value === '') {
+                return;
+            }
+            inputs.push(
+                <input
+                    key={`${v.id}-${rowKey}`}
+                    type="hidden"
+                    name={`_specifico_var_values[${v.id}][${rowKey}]`}
+                    value={value}
+                />
+            );
+        });
+    });
+    return <>{inputs}</>;
 };
 
 export default Options;

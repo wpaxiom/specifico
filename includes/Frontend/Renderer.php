@@ -45,6 +45,28 @@ class Renderer {
 			return;
 		}
 
+		// Product-level values per stable row key: what each cell falls back to
+		// while no variation is chosen.
+		$base_values = [];
+
+		foreach ( $groups as $gi => $group ) {
+			if ( ! is_array( $group ) || empty( $group['inputGroups'] ) ) {
+				continue;
+			}
+			foreach ( $group['inputGroups'] as $ri => $row ) {
+				$row_key                 = Mapping_Resolver::row_key( $row, $gi, $ri );
+				$base_values[ $row_key ] = is_array( $row ) && isset( $row[1]['value'] ) ? $row[1]['value'] : '';
+			}
+		}
+
+		// Show the variation the shopper lands on, not the parent's joined
+		// option list, so the first paint matches the pre-selected variation.
+		$variation_id = Mapping_Resolver::default_variation_id( $product_id );
+
+		if ( $variation_id ) {
+			$groups = Mapping_Resolver::apply_variation_values( $groups, $variation_id );
+		}
+
 		$settings = get_option( '_specifico_settings' );
 		$style    = is_array( $settings ) && isset( $settings['styles']['value'] ) ? $settings['styles']['value'] : '';
 		$show_sub = is_array( $settings ) && ! empty( $settings['enable_sub_heading'] );
@@ -52,11 +74,12 @@ class Renderer {
 		wc_get_template(
 			'specification-table.php',
 			[
-				'groups'     => $groups,
-				'style'      => $style,
-				'style_vars' => Custom_Style::inline_vars( $style ),
-				'show_sub'   => $show_sub,
-				'product_id' => $product_id,
+				'groups'      => $groups,
+				'base_values' => $base_values,
+				'style'       => $style,
+				'style_vars'  => Custom_Style::inline_vars( $style ),
+				'show_sub'    => $show_sub,
+				'product_id'  => $product_id,
 			],
 			'specifico/',
 			SPECIFICO_PATH . 'templates/'

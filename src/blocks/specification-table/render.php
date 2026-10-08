@@ -57,6 +57,29 @@ if ( ! is_array( $specifico_groups ) || empty( $specifico_groups ) ) {
 	return;
 }
 
+// Product-level values per stable row key, kept for the browser to fall back to
+// while no variation is chosen.
+$specifico_base_values = [];
+foreach ( $specifico_groups as $specifico_bg => $specifico_group ) {
+	if ( ! is_array( $specifico_group ) || empty( $specifico_group['inputGroups'] ) ) {
+		continue;
+	}
+	foreach ( $specifico_group['inputGroups'] as $specifico_br => $specifico_row ) {
+		$specifico_row_key                          = Mapping_Resolver::row_key( $specifico_row, $specifico_bg, $specifico_br );
+		$specifico_base_values[ $specifico_row_key ] = is_array( $specifico_row ) && isset( $specifico_row[1]['value'] ) ? $specifico_row[1]['value'] : '';
+	}
+}
+
+if ( $specifico_product_id ) {
+	// Match the pre-selected variation instead of showing the parent's joined
+	// option list, exactly like the product tab does.
+	$specifico_variation_id = Mapping_Resolver::default_variation_id( $specifico_product_id );
+
+	if ( $specifico_variation_id ) {
+		$specifico_groups = Mapping_Resolver::apply_variation_values( $specifico_groups, $specifico_variation_id );
+	}
+}
+
 $specifico_settings = get_option( '_specifico_settings' );
 $specifico_style    = is_array( $specifico_settings ) && isset( $specifico_settings['styles']['value'] ) ? (string) $specifico_settings['styles']['value'] : '';
 $specifico_show_sub = is_array( $specifico_settings ) && ! empty( $specifico_settings['enable_sub_heading'] );
@@ -84,11 +107,13 @@ if ( '' !== $specifico_style_vars ) {
 	$specifico_style_attr .= ';' . $specifico_style_vars;
 }
 ?>
-<table class="<?php echo esc_attr( implode( ' ', $specifico_classes ) ); ?>" style="<?php echo esc_attr( $specifico_style_attr ); ?>">
-	<?php foreach ( $specifico_groups as $specifico_group ) :
+<table class="<?php echo esc_attr( implode( ' ', $specifico_classes ) ); ?>" style="<?php echo esc_attr( $specifico_style_attr ); ?>"<?php echo $specifico_product_id ? ' data-specifico-product="' . esc_attr( $specifico_product_id ) . '"' : ''; ?>>
+	<?php foreach ( $specifico_groups as $specifico_group_index => $specifico_group ) :
 		if ( empty( $specifico_group ) ) {
 			continue;
 		}
+
+		$specifico_is_auto = ! empty( $specifico_group['auto'] );
 		?>
 		<?php if ( $specifico_show_sub && ! empty( $specifico_group['title'] ) ) : ?>
 			<thead>
@@ -99,7 +124,7 @@ if ( '' !== $specifico_style_vars ) {
 		<?php endif; ?>
 		<?php if ( ! empty( $specifico_group['inputGroups'] ) ) : ?>
 			<tbody>
-				<?php foreach ( $specifico_group['inputGroups'] as $specifico_row ) :
+				<?php foreach ( $specifico_group['inputGroups'] as $specifico_row_index => $specifico_row ) :
 					if ( empty( $specifico_row[0] ) && empty( $specifico_row[1] ) ) {
 						continue;
 					}
@@ -124,10 +149,22 @@ if ( '' !== $specifico_style_vars ) {
 					 * @param int    $product_id Product ID.
 					 */
 					$specifico_value = apply_filters( 'specifico_row_value', $specifico_value, $specifico_row, $specifico_product_id );
+
+					$specifico_key  = Mapping_Resolver::row_key( $specifico_row, $specifico_group_index, $specifico_row_index );
+					$specifico_base = $specifico_value;
+					$specifico_attribute = ! empty( $specifico_row['attribute'] ) && function_exists( 'wc_variation_attribute_name' )
+						? wc_variation_attribute_name( $specifico_row['attribute'] )
+						: '';
+
+					if ( isset( $specifico_base_values[ $specifico_key ] ) && $specifico_base_values[ $specifico_key ] !== ( $specifico_row[1]['value'] ?? '' ) ) {
+						$specifico_base_row             = $specifico_row;
+						$specifico_base_row[1]['value'] = $specifico_base_values[ $specifico_key ];
+						$specifico_base                 = apply_filters( 'specifico_row_value', $specifico_base_values[ $specifico_key ], $specifico_base_row, $specifico_product_id );
+					}
 					?>
-					<tr>
+					<tr<?php echo $specifico_is_auto ? ' data-specifico-auto="attribute"' : ''; ?>>
 						<td><?php echo wp_kses_post( $specifico_label ); ?></td>
-						<td><?php echo wp_kses_post( $specifico_value ); ?></td>
+						<td class="specifico-variation-value" data-specifico-row="<?php echo esc_attr( $specifico_key ); ?>" data-specifico-base="<?php echo esc_attr( $specifico_base ); ?>"<?php echo $specifico_attribute ? ' data-specifico-attribute="' . esc_attr( $specifico_attribute ) . '"' : ''; ?>><?php echo wp_kses_post( $specifico_value ); ?></td>
 					</tr>
 				<?php endforeach; ?>
 			</tbody>

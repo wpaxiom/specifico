@@ -244,3 +244,86 @@ import( '../sass/specifico.css' );
 		init();
 	}
 }() );
+
+/**
+ * Variation-aware specification table.
+ *
+ * Each value cell carries its stable row key plus the product-level value it
+ * falls back to (data-specifico-base), so swapping only needs the values that
+ * differ for the chosen variation. WooCommerce announces that choice through
+ * jQuery-only events, which is why this binds with jQuery instead of
+ * addEventListener.
+ */
+( function () {
+	'use strict';
+
+	var jq = window.jQuery || window.$;
+
+	if ( ! jq ) {
+		return;
+	}
+
+	function setValues( form, deltas, variation ) {
+		var productId = parseInt( form.getAttribute( 'data-product_id' ), 10 );
+
+		if ( ! productId ) {
+			return;
+		}
+
+		var cells = document.querySelectorAll(
+			'table.specifico-table[data-specifico-product="' + productId + '"] [data-specifico-row]'
+		);
+
+		Array.prototype.forEach.call( cells, function ( cell ) {
+			var key = cell.getAttribute( 'data-specifico-row' );
+			var base = cell.getAttribute( 'data-specifico-base' );
+			var value = deltas && Object.prototype.hasOwnProperty.call( deltas, key )
+				? deltas[ key ]
+				: base;
+
+			if ( 'string' !== typeof value ) {
+				value = base;
+			}
+
+			if ( null !== value && cell.innerHTML !== value ) {
+				cell.innerHTML = value;
+			}
+		} );
+
+		// A WooCommerce variation may leave an attribute as "Any…". In that
+		// case its variation payload contains an empty value even though the
+		// shopper selected a concrete option. Read the form control so the
+		// automatic attribute row reflects the shopper's actual selection.
+		if ( variation ) {
+			Array.prototype.forEach.call( cells, function ( cell ) {
+				var attributeName = cell.getAttribute( 'data-specifico-attribute' );
+				if ( ! attributeName ) {
+					return;
+				}
+
+				var select = form.querySelector( 'select[name="' + attributeName + '"]' );
+				var label = '';
+				if ( select && select.value && select.selectedIndex >= 0 ) {
+					label = select.options[ select.selectedIndex ].text;
+				} else {
+					var checked = form.querySelector( '[name="' + attributeName + '"]:checked' );
+					label = checked ? checked.value : '';
+				}
+
+				if ( label ) {
+					cell.textContent = label;
+				}
+			} );
+		}
+	}
+
+	jq( document ).on( 'found_variation', '.variations_form', function ( e, variation ) {
+		setValues( this, variation && variation.specifico ? variation.specifico : null, variation || null );
+	} );
+
+	// No variation is selected (cleared options, or nothing matches): show the
+	// product-level values again.
+	jq( document ).on( 'reset_data', '.variations_form', function () {
+		setValues( this, null, null );
+	} );
+}() );

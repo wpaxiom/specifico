@@ -45,6 +45,7 @@ const Settings = () => {
     const [ customStyles, setCustomStyles ] = useState( {} );
     const [ tabTitle, setTabTitle ] = useState( '' );
     const [ wcAdditionalInfo, setWcAdditionalInfo ] = useState( 'keep' );
+const [ variableAttributeRows, setVariableAttributeRows ] = useState( true );
 
     // Product comparison. Off by default — merchants opt in.
     const [ enableComparison, setEnableComparison ] = useState( false );
@@ -228,6 +229,7 @@ const Settings = () => {
             custom_styles: customStyles,
             tab_title: tabTitle,
             wc_additional_info: wcAdditionalInfo,
+            variable_attribute_rows: variableAttributeRows,
             enable_comparison: enableComparison,
             compare_on_single: compareOnSingle,
             compare_on_archive: compareOnArchive,
@@ -284,6 +286,7 @@ const Settings = () => {
                 setCustomStyles( res.data.custom_styles || {} );
                 setTabTitle( res.data.tab_title || '' );
                 setWcAdditionalInfo( res.data.wc_additional_info || 'keep' );
+                setVariableAttributeRows( res.data.variable_attribute_rows !== false );
 
                 // Comparison — off unless a merchant has explicitly enabled it.
                 setEnableComparison( res.data.enable_comparison === true );
@@ -624,6 +627,9 @@ const Settings = () => {
                         </Row>
                         <Row title={ __( 'Specifications tab title', 'specifico' ) } desc={ __( 'Heading for the specifications product tab.', 'specifico' ) }>
                             <input id="_specifico_settings[tab_title]" type="text" value={tabTitle} onChange={ (e) => setTabTitle( e.target.value )} placeholder={ __( 'Specifications', 'specifico' ) } className={ FIELD } />
+                        </Row>
+                        <Row title={ __( 'Variation attribute rows', 'specifico' ) } desc={ __( 'List every variation attribute and its option values inside the spec table of a variable product.', 'specifico' ) }>
+                            <Switch bare id="_specifico_settings[variable_attribute_rows]" checked={ variableAttributeRows } onChange={ () => setVariableAttributeRows( ( prev ) => ! prev ) } />
                         </Row>
                         <Row title={ __( 'Additional Information tab', 'specifico' ) } desc={ __( 'Control WooCommerce’s default info tab.', 'specifico' ) } last>
                             <Select bare id="_specifico_settings[wc_additional_info]" className="!max-w-[420px]" value={wcAdditionalInfo} onChange={ (e) => setWcAdditionalInfo( e.target.value )} items={wcTabOptions} />

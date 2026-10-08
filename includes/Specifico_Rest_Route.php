@@ -156,6 +156,12 @@ class Specifico_Rest_Route {
 			'permission_callback' => [ $this, 'can_edit_product_meta' ],
 		] );
 
+		register_rest_route( 'specifico/v1', '/option/variations/(?P<id>\d+)', [
+			'methods'             => 'GET',
+			'callback'            => [ $this, 'get_product_variation_options' ],
+			'permission_callback' => [ $this, 'can_edit_product_meta' ],
+		] );
+
 		/**
 		 * Attributes
 		 */
@@ -568,11 +574,19 @@ class Specifico_Rest_Route {
 		$post = get_post( $res['id'] );
 
 		if ( $post ) {
+			$attr       = get_post_meta( $post->ID, '_specifico_attr', true );
+			$clean_attr = $this->sanitize_group_attributes( $attr, $post->ID );
+
+			// Lazily backfill stable row IDs for groups created before 1.0.8.
+			if ( $clean_attr !== $attr ) {
+				update_post_meta( $post->ID, '_specifico_attr', $clean_attr );
+			}
+
 			$data = [];
 			$data['id'] = $post->ID;
 			$data['name'] = $post->post_title;
 			$data['slug'] = $post->post_name;
-			$data['attr'] = get_post_meta($post->ID, '_specifico_attr', true );
+			$data['attr'] = $clean_attr;
 
 			return rest_ensure_response( $data );
 		}
@@ -592,9 +606,11 @@ class Specifico_Rest_Route {
 			'post_type'   => 'specifico-groups',
 		);
 
-		if ( $data['meta'] ) {
+		if ( ! empty( $data['meta'] ) ) {
 			foreach ( $data['meta'] as $meta_key => $values ) {
-				$args['meta_input'][ $meta_key ] = $values;
+				$args['meta_input'][ $meta_key ] = '_specifico_attr' === $meta_key
+					? $this->sanitize_group_attributes( $values )
+					: $values;
 			}
 		}
 
@@ -619,15 +635,50 @@ class Specifico_Rest_Route {
 			'post_type'   => 'specifico-groups',
 		);
 
-		if ( $data['meta'] ) {
+		if ( ! empty( $data['meta'] ) ) {
 			foreach ( $data['meta'] as $meta_key => $values ) {
-				$args['meta_input'][ $meta_key ] = $values;
+				$args['meta_input'][ $meta_key ] = '_specifico_attr' === $meta_key
+					? $this->sanitize_group_attributes( $values, (int) $res['id'] )
+					: $values;
 			}
 		}
 
 		$post_id = wp_update_post( $args, true );
 
 		return rest_ensure_response( $post_id );
+	}
+
+	/**
+	 * Sanitize group attributes and ensure every row has a persistent ID.
+	 *
+	 * @param mixed $attributes Submitted or stored attribute rows.
+	 * @param int   $group_id   Existing group ID, used for deterministic legacy IDs.
+	 * @return array
+	 */
+	private function sanitize_group_attributes( $attributes, $group_id = 0 ) {
+		$clean = [];
+
+		foreach ( (array) $attributes as $index => $attribute ) {
+			if ( ! is_array( $attribute ) ) {
+				continue;
+			}
+
+			$row_id = ! empty( $attribute['id'] )
+				? sanitize_key( (string) $attribute['id'] )
+				: ( $group_id
+					? 'group-' . (int) $group_id . '-row-' . (int) $index
+					: sanitize_key( wp_generate_uuid4() ) );
+
+			$clean[] = [
+				'id'             => $row_id,
+				'attributeName'  => sanitize_text_field( $attribute['attributeName'] ?? '' ),
+				'attributeValue' => wp_kses_post( $attribute['attributeValue'] ?? '' ),
+				'attributeType'  => sanitize_key( $attribute['attributeType'] ?? 'text' ),
+				'defaultValue'   => wp_kses_post( $attribute['defaultValue'] ?? '' ),
+			];
+		}
+
+		return $clean;
 	}
 
 	/**
@@ -713,6 +764,11 @@ class Specifico_Rest_Route {
 
 		$override = get_post_meta( $product_id, '_specifico_override', true );
 		$groups   = get_post_meta( $product_id, '_specifico_groups', true );
+		$groups   = is_array( $groups ) ? $this->ensure_product_group_row_keys( $groups ) : [];
+
+		if ( 'custom' === $override && $groups !== get_post_meta( $product_id, '_specifico_groups', true ) ) {
+			update_post_meta( $product_id, '_specifico_groups', $groups );
+		}
 
 		$inherit_values = get_post_meta( $product_id, '_specifico_inherit_values', true );
 
@@ -720,7 +776,7 @@ class Specifico_Rest_Route {
 			'id'             => $product_id,
 			'spec'           => 'yes' === get_post_meta( $product_id, '_specifico_spec', true ) ? 1 : 0,
 			'override'       => 'custom' === $override ? 'custom' : '',
-			'groups'         => is_array( $groups ) ? $groups : [],
+			'groups'         => $groups,
 			'inherit_values' => is_array( $inherit_values ) ? $inherit_values : [],
 		];
 
@@ -740,6 +796,28 @@ class Specifico_Rest_Route {
 			: null;
 
 		return rest_ensure_response( $data );
+	}
+
+	/**
+	 * Backfill stable keys on custom per-product rows created before 1.0.8.
+	 *
+	 * @param array $groups Product override groups.
+	 * @return array
+	 */
+	private function ensure_product_group_row_keys( $groups ) {
+		foreach ( $groups as $gi => $group ) {
+			foreach ( (array) ( $group['inputGroups'] ?? [] ) as $ri => $row ) {
+				if ( ! isset( $groups[ $gi ]['inputGroups'][ $ri ][0] ) ) {
+					continue;
+				}
+
+				if ( empty( $groups[ $gi ]['inputGroups'][ $ri ][0]['key'] ) ) {
+					$groups[ $gi ]['inputGroups'][ $ri ][0]['key'] = sanitize_key( 'row-' . wp_generate_uuid4() );
+				}
+			}
+		}
+
+		return $groups;
 	}
 
 	public function get_product_option_group( $res ) {
@@ -768,6 +846,103 @@ class Specifico_Rest_Route {
 		}
 
 		return rest_ensure_response( 'Group deleted successfully' );
+	}
+
+	/**
+	 * Variations of a product plus the specification values stored for each.
+	 *
+	 * Powers the per-variation editor in the product metabox: every variation
+	 * comes back with a human label, and `_specifico_var_values` is returned
+	 * normalized as (`[variation][stable_row_key] => value`). A row missing from that map
+	 * inherits the product's own value.
+	 *
+	 * @param \WP_REST_Request $res Request ({id} = parent product ID).
+	 * @return \WP_REST_Response
+	 */
+	public function get_product_variation_options( $res ) {
+		$product_id = (int) $res['id'];
+		$payload    = [
+			'variations' => [],
+			'values'     => [],
+		];
+
+		if ( ! $product_id || ! function_exists( 'wc_get_product' ) ) {
+			return rest_ensure_response( $payload );
+		}
+
+		$product = wc_get_product( $product_id );
+
+		if ( ! $product instanceof \WC_Product || ! $product->is_type( 'variable' ) ) {
+			return rest_ensure_response( $payload );
+		}
+
+		if ( 'custom' === get_post_meta( $product_id, '_specifico_override', true ) ) {
+			$custom_groups = get_post_meta( $product_id, '_specifico_groups', true );
+			if ( is_array( $custom_groups ) ) {
+				$keyed_groups = $this->ensure_product_group_row_keys( $custom_groups );
+				if ( $keyed_groups !== $custom_groups ) {
+					update_post_meta( $product_id, '_specifico_groups', $keyed_groups );
+				}
+			}
+		}
+
+		$default_id = Mapping_Resolver::default_variation_id( $product_id );
+
+		foreach ( $product->get_children() as $variation_id ) {
+			$variation = wc_get_product( $variation_id );
+
+			if ( ! $variation instanceof \WC_Product_Variation ) {
+				continue;
+			}
+
+			$label = function_exists( 'wc_get_formatted_variation' )
+				? wc_get_formatted_variation( $variation, true, false )
+				: '';
+
+			$payload['variations'][] = [
+				'id'         => (int) $variation_id,
+				'label'      => '' !== $label ? $label : $variation->get_name(),
+				'attributes' => $variation->get_attributes(),
+				'default'    => (int) $variation_id === (int) $default_id,
+			];
+		}
+
+		$values = get_post_meta( $product_id, '_specifico_var_values', true );
+
+		if ( is_array( $values ) ) {
+			$groups = Mapping_Resolver::resolve_product_groups( $product_id );
+
+			foreach ( $values as $variation_id => $stored_rows ) {
+				if ( ! is_array( $stored_rows ) ) {
+					continue;
+				}
+
+				foreach ( $groups as $gi => $group ) {
+					if ( ! empty( $group['auto'] ) ) {
+						continue;
+					}
+
+					foreach ( (array) ( $group['inputGroups'] ?? [] ) as $ri => $row ) {
+						$row_key = Mapping_Resolver::row_key( $row, $gi, $ri );
+						$value   = null;
+
+						if ( array_key_exists( $row_key, $stored_rows ) && ! is_array( $stored_rows[ $row_key ] ) ) {
+							$value = $stored_rows[ $row_key ];
+						} elseif ( array_key_exists( 'position-' . $gi . '-' . $ri, $stored_rows ) && ! is_array( $stored_rows[ 'position-' . $gi . '-' . $ri ] ) ) {
+							$value = $stored_rows[ 'position-' . $gi . '-' . $ri ];
+						} elseif ( isset( $stored_rows[ $gi ] ) && is_array( $stored_rows[ $gi ] ) && array_key_exists( $ri, $stored_rows[ $gi ] ) ) {
+							$value = $stored_rows[ $gi ][ $ri ];
+						}
+
+						if ( null !== $value && '' !== (string) $value ) {
+							$payload['values'][ (int) $variation_id ][ $row_key ] = (string) $value;
+						}
+					}
+				}
+			}
+		}
+
+		return rest_ensure_response( $payload );
 	}
 
 	public function get_product_attribute( $res ) {
@@ -806,6 +981,11 @@ class Specifico_Rest_Route {
 			if ( isset( $data['wc_additional_info'] ) ) {
 				$allowed                    = [ 'keep', 'remove', 'remove_if_specs' ];
 				$data['wc_additional_info'] = in_array( $data['wc_additional_info'], $allowed, true ) ? $data['wc_additional_info'] : 'keep';
+			}
+
+			// Variable products: automatic variation-attribute rows.
+			if ( isset( $data['variable_attribute_rows'] ) ) {
+				$data['variable_attribute_rows'] = (bool) $data['variable_attribute_rows'];
 			}
 
 			// Product comparison.

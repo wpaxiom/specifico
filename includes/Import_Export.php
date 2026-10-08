@@ -27,7 +27,7 @@ class Import_Export {
 	/**
 	 * Bumped when the export envelope shape changes.
 	 */
-	const FORMAT_VERSION = 1;
+	const FORMAT_VERSION = 2;
 
 	/**
 	 * WooCommerce log source — view under WooCommerce > Status > Logs.
@@ -98,12 +98,25 @@ class Import_Export {
 
 		foreach ( $groups as $group ) {
 			$attr = get_post_meta( $group->ID, '_specifico_attr', true );
+			$attr = is_array( $attr ) ? $attr : [];
+			$dirty = false;
+
+			foreach ( $attr as $index => $row ) {
+				if ( empty( $row['id'] ) ) {
+					$attr[ $index ]['id'] = 'group-' . (int) $group->ID . '-row-' . (int) $index;
+					$dirty                 = true;
+				}
+			}
+
+			if ( $dirty ) {
+				update_post_meta( $group->ID, '_specifico_attr', $attr );
+			}
 
 			$out[] = [
 				'ref'   => self::ref( 'group', $group->post_name ),
 				'title' => $group->post_title,
 				'slug'  => $group->post_name,
-				'attr'  => is_array( $attr ) ? array_values( $attr ) : [],
+				'attr'  => array_values( $attr ),
 			];
 		}
 
@@ -229,6 +242,20 @@ class Import_Export {
 			$product_id = (int) $product_id;
 			$groups     = get_post_meta( $product_id, '_specifico_groups', true );
 			$groups     = is_array( $groups ) ? $groups : [];
+			$groups_dirty = false;
+
+			foreach ( $groups as $gi => $group ) {
+				foreach ( (array) ( $group['inputGroups'] ?? [] ) as $ri => $row ) {
+					if ( isset( $groups[ $gi ]['inputGroups'][ $ri ][0] ) && empty( $groups[ $gi ]['inputGroups'][ $ri ][0]['key'] ) ) {
+						$groups[ $gi ]['inputGroups'][ $ri ][0]['key'] = sanitize_key( 'row-' . wp_generate_uuid4() );
+						$groups_dirty = true;
+					}
+				}
+			}
+
+			if ( $groups_dirty ) {
+				update_post_meta( $product_id, '_specifico_groups', $groups );
+			}
 
 			// Annotate each custom group with the source group's slug ref.
 			foreach ( $groups as $i => $group ) {
@@ -244,7 +271,72 @@ class Import_Export {
 				'override'       => get_post_meta( $product_id, '_specifico_override', true ),
 				'groups'         => $groups,
 				'inherit_values' => is_array( $inherit ) ? $inherit : [],
+				'variation_values' => self::export_variation_values( $product_id ),
 			];
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Export variation overrides using attribute combinations instead of local
+	 * variation IDs, which are not portable between WordPress installations.
+	 */
+	private static function export_variation_values( $product_id ) {
+		if ( ! function_exists( 'wc_get_product' ) ) {
+			return [];
+		}
+
+		$product = wc_get_product( $product_id );
+		$stored  = get_post_meta( $product_id, '_specifico_var_values', true );
+
+		if ( ! $product instanceof \WC_Product_Variable || ! is_array( $stored ) ) {
+			return [];
+		}
+
+		$groups = Mapping_Resolver::resolve_product_groups( $product_id );
+		$out    = [];
+
+		foreach ( $product->get_children() as $variation_id ) {
+			$variation = wc_get_product( $variation_id );
+			$rows      = $stored[ $variation_id ] ?? null;
+
+			if ( ! $variation instanceof \WC_Product_Variation || ! is_array( $rows ) ) {
+				continue;
+			}
+
+			$values = [];
+			foreach ( $groups as $gi => $group ) {
+				if ( ! empty( $group['auto'] ) ) {
+					continue;
+				}
+
+				foreach ( (array) ( $group['inputGroups'] ?? [] ) as $ri => $row ) {
+					$row_key = Mapping_Resolver::row_key( $row, $gi, $ri );
+					$value   = null;
+
+					if ( array_key_exists( $row_key, $rows ) && ! is_array( $rows[ $row_key ] ) ) {
+						$value = $rows[ $row_key ];
+					} elseif ( array_key_exists( 'position-' . $gi . '-' . $ri, $rows ) && ! is_array( $rows[ 'position-' . $gi . '-' . $ri ] ) ) {
+						$value = $rows[ 'position-' . $gi . '-' . $ri ];
+					} elseif ( isset( $rows[ $gi ] ) && is_array( $rows[ $gi ] ) && array_key_exists( $ri, $rows[ $gi ] ) ) {
+						$value = $rows[ $gi ][ $ri ];
+					}
+
+					if ( null !== $value && '' !== (string) $value ) {
+						$values[ $row_key ] = (string) $value;
+					}
+				}
+			}
+
+			if ( ! empty( $values ) ) {
+				$attributes = $variation->get_attributes();
+				ksort( $attributes );
+				$out[] = [
+					'attributes' => $attributes,
+					'values'     => $values,
+				];
+			}
 		}
 
 		return $out;
@@ -641,6 +733,7 @@ class Import_Export {
 					'override'       => 'custom',
 					'groups'         => $cgroups,
 					'inherit_values' => [],
+					'variation_values' => [],
 				];
 			}
 		}
@@ -816,7 +909,59 @@ class Import_Export {
 		update_post_meta( $pid, '_specifico_groups', $groups );
 		update_post_meta( $pid, '_specifico_inherit_values', self::sanitize_inherit_values( $product['inherit_values'] ?? [] ) );
 
+		$variation_values = self::import_variation_values( $pid, $product['variation_values'] ?? [] );
+		if ( ! empty( $variation_values ) ) {
+			update_post_meta( $pid, '_specifico_var_values', $variation_values );
+		} else {
+			delete_post_meta( $pid, '_specifico_var_values' );
+		}
+
 		$state['summary']['products']++;
+	}
+
+	/**
+	 * Resolve portable variation attribute combinations to local variation IDs.
+	 */
+	private static function import_variation_values( $product_id, $entries ) {
+		if ( ! function_exists( 'wc_get_product' ) ) {
+			return [];
+		}
+
+		$product = wc_get_product( $product_id );
+		if ( ! $product instanceof \WC_Product_Variable ) {
+			return [];
+		}
+
+		$variation_map = [];
+		foreach ( $product->get_children() as $variation_id ) {
+			$variation = wc_get_product( $variation_id );
+			if ( ! $variation instanceof \WC_Product_Variation ) {
+				continue;
+			}
+			$attributes = $variation->get_attributes();
+			ksort( $attributes );
+			$variation_map[ wp_json_encode( $attributes ) ] = (int) $variation_id;
+		}
+
+		$clean = [];
+		foreach ( (array) $entries as $entry ) {
+			$attributes = is_array( $entry['attributes'] ?? null ) ? $entry['attributes'] : [];
+			ksort( $attributes );
+			$variation_id = $variation_map[ wp_json_encode( $attributes ) ] ?? 0;
+			if ( ! $variation_id ) {
+				continue;
+			}
+
+			foreach ( (array) ( $entry['values'] ?? [] ) as $row_key => $value ) {
+				$row_key = sanitize_key( (string) $row_key );
+				$value   = sanitize_text_field( is_scalar( $value ) ? (string) $value : '' );
+				if ( '' !== $row_key && '' !== $value ) {
+					$clean[ $variation_id ][ $row_key ] = $value;
+				}
+			}
+		}
+
+		return $clean;
 	}
 
 	/* --------------------------------------------------------------------- */
@@ -905,6 +1050,7 @@ class Import_Export {
 		$out = [];
 		foreach ( (array) $attr as $row ) {
 			$out[] = [
+				'id'             => ! empty( $row['id'] ) ? sanitize_key( (string) $row['id'] ) : sanitize_key( wp_generate_uuid4() ),
 				'attributeName'  => sanitize_text_field( $row['attributeName'] ?? '' ),
 				'attributeValue' => wp_kses_post( $row['attributeValue'] ?? '' ),
 				'attributeType'  => sanitize_text_field( $row['attributeType'] ?? 'text' ),
@@ -927,11 +1073,17 @@ class Import_Export {
 			$input_groups = [];
 			foreach ( (array) ( $group['inputGroups'] ?? [] ) as $row ) {
 				$cells = [];
-				foreach ( (array) $row as $cell ) {
-					$cells[] = [
+				foreach ( (array) $row as $cell_index => $cell ) {
+					$clean_cell = [
 						'id'    => isset( $cell['id'] ) ? (int) $cell['id'] : 0,
 						'value' => wp_kses_post( $cell['value'] ?? '' ),
 					];
+					if ( 0 === (int) $cell_index ) {
+						$clean_cell['key'] = ! empty( $cell['key'] )
+							? sanitize_key( (string) $cell['key'] )
+							: sanitize_key( 'row-' . wp_generate_uuid4() );
+					}
+					$cells[] = $clean_cell;
 				}
 				$input_groups[] = $cells;
 			}

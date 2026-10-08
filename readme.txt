@@ -5,9 +5,9 @@ Tags: product specifications, product specs, specifications, specifications tabl
 Requires at least: 5.8
 Tested up to: 7.1
 WC requires at least: 6.3
-WC tested up to: 11.1
+WC tested up to: 11.2
 Requires PHP: 7.4
-Stable tag: 1.0.7
+Stable tag: 1.0.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,6 +21,8 @@ Instead of re-entering the same specs for every product, you build reusable attr
 
 [youtube https://www.youtube.com/watch?v=lNAtGRf2PnA]
 
+[More WPAxiom video tutorials](https://www.youtube.com/watch?v=lNAtGRf2PnA&list=PLZjTQOjxY6Ec)
+
 [Documentation](https://www.wpaxiom.com/docs/specifico/) | [Get Support](https://www.wpaxiom.com/contact)
 
 = Key Features =
@@ -28,6 +30,8 @@ Instead of re-entering the same specs for every product, you build reusable attr
 * Reusable attribute groups so common specs (Dimensions, Materials, Connectivity, etc.) are defined once and reused everywhere.
 * Category, tag, and per-product mapping rules to decide which table each product uses - no manual assignment needed.
 * Per-product overrides: inherit values from the mapped table, or customize values for a single product while labels stay locked to the mapping.
+* Variable product support: set specification values per variation and let the table follow the variation selected by the shopper.
+* Automatic variation-attribute rows for values such as size, colour, voltage, or capacity, with a Settings toggle to show or hide them.
 * Show/Hide toggle for inherited fields so the table stays tidy in the product editor.
 * Product comparison - shoppers add products to a compare tray and view their specification tables side by side in a slide-in drawer, with differing rows highlighted. "Add to compare" buttons can be shown on the single product page and the shop/archive loop, and a `[specifico_compare ids="1,2,3"]` shortcode or the Comparison Table block embeds a comparison anywhere.
 * Customizable table styles via the Settings page, plus a customizable Specifications tab title.
@@ -44,7 +48,7 @@ After activating the plugin (WooCommerce must be active), you'll find Specifico 
 1. **Create attribute groups** - Go to *Specifico → Groups* and add a group (for example, "Dimensions"). Add the attributes that belong to it, such as Height, Width, and Weight.
 2. **Build a specification table** - Go to *Specifico → Specifications* and create a table. Add one or more groups to it to assemble the full set of specs for a type of product.
 3. **Map tables to products** - Go to *Specifico → Mapping* and create rules that assign a specification table to products by category, tag, or specific product ID. Products matching a rule automatically use that table.
-4. **Adjust a single product (optional)** - On the WooCommerce product edit screen, open the *Specification Settings* panel. Enable the Specifications tab, then either inherit the mapped values or switch to "Customize" to set per-product values.
+4. **Adjust a single product (optional)** - On the WooCommerce product edit screen, open the *Specification Settings* panel. Enable the Specifications tab, then either inherit the mapped values or switch to "Customize" to set per-product values. For a variable product, choose each variation in the per-variation section and enter only the values that differ; empty fields continue to inherit the product value.
 5. **Style the table** - Go to *Specifico → Settings* to choose the table style that best matches your theme.
 6. **Enable product comparison (optional)** - In *Specifico → Settings*, turn on comparison and choose where the "Add to compare" buttons appear (single product page, shop/archive loop). Shoppers can then add products to the compare tray and open a side-by-side comparison. Use the `[specifico_compare ids="1,2,3"]` shortcode or the Comparison Table block to embed a comparison on a dedicated page.
 
@@ -123,6 +127,15 @@ To build the plugin from source:
 
 == Changelog ==
 
+= 1.0.8 =
+* New: Variable product support - set specification values per variation in the product editor, and the table follows whichever variation a shopper picks.
+* New: Attribute rows - a variable product's variation attributes (size, colour, voltage, and so on) appear as their own group and update as the shopper changes options. Show or hide them from Settings.
+* New: Variation editing shortcuts - reset one variation to inherited product values or copy its overrides to every variation.
+* Improve: Variation overrides use stable row identifiers, so reorganizing a specification table does not attach saved values to the wrong row.
+* Improve: Export and import include per-variation values and match variations by their attribute combination instead of site-specific IDs.
+* Improve: Structured data stays honest - attribute rows and any value that differs between variations are left out of the product's JSON-LD, so the schema only states facts that hold for every variation.
+* Compatibility: Tested with WooCommerce 11.2.
+
 = 1.0.7 =
 * New: Comparison Table block - pick two to four products in the block editor and compare them side by side on any page, straight from the products search.
 * New: Comparison Table block preview - the editor shows the live table exactly as shoppers see it, reusing the same renderer as the shortcode and drawer.
@@ -180,6 +193,9 @@ To build the plugin from source:
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.8 =
+Adds variable product support, per-variation specification values, variation attribute rows, and a tutorial playlist. Tested with WooCommerce 11.2 and recommended for all users.
 
 = 1.0.7 =
 Adds the Comparison Table block for the block editor. Recommended for all users.
