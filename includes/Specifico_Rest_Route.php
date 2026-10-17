@@ -193,7 +193,7 @@ class Specifico_Rest_Route {
 		) );
 
 		/**
-		 * Product comparison (public — powers the frontend compare drawer).
+		 * Product comparison (public, powers the frontend compare drawer).
 		 */
 		register_rest_route( 'specifico/v1', '/compare', array(
 			'methods'             => 'GET',
@@ -378,6 +378,7 @@ class Specifico_Rest_Route {
 		$table_id = (int) $res['id'];
 
 		$groups = \WpAxiom\Specifico\Mapping_Resolver::get_table_groups( $table_id );
+		$groups = \WpAxiom\Specifico\Multilingual::translate_groups( $groups );
 		$groups = apply_filters( 'specifico_table_groups', $groups, 0 );
 
 		$settings = get_option( '_specifico_settings' );
@@ -909,6 +910,17 @@ class Specifico_Rest_Route {
 
 		$values = get_post_meta( $product_id, '_specifico_var_values', true );
 
+		// A translated product carries the source product's variation IDs
+		// until its own values are saved; show them under this product's IDs.
+		if ( is_array( $values ) ) {
+			foreach ( $payload['variations'] as $variation ) {
+				$source_id = \WpAxiom\Specifico\Multilingual::default_language_post_id( $variation['id'] );
+				if ( ! isset( $values[ $variation['id'] ] ) && isset( $values[ $source_id ] ) ) {
+					$values[ $variation['id'] ] = $values[ $source_id ];
+				}
+			}
+		}
+
 		if ( is_array( $values ) ) {
 			$groups = Mapping_Resolver::resolve_product_groups( $product_id );
 
@@ -1009,7 +1021,7 @@ class Specifico_Rest_Route {
 				$data['compare_btn_style_archive'] = in_array( $data['compare_btn_style_archive'], $allowed_btn_styles, true ) ? $data['compare_btn_style_archive'] : 'theme';
 			}
 
-			// Custom table appearance — whitelist keys and sanitize each CSS value.
+			// Custom table appearance: whitelist keys and sanitize each CSS value.
 			if ( isset( $data['custom_styles'] ) && is_array( $data['custom_styles'] ) ) {
 				$data['custom_styles'] = \WpAxiom\Specifico\Frontend\Custom_Style::sanitize_table( $data['custom_styles'] );
 			}

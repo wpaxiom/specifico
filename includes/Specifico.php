@@ -42,7 +42,7 @@ final class Specifico {
 
 	/**
 	 * One-shot meta migration from the 3-mode (default/table/custom) shape to
-	 * the 2-mode (inherit/custom) shape. Idempotent — gated by the
+	 * the 2-mode (inherit/custom) shape. Idempotent, gated by the
 	 * `_specifico_db_version` option.
 	 */
 	public function maybe_migrate() {
@@ -98,6 +98,9 @@ final class Specifico {
 		}
 
 		new Specifico_Rest_Route();
+
+		// WPML / Polylang string registration.
+		Multilingual::init();
 
 		// Gutenberg block (editor + frontend).
 		Block::init();

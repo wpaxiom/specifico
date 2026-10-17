@@ -1,5 +1,5 @@
 === Specifico - Product Specifications & Comparison for WooCommerce ===
-Contributors: wpaxiom, shuvo586
+Contributors: wpaxiom
 Donate link: https://www.wpaxiom.com/donate
 Tags: product specifications, product specs, specifications, specifications table, product attributes
 Requires at least: 5.8
@@ -7,7 +7,7 @@ Tested up to: 7.1
 WC requires at least: 6.3
 WC tested up to: 11.2
 Requires PHP: 7.4
-Stable tag: 1.0.8
+Stable tag: 1.0.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -97,6 +97,9 @@ For example, a product's specifications are added to the `Product` JSON-LD like 
 
 You can verify the output with Google's Rich Results Test or the Schema Markup Validator.
 
+= Does Specifico work with WPML or Polylang? =
+Yes. Specification tables and attribute groups are shared across languages, and their labels and default values are translated as strings: open WPML String Translation or Polylang's Languages > Translations screen and filter by "Specifico". Per-product values are translated with the product itself, and translated products keep the table their mapping rule assigns.
+
 = Is Specifico compatible with the latest version of WooCommerce? =
 Yes, Specifico has been tested with WooCommerce up to latest version.
 
@@ -126,6 +129,12 @@ To build the plugin from source:
 3. `npm run build` - compile `src/` and `assets/src/` into `build/` and `assets/dist/`.
 
 == Changelog ==
+
+= 1.0.9 =
+* New: WPML and Polylang support. Group labels, attribute names, and default values are translatable as strings in the "Specifico" group, and the Specifications tab title is translatable too.
+* New: Product specifications translate with the product. Per-product values and custom tables can be different in every language.
+* Fix: Translated products now show their mapped specification table. Before, category, tag, and product mapping rules only matched products in the language they were set up in.
+* Fix: Per-variation values carry over to a translated product's variations until the translation saves its own values.
 
 = 1.0.8 =
 * New: Variable product support - set specification values per variation in the product editor, and the table follows whichever variation a shopper picks.
@@ -193,6 +202,9 @@ To build the plugin from source:
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.9 =
+Adds WPML and Polylang support, and fixes specification tables not showing on translated products. Recommended for multilingual stores.
 
 = 1.0.8 =
 Adds variable product support, per-variation specification values, variation attribute rows, and a tutorial playlist. Tested with WooCommerce 11.2 and recommended for all users.

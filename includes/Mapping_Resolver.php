@@ -32,6 +32,11 @@ class Mapping_Resolver {
 			return null;
 		}
 
+		// Product rules hold the IDs the merchant picked, usually in the
+		// default language, so translations also match through that product.
+		// Term rules are matched across languages in check_match().
+		$candidates = array_unique( [ $product_id, Multilingual::default_language_post_id( $product_id ) ] );
+
 		foreach ( $mappings as $mapping ) {
 			$type     = $mapping['type']['value'] ?? null;
 			$table_id = $mapping['category']['value'] ?? null;
@@ -41,7 +46,13 @@ class Mapping_Resolver {
 				continue;
 			}
 
-			$match = self::check_match( $product_id, $type, $values );
+			$match = null;
+			foreach ( $candidates as $candidate_id ) {
+				$match = self::check_match( $candidate_id, $type, $values );
+				if ( $match ) {
+					break;
+				}
+			}
 
 			if ( $match ) {
 				return [
@@ -96,6 +107,9 @@ class Mapping_Resolver {
 		} else {
 			$groups         = self::resolve_groups( $product_id );
 			$groups         = is_array( $groups ) ? $groups : [];
+			// Translate table strings before the merge, so per-product values
+			// (translated with the product itself) are never passed through.
+			$groups         = Multilingual::translate_groups( $groups );
 			$inherit_values = get_post_meta( $product_id, '_specifico_inherit_values', true );
 
 			if ( is_array( $inherit_values ) && ! empty( $groups ) ) {
@@ -295,7 +309,18 @@ class Mapping_Resolver {
 		}
 
 		$stored = get_post_meta( $variation->get_parent_id(), '_specifico_var_values', true );
-		$stored = is_array( $stored ) && isset( $stored[ $variation_id ] ) && is_array( $stored[ $variation_id ] )
+		$stored = is_array( $stored ) ? $stored : [];
+
+		// A translated product carries the source product's variation IDs
+		// until its own values are saved.
+		if ( ! isset( $stored[ $variation_id ] ) ) {
+			$source_id = Multilingual::default_language_post_id( $variation_id );
+			if ( isset( $stored[ $source_id ] ) ) {
+				$variation_id = $source_id;
+			}
+		}
+
+		$stored = isset( $stored[ $variation_id ] ) && is_array( $stored[ $variation_id ] )
 			? $stored[ $variation_id ]
 			: [];
 
@@ -519,9 +544,9 @@ class Mapping_Resolver {
 			if ( 'product-category' === $type ) {
 				if ( null === $cat_terms ) {
 					$cat_terms = wp_get_post_terms( $product_id, 'product_cat', [ 'fields' => 'ids' ] );
-					$cat_terms = is_array( $cat_terms ) ? array_map( 'intval', $cat_terms ) : [];
+					$cat_terms = is_array( $cat_terms ) ? Multilingual::with_default_language_terms( $cat_terms, 'product_cat' ) : [];
 				}
-				if ( in_array( (int) $v_value, $cat_terms, true ) ) {
+				if ( in_array( (int) $v_value, $cat_terms, true ) || in_array( Multilingual::default_language_term_id( $v_value, 'product_cat' ), $cat_terms, true ) ) {
 					return $value;
 				}
 			}
@@ -529,9 +554,9 @@ class Mapping_Resolver {
 			if ( 'product-tag' === $type ) {
 				if ( null === $tag_terms ) {
 					$tag_terms = wp_get_post_terms( $product_id, 'product_tag', [ 'fields' => 'ids' ] );
-					$tag_terms = is_array( $tag_terms ) ? array_map( 'intval', $tag_terms ) : [];
+					$tag_terms = is_array( $tag_terms ) ? Multilingual::with_default_language_terms( $tag_terms, 'product_tag' ) : [];
 				}
-				if ( in_array( (int) $v_value, $tag_terms, true ) ) {
+				if ( in_array( (int) $v_value, $tag_terms, true ) || in_array( Multilingual::default_language_term_id( $v_value, 'product_tag' ), $tag_terms, true ) ) {
 					return $value;
 				}
 			}

@@ -1,0 +1,43 @@
+<wpml-config>
+	<custom-types>
+		<!-- Shared across languages; their labels are translated as strings (context "Specifico"). -->
+		<custom-type translate="0">specifico-table</custom-type>
+		<custom-type translate="0">specifico-groups</custom-type>
+	</custom-types>
+	<custom-fields>
+		<custom-field action="copy">_specifico_spec</custom-field>
+		<custom-field action="copy">_specifico_override</custom-field>
+		<custom-field action="translate">_specifico_groups</custom-field>
+		<custom-field action="translate">_specifico_inherit_values</custom-field>
+		<custom-field action="translate">_specifico_var_values</custom-field>
+	</custom-fields>
+	<custom-fields-texts>
+		<key name="_specifico_groups">
+			<key name="*">
+				<key name="title" />
+				<key name="inputGroups">
+					<key name="*">
+						<key name="*">
+							<key name="value" />
+						</key>
+					</key>
+				</key>
+			</key>
+		</key>
+		<key name="_specifico_inherit_values">
+			<key name="*">
+				<key name="*" />
+			</key>
+		</key>
+		<key name="_specifico_var_values">
+			<key name="*">
+				<key name="*" />
+			</key>
+		</key>
+	</custom-fields-texts>
+	<admin-texts>
+		<key name="_specifico_settings">
+			<key name="tab_title" />
+		</key>
+	</admin-texts>
+</wpml-config>

@@ -1,0 +1,158 @@
+# Creates a GitHub release for an existing tag and attaches the plugin zip.
+#
+# Run it from the Actions tab after pushing a tag (for example 1.0.9).
+# The release is titled "v<version>", its notes are that version's entry in the
+# readme.txt changelog, and the zip holds the same files as the wp.org zip:
+# .distignore decides what stays out, as it does for scripts/make-zip.js.
+#
+# This repo does not track build/ or assets/dist/, so the workflow compiles them
+# from the tagged sources with the locked npm dependencies.
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to release, for example 1.0.9"
+        required: true
+        type: string
+      release_date:
+        description: "Optional original release date (YYYY-MM-DD), shown in the notes for a release published late"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ inputs.tag }}
+  cancel-in-progress: false
+
+env:
+  SLUG: specifico
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the tag
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+
+      - name: Check the tag matches the plugin version
+        id: version
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          version="${TAG#v}"
+          header=$(tr -d '\r' < "$SLUG.php" | sed -n 's/^[ *]*Version:[[:space:]]*\([^[:space:]]*\).*/\1/p' | head -n 1)
+          constant=$(tr -d '\r' < "$SLUG.php" | sed -n "s/.*define([[:space:]]*'SPECIFICO_VERSION',[[:space:]]*'\([^']*\)'.*/\1/p" | head -n 1)
+          stable=$(tr -d '\r' < readme.txt | sed -n 's/^Stable tag:[[:space:]]*\([^[:space:]]*\).*/\1/p' | head -n 1)
+          package=$(node -p "require('./package.json').version")
+          echo "Tag: $TAG  Header: $header  SPECIFICO_VERSION: $constant  Stable tag: $stable  package.json: $package"
+          if [ "$header" != "$version" ] || [ "$constant" != "$version" ] || [ "$stable" != "$version" ] || [ "$package" != "$version" ]; then
+            echo "::error::Tag $TAG does not match the plugin header ($header), SPECIFICO_VERSION ($constant), readme Stable tag ($stable) and package.json ($package)."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Write the release notes from the changelog
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_DATE: ${{ inputs.release_date }}
+        run: |
+          if [ -n "$RELEASE_DATE" ] && { ! [[ "$RELEASE_DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || [ "$(date -d "$RELEASE_DATE" +%F 2>/dev/null)" != "$RELEASE_DATE" ]; }; then
+            echo "::error::release_date must be a date like 2026-09-06, got '$RELEASE_DATE'."
+            exit 1
+          fi
+          tr -d '\r' < readme.txt | awk -v v="$VERSION" '
+            /^== / { inlog = ($0 == "== Changelog ==") ; next }
+            inlog && $0 == "= " v " =" { found = 1; next }
+            found && /^= / { exit }
+            found { print }
+          ' | sed 's/^\* /- /' | sed -e '/./,$!d' > "$RUNNER_TEMP/changes.md"
+          if ! grep -q '[^[:space:]]' "$RUNNER_TEMP/changes.md"; then
+            echo "::error::readme.txt has no changelog entry for $VERSION."
+            exit 1
+          fi
+          {
+            printf '## Released Version %s\n\n' "$VERSION"
+            if [ -n "$RELEASE_DATE" ]; then
+              printf '_Released on %s._\n\n' "$(date -d "$RELEASE_DATE" '+%B %-d, %Y')"
+            fi
+            cat "$RUNNER_TEMP/changes.md"
+          } > "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install the npm dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build the admin bundles and styles
+        # `npm run build` also regenerates the POT with WP-CLI. The POT is
+        # committed, so only the compile steps run here.
+        run: |
+          npx wp-scripts build
+          npm run tailwind:build
+
+      - name: Set up PHP and Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+          tools: composer
+          coverage: none
+
+      - name: Generate the production autoloader
+        # The plugin has no runtime Composer packages, only its own PSR-4
+        # autoloader. dump-autoload builds that from composer.json without
+        # resolving require-dev, which has no lock file in this repo.
+        run: composer dump-autoload --optimize --no-dev --no-interaction
+
+      - name: Check the built plugin is complete
+        run: |
+          missing=0
+          for path in "$SLUG.php" readme.txt wpml-config.xml includes vendor/autoload.php languages/"$SLUG".pot \
+            build/specification.js build/groups.js build/mapping.js build/settings.js build/exportImport.js \
+            build/productOptions.js build/blocks.js build/blocks \
+            assets/dist/css/admin.css; do
+            if [ ! -e "$path" ]; then
+              echo "::error::$path is missing from the built plugin."
+              missing=1
+            fi
+          done
+          exit $missing
+
+      - name: Build the zip
+        id: zip
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          stage="$RUNNER_TEMP/stage"
+          mkdir -p "$stage/$SLUG"
+          tr -d '\r' < .distignore | sed -e '/^#/d' -e '/^[[:space:]]*$/d' > "$RUNNER_TEMP/exclude.txt"
+          rsync -a --exclude-from="$RUNNER_TEMP/exclude.txt" ./ "$stage/$SLUG/"
+          zip_name="$SLUG-$VERSION.zip"
+          (cd "$stage" && zip -qr9 "$GITHUB_WORKSPACE/$zip_name" "$SLUG")
+          unzip -l "$zip_name" | tail -n 1
+          echo "name=$zip_name" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+          ZIP: ${{ steps.zip.outputs.name }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "Release $TAG exists, updating its notes and zip."
+            gh release edit "$TAG" --title "v$VERSION" --notes-file "$RUNNER_TEMP/notes.md"
+            gh release upload "$TAG" "$ZIP" --clobber
+          else
+            gh release create "$TAG" "$ZIP" --verify-tag --title "v$VERSION" --notes-file "$RUNNER_TEMP/notes.md"
+          fi
