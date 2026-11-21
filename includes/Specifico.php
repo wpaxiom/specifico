@@ -97,7 +97,10 @@ final class Specifico {
 			new Frontend();
 		}
 
-		new Specifico_Rest_Route();
+		$rest = new Specifico_Rest_Route();
+
+		// AI agent tools (Abilities API + MCP Adapter). Off unless enabled in Settings.
+		Abilities::init( $rest );
 
 		// WPML / Polylang string registration.
 		Multilingual::init();

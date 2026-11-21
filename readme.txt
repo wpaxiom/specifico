@@ -1,21 +1,21 @@
 === Specifico - Product Specifications & Comparison for WooCommerce ===
 Contributors: wpaxiom
 Donate link: https://www.wpaxiom.com/donate
-Tags: product specifications, product specs, specifications, specifications table, product attributes
+Tags: product specifications, product specs, specifications table, product comparison, product attributes
 Requires at least: 5.8
 Tested up to: 7.1
 WC requires at least: 6.3
-WC tested up to: 11.2
+WC tested up to: 11.3
 Requires PHP: 7.4
-Stable tag: 1.0.9
+Stable tag: 1.0.10
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Display product specification tables on WooCommerce product pages with grouped attributes, category mapping, and per-product overrides.
+Build reusable WooCommerce specification tables, assign them to products automatically, and let shoppers compare products side by side.
 
 == Description ==
 
-Specifico is a powerful WordPress plugin designed to showcase product specifications for WooCommerce products. It allows you to display a structured specifications table for each product, enhancing the user experience and presenting detailed product information at a glance.
+Specifico adds a structured specification table to every WooCommerce product page, in its own Specifications tab, so shoppers can read a product's details at a glance.
 
 Instead of re-entering the same specs for every product, you build reusable attribute groups and specification tables once, then map them to categories, tags, or individual products. Each product can inherit those values automatically or override them when it needs something different. Shoppers can even compare products side by side, with their specification tables lined up and the differences highlighted.
 
@@ -40,6 +40,8 @@ Instead of re-entering the same specs for every product, you build reusable attr
 * Theme template override - copy the bundled table template into your theme to fully control the markup.
 * Developer hooks to filter the groups, labels, values, tab title, table classes, and to inject markup before/after the table.
 * Schema.org structured data - specifications are added to the product's `Product` JSON-LD as `additionalProperty` entries, helping search engines understand your product specs.
+* WPML and Polylang support - translate labels and default values while keeping product-specific specification values with each translated product.
+* AI agent tools over MCP - with the official MCP Adapter plugin, AI agents such as Claude Code can read and manage your groups, tables, mapping rules and product specifications. Off by default, and an agent can only do what its WordPress user is allowed to do. Needs WordPress 6.9 or later.
 * Built for WooCommerce and compatible with HPOS (High-Performance Order Storage).
 
 = How to Use =
@@ -53,6 +55,20 @@ After activating the plugin (WooCommerce must be active), you'll find Specifico 
 6. **Enable product comparison (optional)** - In *Specifico → Settings*, turn on comparison and choose where the "Add to compare" buttons appear (single product page, shop/archive loop). Shoppers can then add products to the compare tray and open a side-by-side comparison. Use the `[specifico_compare ids="1,2,3"]` shortcode or the Comparison Table block to embed a comparison on a dedicated page.
 
 The specification table then appears automatically in the "Specifications" tab on the front-end product page.
+
+= Configure AI agents (MCP) =
+AI agents such as Claude Code can manage your groups, tables, mapping rules and product specifications. This needs WordPress 6.9 or later and is off until you turn it on.
+
+1. Install and activate the free **MCP Adapter** plugin. The *AI agents* section in *Specifico → Settings* shows its status and has a button to install or activate it.
+2. In *Specifico → Settings*, turn on **Allow AI agents** and save.
+3. Copy the **Server URL**. It looks like `https://example.com/wp-json/mcp/specifico`.
+4. Click **Create an application password**, create one for a user who can manage Specifico, and copy it. WordPress shows it only once.
+5. Encode `username:application-password` in Base64. On macOS or Linux, run `printf '%s' 'username:xxxx xxxx xxxx xxxx xxxx xxxx' | base64`. On Windows PowerShell, run `[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes('username:xxxx xxxx xxxx xxxx xxxx xxxx'))`.
+6. Add the server to your agent with the header `Authorization: Basic <the Base64 string>`. For Claude Code:
+
+    claude mcp add --transport http --scope user specifico https://example.com/wp-json/mcp/specifico --header "Authorization: Basic BASE64_TOKEN"
+
+Other MCP clients (Codex, Cursor, VS Code and so on) take the same server URL and header in their own config file. Start a new agent session, then ask something read-only such as "List my Specifico tables" to check the connection. A 401 error means the header is wrong, usually because the raw application password was used instead of the Base64 string. Step-by-step setup for each client is in the [AI agents documentation](https://www.wpaxiom.com/docs/specifico/ai-agents).
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/specifico` directory, or install the plugin through the WordPress plugins screen directly.
@@ -74,7 +90,7 @@ Yes. Use the `[specifico]` shortcode to render the current product's table anywh
 Yes. Copy the bundled `templates/specification-table.php` into your theme at `yourtheme/specifico/specification-table.php` and edit it there. Your override is used automatically and survives plugin updates. It works with both classic and block themes.
 
 = Are there developer hooks? =
-Yes. Specifico provides filters and actions to customize the table programmatically, including `specifico_table_groups`, `specifico_tab_title`, `specifico_show_table`, `specifico_table_classes`, `specifico_row_label`, `specifico_row_value`, and the `specifico_before_table` / `specifico_after_table` actions.
+Yes. Specifico provides filters and actions to customize the table programmatically, including `specifico_table_groups`, `specifico_tab_title`, `specifico_show_table`, `specifico_table_classes`, `specifico_row_label`, `specifico_row_value`, and the `specifico_before_table` / `specifico_after_table` actions. The `specifico_ai_agents_enabled` filter forces the AI agents setting on or off.
 
 = Does Specifico add structured data for search engines? =
 Yes. When a product's Specifications are enabled, Specifico adds each specification to the product's existing `Product` structured data (JSON-LD) as `additionalProperty` entries. It enriches WooCommerce's structured data rather than emitting a separate block, so there is only one Product entity per page. Developers can adjust or disable it with the `specifico_structured_data` filter.
@@ -100,8 +116,13 @@ You can verify the output with Google's Rich Results Test or the Schema Markup V
 = Does Specifico work with WPML or Polylang? =
 Yes. Specification tables and attribute groups are shared across languages, and their labels and default values are translated as strings: open WPML String Translation or Polylang's Languages > Translations screen and filter by "Specifico". Per-product values are translated with the product itself, and translated products keep the table their mapping rule assigns.
 
+= Can AI agents manage my specifications? =
+Yes, on WordPress 6.9 or later. Install the official MCP Adapter plugin, then turn on "Allow AI agents" in *Specifico → Settings* and save. Add the server URL shown there to your AI agent (Claude Code, for example) as an MCP server, and sign the agent in with an application password for a user who can manage Specifico. See "Configure AI agents (MCP)" in the description for the exact steps.
+
+The agent can then find products by name, SKU, category or tag, list, create, update and delete groups and tables, add, remove and reorder mapping rules, set specification values for one product or up to 50 at once (including per-variation values), and import or export Specifico data. Every change accepts a dry run that returns the planned change without saving it. Agents get the same permissions as the user they sign in as. While the setting is off, Specifico registers no agent tools at all.
+
 = Is Specifico compatible with the latest version of WooCommerce? =
-Yes, Specifico has been tested with WooCommerce up to latest version.
+Yes. Specifico is tested with WooCommerce 11.3 and needs WooCommerce 6.3 or later.
 
 == Screenshots ==
 1. Specification Tables list - create, edit and manage your specification tables with the redesigned table interface.
@@ -129,6 +150,13 @@ To build the plugin from source:
 3. `npm run build` - compile `src/` and `assets/src/` into `build/` and `assets/dist/`.
 
 == Changelog ==
+
+= 1.0.10 =
+* New: AI agent tools. Specifico registers 21 tools through the WordPress Abilities API (WordPress 6.9+), and the official MCP Adapter plugin serves them to MCP clients such as Claude Code. Agents can find products by name, SKU, category or tag, read, create, update and delete groups and tables, add, remove and reorder mapping rules, set specification values for one product or up to 50 at once (including per-variation values), and import or export Specifico data.
+* New: Every agent write accepts a dry run that returns the planned change without saving it. Delete tools are marked destructive so MCP clients ask before running them.
+* New: "AI agents" section in Settings, off by default. When it is on, it shows whether the MCP Adapter is installed and active (with a button to install or activate it), the server URL to copy into your agent, and a link for creating an application password.
+* Dev: New `specifico_ai_agents_enabled` filter to force the AI agents setting on or off.
+* Tweak: Tested with WooCommerce 11.3.
 
 = 1.0.9 =
 * New: WPML and Polylang support. Group labels, attribute names, and default values are translatable as strings in the "Specifico" group, and the Specifications tab title is translatable too.
@@ -202,6 +230,9 @@ To build the plugin from source:
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.10 =
+Adds optional AI agent tools (MCP) for managing specification tables, off by default. Tested with WooCommerce 11.3.
 
 = 1.0.9 =
 Adds WPML and Polylang support, and fixes specification tables not showing on translated products. Recommended for multilingual stores.

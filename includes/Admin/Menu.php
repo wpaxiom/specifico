@@ -153,6 +153,23 @@ class Menu {
 				'url'     => esc_url_raw( rest_url() ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
 				'version' => SPECIFICO_ASSETS,
+				'ai'      => array(
+					'supported'      => \WpAxiom\Specifico\Abilities::is_supported(),
+					'adapter_active' => \WpAxiom\Specifico\Abilities::adapter_active(),
+					// Installed but inactive: the plugin id for the core
+					// wp/v2/plugins REST route, so the page can activate it in place.
+					'adapter_installed' => '' !== \WpAxiom\Specifico\Abilities::adapter_plugin_file(),
+					'adapter_plugin'    => ( ! \WpAxiom\Specifico\Abilities::adapter_active()
+						&& '' !== \WpAxiom\Specifico\Abilities::adapter_plugin_file()
+						&& current_user_can( 'activate_plugin', \WpAxiom\Specifico\Abilities::adapter_plugin_file() ) )
+						? preg_replace( '/\.php$/', '', \WpAxiom\Specifico\Abilities::adapter_plugin_file() )
+						: '',
+					'server_url'     => esc_url_raw( \WpAxiom\Specifico\Abilities::server_url() ),
+					'install_url'    => ( '' === \WpAxiom\Specifico\Abilities::adapter_plugin_file() && current_user_can( 'install_plugins' ) )
+						? esc_url_raw( admin_url( 'plugin-install.php?s=mcp-adapter&tab=search&type=term' ) )
+						: '',
+					'profile_url'    => esc_url_raw( admin_url( 'profile.php#application-passwords-section' ) ),
+				),
 			) );
 		}
 

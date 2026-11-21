@@ -33,6 +33,67 @@ const composePadding = ( v, h ) => {
     return `${ vv === '' ? '0' : vv }px ${ hh === '' ? '0' : hh }px`;
 };
 
+// These layout components live outside Settings on purpose. Declared inside it,
+// every state change made them new component types, so React rebuilt the whole
+// form on each toggle and the page lost its scroll position.
+
+// Section card with a lavender icon badge header, per the redesign handoff.
+const Section = ( { icon, title, desc, children } ) => (
+    <div className={`${CARD} overflow-hidden`}>
+        <div className="flex items-center gap-[13px] px-6 py-[18px] border-b border-[#EFEFF4]">
+            <span className="w-[38px] h-[38px] flex-none rounded-[11px] bg-[#F2F1FF] flex items-center justify-center">{icon}</span>
+            <div>
+                <div className="font-extrabold text-[15.5px] text-[#23232E] tracking-[-0.2px]">{title}</div>
+                <div className="font-medium text-[12.5px] text-[#9A9AAE] mt-0.5">{desc}</div>
+            </div>
+        </div>
+        {children}
+    </div>
+);
+
+const Row = ( { title, desc, children, last, top } ) => (
+    <div className={ "grid grid-cols-[300px_minmax(0,1fr)] gap-6 px-6 py-[18px] " + ( top ? "items-start" : "items-center" ) + ( last ? "" : " border-b border-[#F3F3F8]" ) }>
+        <div className="max-w-[460px]">
+            <div className="font-bold text-[13.5px] text-[#23232E]">{title}</div>
+            <div className="font-medium text-[12.5px] leading-[1.5] text-[#9A9AAE] mt-[3px]">{desc}</div>
+        </div>
+        <div className="flex justify-start">{children}</div>
+    </div>
+);
+
+// A style select plus, when set to "Custom", a "Customize appearance" button
+// with a badge that opens the appearance modal.
+const StyleControl = ( { id, value, onChange, items, panelKey, isCustom, getCount, onCustomize } ) => {
+    const n = isCustom ? getCount( panelKey ) : 0;
+    return (
+        <div className="flex flex-col gap-[11px] w-full">
+            <Select bare id={ id } className="!max-w-[420px]" value={ value } onChange={ onChange } items={ items } />
+            { isCustom && (
+                <button
+                    type="button"
+                    onClick={ () => onCustomize( panelKey ) }
+                    className="inline-flex items-center justify-between gap-3 self-start h-9 pl-[13px] pr-[9px] bg-[#F6F5FF] border border-[#E2DFFF] rounded-[10px] cursor-pointer hover:bg-[#EEEBFF] transition-colors"
+                >
+                    <span className="inline-flex items-center gap-[7px] font-bold text-[12.5px] text-[#6B66F7]">
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M4 12l7-7a1.5 1.5 0 0 0-2-2l-7 7v2h2z" stroke="#6B66F7" strokeWidth="1.3" strokeLinejoin="round"/></svg>
+                        { __( 'Customize appearance', 'specifico' ) }
+                    </span>
+                    <span className={ ( n > 0 ? "bg-[#6B66F7] text-white" : "bg-[#EDEBFF] text-[#6B66F7]" ) + " px-2 py-[2px] rounded-[7px] font-extrabold text-[10.5px]" }>
+                        {
+                            n > 0
+                                ? sprintf(
+                                    /* translators: %d: number of overridden custom style fields. */
+                                    __( '%d custom', 'specifico' ), n
+                                )
+                                : __( 'Inherits theme', 'specifico' )
+                        }
+                    </span>
+                </button>
+            ) }
+        </div>
+    );
+};
+
 const Settings = () => {
 
     const [ loader , setLoader ] = useState( __( 'Save Settings', 'specifico' ) );
@@ -47,7 +108,32 @@ const Settings = () => {
     const [ wcAdditionalInfo, setWcAdditionalInfo ] = useState( 'keep' );
 const [ variableAttributeRows, setVariableAttributeRows ] = useState( true );
 
-    // Product comparison. Off by default — merchants opt in.
+    // AI agent tools (MCP). Off by default; merchants opt in.
+    const [ aiAgents, setAiAgents ] = useState( false );
+    const [ aiCopied, setAiCopied ] = useState( false );
+    const aiInfo = ( typeof specificoAdminSettings !== 'undefined' && specificoAdminSettings.ai ) || {};
+    const [ adapterActive, setAdapterActive ] = useState( !! aiInfo.adapter_active );
+    const [ adapterBusy, setAdapterBusy ] = useState( false );
+    const [ adapterError, setAdapterError ] = useState( '' );
+
+    // Activate an installed-but-inactive MCP Adapter through core's plugins
+    // REST route, without leaving the page (unsaved settings stay put).
+    const activateAdapter = () => {
+        if ( ! aiInfo.adapter_plugin || adapterBusy ) {
+            return;
+        }
+        setAdapterBusy( true );
+        setAdapterError( '' );
+        Api.put( 'wp/v2/plugins/' + aiInfo.adapter_plugin, { status: 'active' } )
+            .then( () => setAdapterActive( true ) )
+            .catch( ( err ) => {
+                const msg = err && err.response && err.response.data && err.response.data.message;
+                setAdapterError( msg || __( 'Could not activate the MCP Adapter. Activate it from the Plugins screen.', 'specifico' ) );
+            } )
+            .finally( () => setAdapterBusy( false ) );
+    };
+
+    // Product comparison. Off by default; merchants opt in.
     const [ enableComparison, setEnableComparison ] = useState( false );
     const [ compareOnSingle, setCompareOnSingle ] = useState( true );
     const [ compareOnArchive, setCompareOnArchive ] = useState( true );
@@ -55,7 +141,7 @@ const [ variableAttributeRows, setVariableAttributeRows ] = useState( true );
     const [ compareHighlight, setCompareHighlight ] = useState( true );
     const [ compareBtnStyle, setCompareBtnStyle ] = useState( 'theme' );
     const [ compareBtnStyles, setCompareBtnStyles ] = useState( {} );
-    // Shop/archive-card compare button — styled independently of the single-page one.
+    // Shop/archive-card compare button, styled independently of the single-page one.
     const [ compareBtnStyleArchive, setCompareBtnStyleArchive ] = useState( 'theme' );
     const [ compareBtnStylesArchive, setCompareBtnStylesArchive ] = useState( {} );
     const [ compareTableStyle, setCompareTableStyle ] = useState( 'default' );
@@ -196,7 +282,7 @@ const [ variableAttributeRows, setVariableAttributeRows ] = useState( true );
         compareTable:     { title: __( 'Comparison table appearance', 'specifico' ), preview: 'table', groups: compareTableStyleGroups, values: compareTableStyles, setField: setCompareTableStyleField, reset: () => setCompareTableStyles( {} ) },
     };
 
-    // What a blank ("inherit") field resolves to in the live preview — matches
+    // What a blank ("inherit") field resolves to in the live preview. Matches
     // the CSS fallbacks the frontend uses when a variable is unset.
     const DEF = {
         specTable:    { cell_padding: '8px', radius: '0', text_color: '#23232E', cell_bg: '#ffffff', stripe_bg: '#f6f6fb', border_color: '#e5e7eb', header_bg: '#f6f6fb', header_color: '#23232E', header_weight: '700', font_size: '14px', font_weight: '400' },
@@ -230,6 +316,7 @@ const [ variableAttributeRows, setVariableAttributeRows ] = useState( true );
             tab_title: tabTitle,
             wc_additional_info: wcAdditionalInfo,
             variable_attribute_rows: variableAttributeRows,
+            ai_agents: aiAgents,
             enable_comparison: enableComparison,
             compare_on_single: compareOnSingle,
             compare_on_archive: compareOnArchive,
@@ -254,7 +341,7 @@ const [ variableAttributeRows, setVariableAttributeRows ] = useState( true );
     }, []);
 
     // Warn when the chosen comparison page is missing the [specifico_compare]
-    // shortcode — otherwise the tray's "Compare" button navigates to an empty
+    // shortcode, otherwise the tray's "Compare" button navigates to an empty
     // page. Reads raw content (context=edit), so the rendered/expanded shortcode
     // doesn't hide the literal we're looking for.
     useEffect( () => {
@@ -267,7 +354,7 @@ const [ variableAttributeRows, setVariableAttributeRows ] = useState( true );
             .then( ( res ) => {
                 const raw = res?.data?.content?.raw;
                 if ( typeof raw !== 'string' ) {
-                    // Couldn't read the source (permissions/other) — don't false-alarm.
+                    // Couldn't read the source (permissions/other), so don't false-alarm.
                     setPageShortcode( 'unknown' );
                     return;
                 }
@@ -287,8 +374,9 @@ const [ variableAttributeRows, setVariableAttributeRows ] = useState( true );
                 setTabTitle( res.data.tab_title || '' );
                 setWcAdditionalInfo( res.data.wc_additional_info || 'keep' );
                 setVariableAttributeRows( res.data.variable_attribute_rows !== false );
+                setAiAgents( res.data.ai_agents === true );
 
-                // Comparison — off unless a merchant has explicitly enabled it.
+                // Comparison: off unless a merchant has explicitly enabled it.
                 setEnableComparison( res.data.enable_comparison === true );
                 setCompareOnSingle( res.data.compare_on_single !== false );
                 setCompareOnArchive( res.data.compare_on_archive !== false );
@@ -323,63 +411,6 @@ const [ variableAttributeRows, setVariableAttributeRows ] = useState( true );
         }
     }
 
-    // Section card with a lavender icon badge header, per the redesign handoff.
-    const Section = ( { icon, title, desc, children } ) => (
-        <div className={`${CARD} overflow-hidden`}>
-            <div className="flex items-center gap-[13px] px-6 py-[18px] border-b border-[#EFEFF4]">
-                <span className="w-[38px] h-[38px] flex-none rounded-[11px] bg-[#F2F1FF] flex items-center justify-center">{icon}</span>
-                <div>
-                    <div className="font-extrabold text-[15.5px] text-[#23232E] tracking-[-0.2px]">{title}</div>
-                    <div className="font-medium text-[12.5px] text-[#9A9AAE] mt-0.5">{desc}</div>
-                </div>
-            </div>
-            {children}
-        </div>
-    );
-
-    const Row = ( { title, desc, children, last, top } ) => (
-        <div className={ "grid grid-cols-[300px_minmax(0,1fr)] gap-6 px-6 py-[18px] " + ( top ? "items-start" : "items-center" ) + ( last ? "" : " border-b border-[#F3F3F8]" ) }>
-            <div className="max-w-[460px]">
-                <div className="font-bold text-[13.5px] text-[#23232E]">{title}</div>
-                <div className="font-medium text-[12.5px] leading-[1.5] text-[#9A9AAE] mt-[3px]">{desc}</div>
-            </div>
-            <div className="flex justify-start">{children}</div>
-        </div>
-    );
-
-    // A style select plus, when set to "Custom", a "Customize appearance" button
-    // with a badge that opens the appearance modal.
-    const StyleControl = ( { id, value, onChange, items, panelKey, isCustom } ) => {
-        const n = isCustom ? panelCount( panelKey ) : 0;
-        return (
-            <div className="flex flex-col gap-[11px] w-full">
-                <Select bare id={ id } className="!max-w-[420px]" value={ value } onChange={ onChange } items={ items } />
-                { isCustom && (
-                    <button
-                        type="button"
-                        onClick={ () => setDrawer( panelKey ) }
-                        className="inline-flex items-center justify-between gap-3 self-start h-9 pl-[13px] pr-[9px] bg-[#F6F5FF] border border-[#E2DFFF] rounded-[10px] cursor-pointer hover:bg-[#EEEBFF] transition-colors"
-                    >
-                        <span className="inline-flex items-center gap-[7px] font-bold text-[12.5px] text-[#6B66F7]">
-                            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M4 12l7-7a1.5 1.5 0 0 0-2-2l-7 7v2h2z" stroke="#6B66F7" strokeWidth="1.3" strokeLinejoin="round"/></svg>
-                            { __( 'Customize appearance', 'specifico' ) }
-                        </span>
-                        <span className={ ( n > 0 ? "bg-[#6B66F7] text-white" : "bg-[#EDEBFF] text-[#6B66F7]" ) + " px-2 py-[2px] rounded-[7px] font-extrabold text-[10.5px]" }>
-                            {
-                                n > 0
-                                    ? sprintf(
-                                        /* translators: %d: number of overridden custom style fields. */
-                                        __( '%d custom', 'specifico' ), n
-                                    )
-                                    : __( 'Inherits theme', 'specifico' )
-                            }
-                        </span>
-                    </button>
-                ) }
-            </div>
-        );
-    };
-
     const tableIcon = (
         <svg width="19" height="19" viewBox="0 0 20 20" fill="none">
             <rect x="3" y="4" width="14" height="12" rx="2" stroke="#6B66F7" strokeWidth="1.7" />
@@ -394,6 +425,45 @@ const [ variableAttributeRows, setVariableAttributeRows ] = useState( true );
             <rect x="11" y="4" width="6" height="12" rx="1.6" stroke="#B7B4FF" strokeWidth="1.7" />
         </svg>
     );
+
+    const aiIcon = (
+        <svg width="19" height="19" viewBox="0 0 20 20" fill="none">
+            <rect x="4" y="6" width="12" height="10" rx="2.4" stroke="#6B66F7" strokeWidth="1.7" />
+            <path d="M10 6V3.5" stroke="#6B66F7" strokeWidth="1.6" strokeLinecap="round" />
+            <circle cx="7.8" cy="11" r="1.1" fill="#B7B4FF" />
+            <circle cx="12.2" cy="11" r="1.1" fill="#B7B4FF" />
+        </svg>
+    );
+
+    const copyServerUrl = () => {
+        if ( ! aiInfo.server_url ) {
+            return;
+        }
+        const done = () => {
+            setAiCopied( true );
+            setTimeout( () => setAiCopied( false ), 1800 );
+        };
+        // The Clipboard API exists only on HTTPS (and localhost). Plain-HTTP
+        // dev sites fall back to selecting the field and copying it.
+        const fallback = () => {
+            const field = document.getElementById( 'specifico-ai-server-url' );
+            if ( ! field ) {
+                return;
+            }
+            field.focus();
+            field.select();
+            try {
+                if ( document.execCommand( 'copy' ) ) {
+                    done();
+                }
+            } catch ( e ) {}
+        };
+        if ( navigator.clipboard && window.isSecureContext ) {
+            navigator.clipboard.writeText( aiInfo.server_url ).then( done ).catch( fallback );
+        } else {
+            fallback();
+        }
+    };
 
     // ---- Live storefront preview inside the appearance modal ----
     const renderPreview = ( panelKey ) => {
@@ -525,7 +595,7 @@ const [ variableAttributeRows, setVariableAttributeRows ] = useState( true );
                 );
             }
 
-            // 'unit' — a single number with an implied px suffix.
+            // 'unit': a single number with an implied px suffix.
             return (
                 <div key={ field.key }>
                     { labelEl }
@@ -547,7 +617,7 @@ const [ variableAttributeRows, setVariableAttributeRows ] = useState( true );
                     <div className="flex items-start justify-between gap-[14px] px-6 pt-5 pb-[18px] border-b border-[#EFEFF4]">
                         <div>
                             <div className="font-extrabold text-[17px] text-[#23232E] tracking-[-0.2px]">{ panel.title }</div>
-                            <div className="font-medium text-[12.5px] leading-[1.5] text-[#9A9AAE] mt-[3px]">{ __( 'Leave a field blank to inherit your theme — only what you fill in overrides it.', 'specifico' ) }</div>
+                            <div className="font-medium text-[12.5px] leading-[1.5] text-[#9A9AAE] mt-[3px]">{ __( 'Leave a field blank to inherit your theme. Only what you fill in overrides it.', 'specifico' ) }</div>
                         </div>
                         <button type="button" onClick={ () => setDrawer( null ) } className="flex-none w-[34px] h-[34px] rounded-[9px] border border-[#EFEFF4] bg-white cursor-pointer inline-flex items-center justify-center hover:bg-[#F5F5F9]">
                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="#54546A" strokeWidth="1.6" strokeLinecap="round"/></svg>
@@ -617,6 +687,8 @@ const [ variableAttributeRows, setVariableAttributeRows ] = useState( true );
                         </Row>
                         <Row title={ __( 'Table style', 'specifico' ) } desc={ __( 'Preset looks for the rendered table. Choose “Custom” to style it yourself.', 'specifico' ) } top={ styles?.value === 'custom' }>
                             <StyleControl
+                                getCount={ panelCount }
+                                onCustomize={ setDrawer }
                                 id="_specifico_settings[default_styles]"
                                 value={ styles?.value || '' }
                                 onChange={ (e) => { const opt = styleOptions.find( ( o ) => o.value === e.target.value ); setStyles( opt || { value: e.target.value, label: e.target.value } ); } }
@@ -650,8 +722,10 @@ const [ variableAttributeRows, setVariableAttributeRows ] = useState( true );
                         <Row title={ __( 'Maximum products to compare', 'specifico' ) } desc={ __( 'How many products a shopper can compare at once.', 'specifico' ) }>
                             <Select bare id="_specifico_settings[compare_max]" className="!max-w-[420px]" value={compareMax} onChange={ (e) => setCompareMax( parseInt( e.target.value, 10 ) )} items={compareMaxOptions} />
                         </Row>
-                        <Row title={ __( 'Compare button style — single page', 'specifico' ) } desc={ __( '“Match theme” inherits your theme’s button look. Solid, Outline and Pill use Specifico’s own style. Choose “Custom” to set your own.', 'specifico' ) } top={ compareBtnStyle === 'custom' }>
+                        <Row title={ __( 'Compare button style · single page', 'specifico' ) } desc={ __( '“Match theme” inherits your theme’s button look. Solid, Outline and Pill use Specifico’s own style. Choose “Custom” to set your own.', 'specifico' ) } top={ compareBtnStyle === 'custom' }>
                             <StyleControl
+                                getCount={ panelCount }
+                                onCustomize={ setDrawer }
                                 id="_specifico_settings[compare_btn_style]"
                                 value={ compareBtnStyle }
                                 onChange={ (e) => setCompareBtnStyle( e.target.value ) }
@@ -660,8 +734,10 @@ const [ variableAttributeRows, setVariableAttributeRows ] = useState( true );
                                 isCustom={ compareBtnStyle === 'custom' }
                             />
                         </Row>
-                        <Row title={ __( 'Compare button style — shop / archive card', 'specifico' ) } desc={ __( 'Style the compare button that sits inside product cards on shop and category pages, independently of the single-page one.', 'specifico' ) } top={ compareBtnStyleArchive === 'custom' }>
+                        <Row title={ __( 'Compare button style · shop / archive card', 'specifico' ) } desc={ __( 'Style the compare button that sits inside product cards on shop and category pages, independently of the single-page one.', 'specifico' ) } top={ compareBtnStyleArchive === 'custom' }>
                             <StyleControl
+                                getCount={ panelCount }
+                                onCustomize={ setDrawer }
                                 id="_specifico_settings[compare_btn_style_archive]"
                                 value={ compareBtnStyleArchive }
                                 onChange={ (e) => setCompareBtnStyleArchive( e.target.value ) }
@@ -675,6 +751,8 @@ const [ variableAttributeRows, setVariableAttributeRows ] = useState( true );
                         </Row>
                         <Row title={ __( 'Comparison table style', 'specifico' ) } desc={ __( '“Default” uses Specifico’s built-in look. Choose “Custom” to style the side-by-side table yourself.', 'specifico' ) } top={ compareTableStyle === 'custom' }>
                             <StyleControl
+                                getCount={ panelCount }
+                                onCustomize={ setDrawer }
                                 id="_specifico_settings[compare_table_style]"
                                 value={ compareTableStyle }
                                 onChange={ (e) => setCompareTableStyle( e.target.value ) }
@@ -697,6 +775,60 @@ const [ variableAttributeRows, setVariableAttributeRows ] = useState( true );
                                     </div>
                                 ) }
                             </div>
+                        </Row>
+                        </> ) }
+                    </Section>
+
+                    <Section icon={aiIcon} title={ __( 'AI agents', 'specifico' ) } desc={ __( 'Let AI agents such as Claude Code create and manage specification tables through MCP.', 'specifico' ) }>
+                        <Row title={ __( 'Allow AI agents', 'specifico' ) } desc={ aiInfo.supported ? __( 'Agents can read and change groups, tables, mapping rules and product specifications. They sign in as a WordPress user and can only do what that user can.', 'specifico' ) : __( 'Requires WordPress 6.9 or newer.', 'specifico' ) } last={ ! aiAgents || ! aiInfo.supported }>
+                            <Switch bare id="_specifico_settings[ai_agents]" checked={ aiAgents && !! aiInfo.supported } disabled={ ! aiInfo.supported } onChange={ () => setAiAgents( ( prev ) => ! prev ) } />
+                        </Row>
+                        { aiAgents && aiInfo.supported && ( <>
+                        <Row title={ __( 'MCP Adapter plugin', 'specifico' ) } desc={ __( 'The official WordPress plugin that connects AI agents to your site. Specifico needs it to serve its tools.', 'specifico' ) }>
+                            { adapterActive ? (
+                                <span className="inline-flex items-center gap-2 h-[30px] px-3 rounded-full bg-[#ECFDF3] text-[#067647] font-bold text-[12.5px]">
+                                    <span className="w-[7px] h-[7px] rounded-full bg-[#17B26A]" />
+                                    { __( 'Active', 'specifico' ) }
+                                </span>
+                            ) : (
+                                <div className="flex items-center gap-3 flex-wrap">
+                                    <span className="inline-flex items-center gap-2 h-[30px] px-3 rounded-full bg-[#FFFBEB] text-[#92400E] font-bold text-[12.5px]">
+                                        <span className="w-[7px] h-[7px] rounded-full bg-[#F59E0B]" />
+                                        { aiInfo.adapter_installed ? __( 'Installed, not active', 'specifico' ) : __( 'Not installed', 'specifico' ) }
+                                    </span>
+                                    { aiInfo.adapter_plugin ? (
+                                        <button type="button" onClick={ activateAdapter } disabled={ adapterBusy } className="inline-flex items-center h-[34px] px-[14px] bg-white border border-[#E7E7EF] rounded-[10px] font-bold text-[12.5px] text-[#6B66F7] cursor-pointer hover:bg-[#F5F5F9] disabled:opacity-60 disabled:cursor-wait">
+                                            { adapterBusy ? __( 'Activating…', 'specifico' ) : __( 'Activate MCP Adapter', 'specifico' ) }
+                                        </button>
+                                    ) : aiInfo.install_url ? (
+                                        <a href={ aiInfo.install_url } className="inline-flex items-center h-[34px] px-[14px] bg-white border border-[#E7E7EF] rounded-[10px] font-bold text-[12.5px] text-[#6B66F7] no-underline hover:bg-[#F5F5F9]">
+                                            { __( 'Install MCP Adapter', 'specifico' ) }
+                                        </a>
+                                    ) : (
+                                        <span className="text-[12.5px] text-[#54546A]">
+                                            { aiInfo.adapter_installed
+                                                ? __( 'Ask a site administrator to activate the MCP Adapter plugin.', 'specifico' )
+                                                : __( 'Ask a site administrator to install the MCP Adapter plugin.', 'specifico' ) }
+                                        </span>
+                                    ) }
+                                    { adapterError && (
+                                        <span className="w-full text-[12.5px] text-[#B42318]">{ adapterError }</span>
+                                    ) }
+                                </div>
+                            ) }
+                        </Row>
+                        <Row title={ __( 'Server URL', 'specifico' ) } desc={ __( 'Add this URL to your AI agent as an MCP server. It works once the MCP Adapter is active and these settings are saved.', 'specifico' ) }>
+                            <div className="w-full flex items-center gap-2 max-w-[520px]">
+                                <input id="specifico-ai-server-url" type="text" readOnly value={ aiInfo.server_url || '' } onFocus={ ( e ) => e.target.select() } className={ FIELD } />
+                                <button type="button" onClick={ copyServerUrl } className="flex-none h-[38px] px-[14px] bg-white border border-[#E7E7EF] rounded-[10px] font-bold text-[12.5px] text-[#54546A] cursor-pointer hover:bg-[#F5F5F9]">
+                                    { aiCopied ? __( 'Copied', 'specifico' ) : __( 'Copy', 'specifico' ) }
+                                </button>
+                            </div>
+                        </Row>
+                        <Row title={ __( 'Sign-in', 'specifico' ) } desc={ __( 'Agents sign in with an application password. Create one for a user who is allowed to manage Specifico, and keep it private.', 'specifico' ) } last>
+                            <a href={ aiInfo.profile_url } className="inline-flex items-center h-[34px] px-[14px] bg-white border border-[#E7E7EF] rounded-[10px] font-bold text-[12.5px] text-[#6B66F7] no-underline hover:bg-[#F5F5F9]">
+                                { __( 'Create an application password', 'specifico' ) }
+                            </a>
                         </Row>
                         </> ) }
                     </Section>

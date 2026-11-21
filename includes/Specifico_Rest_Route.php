@@ -995,6 +995,11 @@ class Specifico_Rest_Route {
 				$data['wc_additional_info'] = in_array( $data['wc_additional_info'], $allowed, true ) ? $data['wc_additional_info'] : 'keep';
 			}
 
+			// AI agent tools (Abilities API + MCP). Off unless explicitly enabled.
+			if ( isset( $data['ai_agents'] ) ) {
+				$data['ai_agents'] = (bool) $data['ai_agents'];
+			}
+
 			// Variable products: automatic variation-attribute rows.
 			if ( isset( $data['variable_attribute_rows'] ) ) {
 				$data['variable_attribute_rows'] = (bool) $data['variable_attribute_rows'];

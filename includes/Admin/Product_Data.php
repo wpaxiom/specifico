@@ -103,7 +103,7 @@ class Product_Data {
 	 *
 	 * Shape: [ group_index ][ row_index ] => value.
 	 */
-	private static function sanitize_inherit_values( $raw ) {
+	public static function sanitize_inherit_values( $raw ) {
 		$clean = [];
 		if ( ! is_array( $raw ) ) {
 			return $clean;
@@ -130,7 +130,7 @@ class Product_Data {
 	 * @param int   $product_id Parent product ID.
 	 * @return array
 	 */
-	private static function sanitize_var_values( $raw, $product_id ) {
+	public static function sanitize_var_values( $raw, $product_id ) {
 		$clean = [];
 
 		if ( ! is_array( $raw ) ) {
@@ -182,7 +182,7 @@ class Product_Data {
 		return $clean;
 	}
 
-	private static function sanitize_groups( $raw ) {
+	public static function sanitize_groups( $raw ) {
 		$clean = [];
 		if ( ! is_array( $raw ) ) {
 			return $clean;
