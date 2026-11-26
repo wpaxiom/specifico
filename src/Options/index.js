@@ -541,19 +541,31 @@ const HiddenGroupsPayload = ({ accordions }) => (
     </>
 );
 
+// Posts only the rows whose value differs from the mapped table. A row left at
+// the table's value is not stored, so it keeps following the table when the
+// shared groups change. The marker tells the save handler the payload was
+// sent, so it can clear the stored overrides when no row differs.
 const HiddenInheritValuesPayload = ({ inherited, inheritValues }) => {
     const previewGroups = Array.isArray(inherited?.groups) ? inherited.groups : [];
     return (
         <>
+            <input type="hidden" name="_specifico_inherit_values_present" value="1" />
             {previewGroups.map((g, gi) =>
-                (g.inputGroups || []).map((row, ri) => (
-                    <input
-                        key={`${gi}-${ri}`}
-                        type="hidden"
-                        name={`_specifico_inherit_values[${gi}][${ri}]`}
-                        value={inheritValues[gi]?.[ri] ?? (row[1]?.value || '')}
-                    />
-                ))
+                (g.inputGroups || []).map((row, ri) => {
+                    const tableValue = row[1]?.value || '';
+                    const value = inheritValues[gi]?.[ri] ?? tableValue;
+                    if (value === tableValue) {
+                        return null;
+                    }
+                    return (
+                        <input
+                            key={`${gi}-${ri}`}
+                            type="hidden"
+                            name={`_specifico_inherit_values[${gi}][${ri}]`}
+                            value={value}
+                        />
+                    );
+                })
             )}
         </>
     );

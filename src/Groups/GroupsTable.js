@@ -406,7 +406,7 @@ const GroupsTable = () => {
 
                     <div className={`${CARD} overflow-hidden`}>
                         <div className="grid grid-cols-[1fr_1fr_1fr_48px] gap-3.5 px-6 py-3.5 border-b border-[#EFEFF4] font-bold text-[10.5px] tracking-[0.09em] uppercase text-[#A2A2B4]">
-                            <span>{ __( 'Attribute Type', 'specifico' ) }</span><span>{ __( 'Attribute Value', 'specifico' ) }</span><span>{ __( 'Values', 'specifico' ) }</span><span></span>
+                            <span>{ __( 'Attribute Name', 'specifico' ) }</span><span>{ __( 'Attribute Value', 'specifico' ) }</span><span>{ __( 'Type', 'specifico' ) }</span><span></span>
                         </div>
                         <PostMetaRepeater
                             metaFields={attributes}

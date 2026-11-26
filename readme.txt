@@ -7,7 +7,7 @@ Tested up to: 7.1
 WC requires at least: 6.3
 WC tested up to: 11.3
 Requires PHP: 7.4
-Stable tag: 1.0.10
+Stable tag: 1.0.11
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,7 +21,15 @@ Instead of re-entering the same specs for every product, you build reusable attr
 
 [youtube https://www.youtube.com/watch?v=lNAtGRf2PnA]
 
-[More WPAxiom video tutorials](https://www.youtube.com/watch?v=lNAtGRf2PnA&list=PLZjTQOjxY6Ec)
+= Video tutorials =
+The [Specifico tutorials playlist](https://www.youtube.com/playlist?list=PLZjTQOjxY6Ec) walks through the plugin one feature at a time:
+
+* [Add Product Specs to WooCommerce](https://www.youtube.com/watch?v=lNAtGRf2PnA&list=PLZjTQOjxY6Ec): install Specifico, build groups and a specification table, and show it on a product.
+* [Map Product Specs by Category](https://www.youtube.com/watch?v=viTkmjvzmho&list=PLZjTQOjxY6Ec): assign one table to a whole product category with a mapping rule.
+* [Override Product Specs for One Product](https://www.youtube.com/watch?v=kzHpDCn-Ric&list=PLZjTQOjxY6Ec): change a few values on one product while it keeps following its mapped table, or give it a custom table.
+* [Compare Products Side by Side](https://www.youtube.com/watch?v=v5BZBlKYE6s&list=PLZjTQOjxY6Ec): turn on comparison, use the compare tray and drawer, and build a comparison page.
+* [Style Your Spec Table to Match Your Theme](https://www.youtube.com/watch?v=U7gyH3SP-EY&list=PLZjTQOjxY6Ec): pick a table style, set custom colours and spacing, and rename the Specifications tab.
+* [Let AI Build Your Product Spec Tables (MCP)](https://www.youtube.com/watch?v=6DyJmRmda_s&list=PLZjTQOjxY6Ec): connect an AI agent such as Claude Code and have it create specification tables for you.
 
 [Documentation](https://www.wpaxiom.com/docs/specifico/) | [Get Support](https://www.wpaxiom.com/contact)
 
@@ -58,6 +66,8 @@ The specification table then appears automatically in the "Specifications" tab o
 
 = Configure AI agents (MCP) =
 AI agents such as Claude Code can manage your groups, tables, mapping rules and product specifications. This needs WordPress 6.9 or later and is off until you turn it on.
+
+[youtube https://www.youtube.com/watch?v=6DyJmRmda_s]
 
 1. Install and activate the free **MCP Adapter** plugin. The *AI agents* section in *Specifico → Settings* shows its status and has a button to install or activate it.
 2. In *Specifico → Settings*, turn on **Allow AI agents** and save.
@@ -151,6 +161,12 @@ To build the plugin from source:
 
 == Changelog ==
 
+= 1.0.11 =
+* Fix: In "Inherit from mapping" mode, updating a product saved every row of its table, so later changes to the mapped table or its groups no longer reached that product. Now only the values you change are saved, and every other row keeps following the table.
+* Fix: A product saved with an earlier version stores every row. Updating it once drops the rows that still match the table. Rows that no longer match are kept as product values.
+* Fix: The attribute column headings in the group editor now read Attribute Name, Attribute Value and Type, matching the fields below them.
+* Docs: Added the video tutorials to the plugin description.
+
 = 1.0.10 =
 * New: AI agent tools. Specifico registers 21 tools through the WordPress Abilities API (WordPress 6.9+), and the official MCP Adapter plugin serves them to MCP clients such as Claude Code. Agents can find products by name, SKU, category or tag, read, create, update and delete groups and tables, add, remove and reorder mapping rules, set specification values for one product or up to 50 at once (including per-variation values), and import or export Specifico data.
 * New: Every agent write accepts a dry run that returns the planned change without saving it. Delete tools are marked destructive so MCP clients ask before running them.
@@ -230,6 +246,9 @@ To build the plugin from source:
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.11 =
+Fixes products in Inherit mode no longer following changes to their mapped table after the first update. Recommended for all users.
 
 = 1.0.10 =
 Adds optional AI agent tools (MCP) for managing specification tables, off by default. Tested with WooCommerce 11.3.

@@ -65,9 +65,16 @@ class Product_Data {
 			delete_post_meta( $product_id, '_specifico_inherit_values' );
 		} else {
 			delete_post_meta( $product_id, '_specifico_groups' );
-			if ( isset( $_POST['_specifico_inherit_values'] ) && is_array( $_POST['_specifico_inherit_values'] ) ) {
-				$inherit_values = self::sanitize_inherit_values( map_deep( wp_unslash( $_POST['_specifico_inherit_values'] ), 'sanitize_text_field' ) );
+			// The metabox posts only the rows that differ from the mapped table,
+			// so a row left at the table's value keeps following the table.
+			$inherit_values = isset( $_POST['_specifico_inherit_values'] ) && is_array( $_POST['_specifico_inherit_values'] )
+				? self::sanitize_inherit_values( map_deep( wp_unslash( $_POST['_specifico_inherit_values'] ), 'sanitize_text_field' ) )
+				: [];
+			if ( $inherit_values ) {
 				update_post_meta( $product_id, '_specifico_inherit_values', $inherit_values );
+			} elseif ( isset( $_POST['_specifico_inherit_values_present'] ) ) {
+				// Every row matches the table again: drop the stored overrides.
+				delete_post_meta( $product_id, '_specifico_inherit_values' );
 			}
 		}
 
